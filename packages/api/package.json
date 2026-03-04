@@ -1,0 +1,25 @@
+{
+  "name": "@script/api",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./auth": "./src/auth.ts",
+    "./auth-client": "./src/auth-client.ts",
+    "./trpc": "./src/trpc.ts"
+  },
+  "dependencies": {
+    "@better-auth/prisma-adapter": "^1.5.3",
+    "@script/db": "workspace:*",
+    "@script/types": "workspace:*",
+    "@trpc/server": "^11.0.0",
+    "better-auth": "^1.4.0",
+    "superjson": "^2.2.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "extends": "../../packages/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@script/api": [
+        "../../packages/api/src"
+      ],
+      "@script/api/*": [
+        "../../packages/api/src/*"
+      ],
+      "@script/db": [
+        "../../packages/db/src"
+      ],
+      "@script/types": [
+        "../../packages/types/src"
+      ],
+      "@script/editor": [
+        "../../packages/editor/src"
+      ]
+    },
+    "allowJs": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
