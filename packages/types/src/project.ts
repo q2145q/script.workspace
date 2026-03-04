@@ -23,10 +23,24 @@ export const createProjectSchema = z.object({
 });
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 
+export const LANGUAGES = [
+  { code: "en", label: "English" },
+  { code: "ru", label: "Русский" },
+  { code: "es", label: "Español" },
+  { code: "fr", label: "Français" },
+  { code: "de", label: "Deutsch" },
+  { code: "it", label: "Italiano" },
+  { code: "pt", label: "Português" },
+  { code: "zh", label: "中文" },
+  { code: "ja", label: "日本語" },
+  { code: "ko", label: "한국어" },
+] as const;
+
 export const updateProjectSchema = z.object({
   id: z.string(),
   title: z.string().min(1).max(255).optional(),
   description: z.string().max(2000).optional(),
   type: ProjectTypeEnum.optional(),
+  language: z.string().min(2).max(5).optional(),
 });
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;

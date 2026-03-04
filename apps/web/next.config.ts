@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     "@script/db",
     "@script/types",
     "@script/editor",
+    "@script/ai",
   ],
 };
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "next-themes";
 import { TRPCReactProvider } from "@/lib/trpc/client";
 import "./globals.css";
 
@@ -14,12 +15,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
-        <TRPCReactProvider>
-          {children}
-          <Toaster position="bottom-right" />
-        </TRPCReactProvider>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <TRPCReactProvider>
+            {children}
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                style: {
+                  background: "var(--color-card)",
+                  border: "1px solid var(--color-border)",
+                  color: "var(--color-foreground)",
+                },
+              }}
+            />
+          </TRPCReactProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

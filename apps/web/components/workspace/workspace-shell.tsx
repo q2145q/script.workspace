@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import type { Editor } from "@script/editor";
 import {
   ResizableHandle,
@@ -28,13 +29,18 @@ export function WorkspaceShell({ project, document }: WorkspaceShellProps) {
   const [editor, setEditor] = useState<Editor | null>(null);
 
   return (
-    <div className="h-screen overflow-hidden">
+    <motion.div
+      className="h-screen overflow-hidden bg-background"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       <ResizablePanelGroup direction="horizontal" className="h-full">
         <ResizablePanel
           defaultSize={15}
           minSize={10}
           maxSize={25}
-          className="bg-sidebar"
+          className="glass-panel border-r border-sidebar-border"
         >
           <WorkspaceSidebar
             project={project}
@@ -43,23 +49,23 @@ export function WorkspaceShell({ project, document }: WorkspaceShellProps) {
           />
         </ResizablePanel>
 
-        <ResizableHandle />
+        <ResizableHandle className="w-px bg-border/50 transition-colors hover:bg-ai-accent/30" />
 
         <ResizablePanel defaultSize={60} minSize={40}>
           <EditorArea document={document} onEditorReady={setEditor} />
         </ResizablePanel>
 
-        <ResizableHandle />
+        <ResizableHandle className="w-px bg-border/50 transition-colors hover:bg-ai-accent/30" />
 
         <ResizablePanel
           defaultSize={25}
           minSize={15}
           maxSize={35}
-          className="bg-sidebar"
+          className="glass-panel border-l border-sidebar-border"
         >
-          <RightPanel />
+          <RightPanel editor={editor} documentId={document.id} />
         </ResizablePanel>
       </ResizablePanelGroup>
-    </div>
+    </motion.div>
   );
 }

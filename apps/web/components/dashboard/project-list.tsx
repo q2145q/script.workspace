@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -21,6 +22,19 @@ const typeLabels: Record<string, string> = {
   OTHER: "Other",
 };
 
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.06 },
+  },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0 },
+};
+
 export function ProjectList({ projects }: { projects: Project[] }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -38,11 +52,17 @@ export function ProjectList({ projects }: { projects: Project[] }) {
   );
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <motion.div
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      variants={container}
+      initial="hidden"
+      animate="show"
+    >
       {projects.map((project) => (
-        <div
+        <motion.div
           key={project.id}
-          className="group relative rounded-lg border border-border bg-card p-5 transition-colors hover:border-foreground/20"
+          variants={item}
+          className="group relative rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:border-ai-accent/30 hover:shadow-md hover:shadow-ai-glow"
         >
           <Link
             href={`/project/${project.id}`}
@@ -50,8 +70,8 @@ export function ProjectList({ projects }: { projects: Project[] }) {
           />
 
           <div className="mb-3 flex items-start justify-between">
-            <h3 className="font-medium">{project.title}</h3>
-            <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+            <h3 className="font-medium text-foreground">{project.title}</h3>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
               {typeLabels[project.type] ?? project.type}
             </span>
           </div>
@@ -75,13 +95,13 @@ export function ProjectList({ projects }: { projects: Project[] }) {
                   deleteMutation.mutate({ id: project.id });
                 }
               }}
-              className="relative z-20 text-muted-foreground hover:text-destructive"
+              className="relative z-20 text-muted-foreground transition-colors duration-200 hover:text-destructive"
             >
               Delete
             </button>
           </div>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }

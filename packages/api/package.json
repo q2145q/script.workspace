@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@better-auth/prisma-adapter": "^1.5.3",
+    "@script/ai": "workspace:*",
     "@script/db": "workspace:*",
     "@script/types": "workspace:*",
     "@trpc/server": "^11.0.0",

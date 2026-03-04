@@ -1,38 +1,138 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #ffffff;
+  /* === Light defaults (Raycast-inspired clean light) === */
+  --color-background: #fafafa;
   --color-foreground: #09090b;
   --color-muted: #f4f4f5;
   --color-muted-foreground: #71717a;
   --color-border: #e4e4e7;
   --color-input: #e4e4e7;
-  --color-ring: #18181b;
+  --color-ring: #6366f1;
   --color-primary: #18181b;
   --color-primary-foreground: #fafafa;
   --color-secondary: #f4f4f5;
   --color-secondary-foreground: #18181b;
   --color-destructive: #ef4444;
   --color-destructive-foreground: #fafafa;
-  --color-accent: #f4f4f5;
+  --color-accent: #f0f0f4;
   --color-accent-foreground: #18181b;
   --color-card: #ffffff;
   --color-card-foreground: #09090b;
-  --color-sidebar: #fafafa;
+  --color-sidebar: #f5f5f7;
   --color-sidebar-foreground: #09090b;
   --color-sidebar-border: #e4e4e7;
 
+  /* === AI accent colors === */
+  --color-ai-accent: #6366f1;
+  --color-ai-accent-foreground: #ffffff;
+  --color-ai-glow: rgba(99, 102, 241, 0.15);
+  --color-suggestion-add: rgba(34, 197, 94, 0.2);
+  --color-suggestion-add-border: rgba(34, 197, 94, 0.6);
+  --color-suggestion-remove: rgba(239, 68, 68, 0.2);
+  --color-suggestion-remove-border: rgba(239, 68, 68, 0.6);
+
+  /* === Glass effects === */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-blur: 16px;
+
+  /* === Fonts === */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Courier Prime", "Courier New", monospace;
-  --radius-lg: 0.5rem;
-  --radius-md: calc(var(--radius-lg) - 2px);
-  --radius-sm: calc(var(--radius-lg) - 4px);
+
+  /* === Radii === */
+  --radius-lg: 0.75rem;
+  --radius-md: 0.5rem;
+  --radius-sm: 0.375rem;
+}
+
+/* ============================================================
+   DARK THEME (Prism-inspired deep dark workspace)
+   ============================================================ */
+
+.dark {
+  --color-background: #0a0a0f;
+  --color-foreground: #e4e4e7;
+  --color-muted: #16161e;
+  --color-muted-foreground: #71717a;
+  --color-border: #23232e;
+  --color-input: #23232e;
+  --color-ring: #818cf8;
+  --color-primary: #e4e4e7;
+  --color-primary-foreground: #09090b;
+  --color-secondary: #16161e;
+  --color-secondary-foreground: #e4e4e7;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #fafafa;
+  --color-accent: #1a1a24;
+  --color-accent-foreground: #e4e4e7;
+  --color-card: #111116;
+  --color-card-foreground: #e4e4e7;
+  --color-sidebar: #0e0e14;
+  --color-sidebar-foreground: #a1a1aa;
+  --color-sidebar-border: #1e1e28;
+
+  --color-ai-accent: #818cf8;
+  --color-ai-accent-foreground: #ffffff;
+  --color-ai-glow: rgba(129, 140, 248, 0.12);
+  --color-suggestion-add: rgba(34, 197, 94, 0.15);
+  --color-suggestion-add-border: rgba(34, 197, 94, 0.5);
+  --color-suggestion-remove: rgba(239, 68, 68, 0.15);
+  --color-suggestion-remove-border: rgba(239, 68, 68, 0.5);
+
+  --glass-bg: rgba(14, 14, 20, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-blur: 20px;
 }
 
 body {
   font-family: var(--font-sans);
   color: var(--color-foreground);
   background: var(--color-background);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ============================================================
+   GLASSMORPHISM UTILITIES
+   ============================================================ */
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-color: var(--glass-border);
+}
+
+/* ============================================================
+   SUGGESTION DECORATIONS (AI inline diff)
+   ============================================================ */
+
+.suggestion-addition {
+  background-color: var(--color-suggestion-add);
+  border-bottom: 2px solid var(--color-suggestion-add-border);
+  text-decoration: none;
+}
+
+.suggestion-deletion {
+  background-color: var(--color-suggestion-remove);
+  border-bottom: 2px solid var(--color-suggestion-remove-border);
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+/* ============================================================
+   AI COMMAND BAR
+   ============================================================ */
+
+.ai-command-bar {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 /* ============================================================
@@ -104,6 +204,52 @@ body {
   height: 0;
   pointer-events: none;
   opacity: 0.5;
+}
+
+/* ============================================================
+   COMMENTS
+   ============================================================ */
+
+.comment-highlight {
+  background-color: rgba(250, 204, 21, 0.3);
+  border-bottom: 2px solid rgba(250, 204, 21, 0.8);
+  cursor: pointer;
+}
+
+.comment-highlight-active {
+  background-color: rgba(250, 204, 21, 0.5);
+  border-bottom: 2px solid rgba(250, 204, 21, 1);
+}
+
+.comment-highlight-resolved {
+  background-color: rgba(156, 163, 175, 0.15);
+  border-bottom: 1px dashed rgba(156, 163, 175, 0.4);
+  cursor: pointer;
+}
+
+.comment-pending-highlight {
+  background-color: rgba(59, 130, 246, 0.2);
+  border-bottom: 2px solid rgba(59, 130, 246, 0.6);
+}
+
+/* ============================================================
+   SHIMMER (loading skeletons)
+   ============================================================ */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-muted) 25%,
+    var(--color-border) 50%,
+    var(--color-muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
 }
 
 /* Print */

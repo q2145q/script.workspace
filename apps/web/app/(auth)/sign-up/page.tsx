@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { signUp } from "@script/api/auth-client";
 
 export default function SignUpPage() {
@@ -33,9 +34,14 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card p-8 shadow-sm">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="glass-panel rounded-xl border border-border p-8 shadow-lg"
+    >
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-semibold">Create Account</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Create Account</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Start writing your screenplay
         </p>
@@ -43,16 +49,17 @@ export default function SignUpPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
             {error}
-          </div>
+          </motion.div>
         )}
 
         <div>
-          <label
-            htmlFor="name"
-            className="mb-1 block text-sm font-medium"
-          >
+          <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
             Name
           </label>
           <input
@@ -61,16 +68,13 @@ export default function SignUpPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
             placeholder="Your name"
           />
         </div>
 
         <div>
-          <label
-            htmlFor="email"
-            className="mb-1 block text-sm font-medium"
-          >
+          <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
             Email
           </label>
           <input
@@ -79,16 +83,13 @@ export default function SignUpPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
             placeholder="you@example.com"
           />
         </div>
 
         <div>
-          <label
-            htmlFor="password"
-            className="mb-1 block text-sm font-medium"
-          >
+          <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
             Password
           </label>
           <input
@@ -98,7 +99,7 @@ export default function SignUpPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
             placeholder="••••••••"
           />
         </div>
@@ -106,7 +107,7 @@ export default function SignUpPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          className="w-full rounded-lg bg-ai-accent px-3 py-2.5 text-sm font-medium text-ai-accent-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-50"
         >
           {loading ? "Creating account..." : "Create Account"}
         </button>
@@ -114,10 +115,10 @@ export default function SignUpPage() {
 
       <p className="mt-4 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/sign-in" className="text-foreground underline">
+        <Link href="/sign-in" className="text-ai-accent transition-colors hover:underline">
           Sign in
         </Link>
       </p>
-    </div>
+    </motion.div>
   );
 }

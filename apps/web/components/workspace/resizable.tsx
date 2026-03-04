@@ -16,8 +16,8 @@ export function ResizablePanel({
   return <Panel className={className} {...props} />;
 }
 
-export function ResizableHandle() {
+export function ResizableHandle({ className }: { className?: string }) {
   return (
-    <PanelResizeHandle className="relative w-px bg-border transition-colors hover:bg-foreground/20 data-[resize-handle-active]:bg-foreground/30" />
+    <PanelResizeHandle className={className ?? "relative w-px bg-border transition-colors hover:bg-foreground/20 data-[resize-handle-active]:bg-foreground/30"} />
   );
 }

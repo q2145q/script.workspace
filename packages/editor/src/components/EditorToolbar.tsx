@@ -40,11 +40,11 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
   };
 
   return (
-    <div className="flex items-center gap-2 border-b border-[var(--color-border,#e4e4e7)] px-4 py-2">
+    <div className="flex items-center gap-2 px-4 py-2">
       <select
         value={state.activeNode}
         onChange={(e) => handleBlockTypeChange(e.target.value)}
-        className="rounded border border-[var(--color-border,#e4e4e7)] bg-transparent px-2 py-1 text-xs font-medium"
+        className="rounded-md border border-border bg-muted/50 px-2 py-1 text-xs font-medium text-foreground transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-ring"
       >
         {SCREENPLAY_NODES.map((name) => (
           <option key={name} value={name}>
@@ -55,7 +55,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
       {state.canMark && (
         <>
-          <div className="mx-1 h-4 w-px bg-[var(--color-border,#e4e4e7)]" />
+          <div className="mx-1 h-4 w-px bg-border" />
           <ToolbarButton
             active={state.bold}
             onClick={() => editor.chain().focus().toggleBold().run()}
@@ -87,10 +87,10 @@ function ToolbarButton({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded px-2 py-1 text-xs font-medium transition-colors ${
+      className={`rounded-md px-2 py-1 text-xs font-medium transition-all duration-200 ${
         active
-          ? "bg-[var(--color-primary,#18181b)] text-[var(--color-primary-foreground,#fafafa)]"
-          : "text-[var(--color-muted-foreground,#71717a)] hover:bg-[var(--color-muted,#f4f4f5)] hover:text-[var(--color-foreground,#09090b)]"
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
       }`}
     >
       {children}

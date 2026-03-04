@@ -13,6 +13,7 @@ export interface ScriptEditorProps {
   onUpdate?: (content: JSONContent) => void;
   onEditorReady?: (editor: Editor) => void;
   editable?: boolean;
+  hideToolbar?: boolean;
   className?: string;
 }
 
@@ -21,6 +22,7 @@ export function ScriptEditor({
   onUpdate,
   onEditorReady,
   editable = true,
+  hideToolbar = false,
   className,
 }: ScriptEditorProps) {
   const editor = useEditor({
@@ -72,7 +74,11 @@ export function ScriptEditor({
 
   return (
     <div className={className}>
-      <EditorToolbar editor={editor} />
+      {!hideToolbar && (
+        <div className="sticky top-0 z-10 bg-[var(--color-background,#fff)]">
+          <EditorToolbar editor={editor} />
+        </div>
+      )}
       <EditorContent editor={editor} />
     </div>
   );

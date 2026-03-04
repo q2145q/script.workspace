@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -35,7 +36,7 @@ export function CreateProjectDialog() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        className="rounded-lg bg-ai-accent px-4 py-2 text-sm font-medium text-ai-accent-foreground transition-all duration-200 hover:opacity-90"
       >
         New Project
       </button>
@@ -43,78 +44,95 @@ export function CreateProjectDialog() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-lg">
-        <h2 className="mb-4 text-lg font-semibold">New Project</h2>
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setOpen(false)}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 8 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="glass-panel relative z-10 w-full max-w-md rounded-xl border border-border p-6 shadow-2xl"
+          >
+            <h2 className="mb-4 text-lg font-semibold text-foreground">New Project</h2>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            createMutation.mutate({
-              title,
-              description: description || undefined,
-              type: type as "FEATURE_FILM" | "TV_SERIES" | "SHORT_FILM" | "OTHER",
-            });
-          }}
-          className="space-y-4"
-        >
-          <div>
-            <label className="mb-1 block text-sm font-medium">Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="My Screenplay"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              Description (optional)
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="A brief description of your project"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium">Type</label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                createMutation.mutate({
+                  title,
+                  description: description || undefined,
+                  type: type as "FEATURE_FILM" | "TV_SERIES" | "SHORT_FILM" | "OTHER",
+                });
+              }}
+              className="space-y-4"
             >
-              <option value="FEATURE_FILM">Feature Film</option>
-              <option value="TV_SERIES">TV Series</option>
-              <option value="SHORT_FILM">Short Film</option>
-              <option value="OTHER">Other</option>
-            </select>
-          </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">Title</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                  className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="My Screenplay"
+                />
+              </div>
 
-          <div className="flex gap-2 justify-end">
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="rounded-md border border-border px-4 py-2 text-sm hover:bg-muted"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={createMutation.isPending}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              {createMutation.isPending ? "Creating..." : "Create"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">
+                  Description (optional)
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                  placeholder="A brief description of your project"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">Type</label>
+                <select
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="FEATURE_FILM">Feature Film</option>
+                  <option value="TV_SERIES">TV Series</option>
+                  <option value="SHORT_FILM">Short Film</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="rounded-lg border border-border px-4 py-2 text-sm text-foreground transition-colors duration-200 hover:bg-muted"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createMutation.isPending}
+                  className="rounded-lg bg-ai-accent px-4 py-2 text-sm font-medium text-ai-accent-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-50"
+                >
+                  {createMutation.isPending ? "Creating..." : "Create"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }

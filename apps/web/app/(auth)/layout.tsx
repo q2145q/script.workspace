@@ -4,8 +4,11 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
-      <div className="w-full max-w-md px-4">{children}</div>
+    <div className="relative flex min-h-screen items-center justify-center bg-background">
+      {/* Gradient mesh background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-ai-accent/5" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--color-ai-glow)_0%,_transparent_60%)]" />
+      <div className="relative z-10 w-full max-w-md px-4">{children}</div>
     </div>
   );
 }

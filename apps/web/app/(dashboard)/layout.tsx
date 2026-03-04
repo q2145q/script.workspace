@@ -3,6 +3,7 @@ import { auth } from "@script/api/auth";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default async function DashboardLayout({
   children,
@@ -19,15 +20,16 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
+      <header className="glass-panel sticky top-0 z-30 border-b border-border">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-          <Link href="/dashboard" className="text-lg font-semibold">
+          <Link href="/dashboard" className="text-lg font-semibold text-foreground">
             Script Workspace
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">
               {session.user.name}
             </span>
+            <ThemeToggle />
             <SignOutButton />
           </div>
         </div>
