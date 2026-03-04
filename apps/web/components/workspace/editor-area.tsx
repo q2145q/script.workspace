@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { ScriptEditor, useEditorAutosave, type JSONContent } from "@script/editor";
+import { ScriptEditor, useEditorAutosave, type JSONContent, type Editor } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -12,9 +12,10 @@ interface EditorAreaProps {
     title: string;
     content: unknown;
   };
+  onEditorReady?: (editor: Editor) => void;
 }
 
-export function EditorArea({ document }: EditorAreaProps) {
+export function EditorArea({ document, onEditorReady }: EditorAreaProps) {
   const trpc = useTRPC();
 
   const saveMutation = useMutation(
@@ -49,6 +50,7 @@ export function EditorArea({ document }: EditorAreaProps) {
         <ScriptEditor
           content={document.content as JSONContent}
           onUpdate={handleUpdate}
+          onEditorReady={onEditorReady}
         />
       </div>
     </div>

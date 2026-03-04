@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import type { Editor } from "@script/editor";
+import { SceneNavigator } from "./scene-navigator";
 
 interface WorkspaceSidebarProps {
   project: {
@@ -9,11 +11,13 @@ interface WorkspaceSidebarProps {
     documents: Array<{ id: string; title: string }>;
   };
   activeDocumentId: string;
+  editor: Editor | null;
 }
 
 export function WorkspaceSidebar({
   project,
   activeDocumentId,
+  editor,
 }: WorkspaceSidebarProps) {
   const navItems = [
     { label: "Script", href: `/project/${project.id}`, icon: "doc" },
@@ -57,6 +61,12 @@ export function WorkspaceSidebar({
           </div>
         ))}
       </nav>
+
+      {editor && (
+        <div className="border-t border-sidebar-border py-2">
+          <SceneNavigator editor={editor} />
+        </div>
+      )}
 
       {project.documents.length > 0 && (
         <div className="border-t border-sidebar-border p-2">

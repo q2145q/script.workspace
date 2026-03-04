@@ -34,3 +34,85 @@ body {
   color: var(--color-foreground);
   background: var(--color-background);
 }
+
+/* ============================================================
+   SCREENPLAY FORMAT
+   US screenplay standard: 8.5" x 11" (US Letter)
+   ============================================================ */
+
+.screenplay-editor {
+  font-family: var(--font-mono);
+  font-size: 12pt;
+  line-height: 1;
+  max-width: 8.5in;
+  margin: 0 auto;
+  color: var(--color-foreground);
+}
+
+.screenplay-scene-heading {
+  text-transform: uppercase;
+  font-weight: bold;
+  padding-left: 1.5in;
+  padding-right: 1in;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.screenplay-action {
+  padding-left: 1.5in;
+  padding-right: 1in;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.screenplay-character {
+  text-transform: uppercase;
+  padding-left: 3.7in;
+  margin-top: 0.5em;
+  margin-bottom: 0;
+}
+
+.screenplay-dialogue {
+  padding-left: 2.5in;
+  padding-right: 2.5in;
+  margin-top: 0;
+  margin-bottom: 0.5em;
+}
+
+.screenplay-parenthetical {
+  font-style: italic;
+  padding-left: 3.1in;
+  padding-right: 2.9in;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.screenplay-transition {
+  text-transform: uppercase;
+  text-align: right;
+  padding-right: 1in;
+  padding-left: 1.5in;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+/* Placeholder per-node */
+.screenplay-editor .is-empty::before {
+  color: var(--color-muted-foreground);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Print */
+@media print {
+  .screenplay-editor {
+    width: 8.5in;
+    min-height: 11in;
+    padding: 1in;
+    font-size: 12pt;
+    line-height: 1;
+  }
+}

@@ -1,52 +1,75 @@
 "use client";
 
-import type { Editor } from "@tiptap/react";
+import { type Editor, useEditorState } from "@tiptap/react";
+import {
+  SCREENPLAY_NODES,
+  type ScreenplayNodeType,
+} from "../types/screenplay";
+
+const NODE_LABELS: Record<ScreenplayNodeType, string> = {
+  sceneHeading: "Scene Heading",
+  action: "Action",
+  character: "Character",
+  dialogue: "Dialogue",
+  parenthetical: "Parenthetical",
+  transition: "Transition",
+};
 
 interface EditorToolbarProps {
   editor: Editor;
 }
 
 export function EditorToolbar({ editor }: EditorToolbarProps) {
+  const state = useEditorState({
+    editor,
+    selector: (ctx) => {
+      const active = SCREENPLAY_NODES.find((name) =>
+        ctx.editor.isActive(name)
+      );
+      return {
+        activeNode: (active || "action") as ScreenplayNodeType,
+        bold: ctx.editor.isActive("bold"),
+        italic: ctx.editor.isActive("italic"),
+        canMark: active === "action" || active === "dialogue",
+      };
+    },
+  });
+
+  const handleBlockTypeChange = (type: string) => {
+    editor.chain().focus().setNode(type).run();
+  };
+
   return (
-    <div className="flex items-center gap-1 border-b border-[var(--color-border,#e4e4e7)] px-4 py-2">
-      <ToolbarButton
-        active={editor.isActive("bold")}
-        onClick={() => editor.chain().focus().toggleBold().run()}
+    <div className="flex items-center gap-2 border-b border-[var(--color-border,#e4e4e7)] px-4 py-2">
+      <select
+        value={state.activeNode}
+        onChange={(e) => handleBlockTypeChange(e.target.value)}
+        className="rounded border border-[var(--color-border,#e4e4e7)] bg-transparent px-2 py-1 text-xs font-medium"
       >
-        B
-      </ToolbarButton>
-      <ToolbarButton
-        active={editor.isActive("italic")}
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-      >
-        I
-      </ToolbarButton>
-      <div className="mx-2 h-4 w-px bg-[var(--color-border,#e4e4e7)]" />
-      <ToolbarButton
-        active={editor.isActive("heading", { level: 1 })}
-        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-      >
-        H1
-      </ToolbarButton>
-      <ToolbarButton
-        active={editor.isActive("heading", { level: 2 })}
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-      >
-        H2
-      </ToolbarButton>
-      <div className="mx-2 h-4 w-px bg-[var(--color-border,#e4e4e7)]" />
-      <ToolbarButton
-        active={editor.isActive("bulletList")}
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-      >
-        List
-      </ToolbarButton>
-      <ToolbarButton
-        active={editor.isActive("blockquote")}
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
-      >
-        Quote
-      </ToolbarButton>
+        {SCREENPLAY_NODES.map((name) => (
+          <option key={name} value={name}>
+            {NODE_LABELS[name]}
+          </option>
+        ))}
+      </select>
+
+      {state.canMark && (
+        <>
+          <div className="mx-1 h-4 w-px bg-[var(--color-border,#e4e4e7)]" />
+          <ToolbarButton
+            active={state.bold}
+            onClick={() => editor.chain().focus().toggleBold().run()}
+          >
+            B
+          </ToolbarButton>
+          <ToolbarButton
+            active={state.italic}
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+          >
+            I
+          </ToolbarButton>
+        </>
+      )}
     </div>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import type { Editor } from "@script/editor";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -23,6 +25,8 @@ interface WorkspaceShellProps {
 }
 
 export function WorkspaceShell({ project, document }: WorkspaceShellProps) {
+  const [editor, setEditor] = useState<Editor | null>(null);
+
   return (
     <div className="h-screen overflow-hidden">
       <ResizablePanelGroup direction="horizontal" className="h-full">
@@ -32,13 +36,17 @@ export function WorkspaceShell({ project, document }: WorkspaceShellProps) {
           maxSize={25}
           className="bg-sidebar"
         >
-          <WorkspaceSidebar project={project} activeDocumentId={document.id} />
+          <WorkspaceSidebar
+            project={project}
+            activeDocumentId={document.id}
+            editor={editor}
+          />
         </ResizablePanel>
 
         <ResizableHandle />
 
         <ResizablePanel defaultSize={60} minSize={40}>
-          <EditorArea document={document} />
+          <EditorArea document={document} onEditorReady={setEditor} />
         </ResizablePanel>
 
         <ResizableHandle />
