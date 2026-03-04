@@ -32,6 +32,7 @@ export default async function ProjectSettingsPage({
             description: project.description,
             type: project.type,
             language: (project as Record<string, unknown>).language as string ?? "en",
+            status: (project as Record<string, unknown>).status as string ?? "DRAFT",
           }}
           projectId={projectId}
         />

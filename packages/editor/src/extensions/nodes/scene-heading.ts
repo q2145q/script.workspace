@@ -41,18 +41,16 @@ export const SceneHeading = Node.create({
 
   addInputRules() {
     return [
-      textblockTypeInputRule({
-        find: /^(INT\.\s)$/,
-        type: this.type,
-      }),
-      textblockTypeInputRule({
-        find: /^(EXT\.\s)$/,
-        type: this.type,
-      }),
-      textblockTypeInputRule({
-        find: /^(INT\.\/EXT\.\s)$/,
-        type: this.type,
-      }),
+      // English
+      textblockTypeInputRule({ find: /^(INT\.\s)$/, type: this.type }),
+      textblockTypeInputRule({ find: /^(EXT\.\s)$/, type: this.type }),
+      textblockTypeInputRule({ find: /^(INT\.\/EXT\.\s)$/, type: this.type }),
+      textblockTypeInputRule({ find: /^(EXT\.\/INT\.\s)$/, type: this.type }),
+      // Russian
+      textblockTypeInputRule({ find: /^(ИНТ\.\s)$/, type: this.type }),
+      textblockTypeInputRule({ find: /^(НАТ\.\s)$/, type: this.type }),
+      textblockTypeInputRule({ find: /^(ИНТ\.\/НАТ\.\s)$/, type: this.type }),
+      textblockTypeInputRule({ find: /^(НАТ\.\/ИНТ\.\s)$/, type: this.type }),
     ];
   },
 });

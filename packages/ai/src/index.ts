@@ -18,3 +18,10 @@ export {
   aiFormatResponseSchema,
   formatBlockSchema,
 } from "./types";
+
+// Chat + Context (Phase 7)
+export { buildChatContext, CHAT_SYSTEM_PROMPT } from "./context";
+export type { ChatContextInput, ChatContext, ContextLayer } from "./context";
+export { streamChatOpenAI, streamChatAnthropic } from "./chat-stream";
+export type { ChatStreamInput, StreamCallbacks } from "./chat-stream";
+export { extractTextFromTipTapJson } from "./utils";

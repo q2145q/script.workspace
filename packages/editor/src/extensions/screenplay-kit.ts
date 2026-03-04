@@ -12,6 +12,7 @@ import { ParagraphGuard } from "./paragraph-guard";
 import { CommentMark } from "./comment-mark";
 import { SelectionHighlight } from "./selection-highlight";
 import { SuggestionDecoration } from "./suggestion-decoration";
+import { AutocompleteExtension } from "./autocomplete/autocomplete-extension";
 
 export const ScreenplayKit = Extension.create({
   name: "screenplayKit",
@@ -29,6 +30,7 @@ export const ScreenplayKit = Extension.create({
       CommentMark,
       SelectionHighlight,
       SuggestionDecoration,
+      AutocompleteExtension,
     ];
   },
 });

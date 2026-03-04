@@ -36,11 +36,37 @@ export const LANGUAGES = [
   { code: "ko", label: "한국어" },
 ] as const;
 
+export const ProjectStatusEnum = z.enum([
+  "DRAFT",
+  "IN_PROGRESS",
+  "UNDER_REVIEW",
+  "FINAL",
+  "ARCHIVED",
+]);
+export type ProjectStatus = z.infer<typeof ProjectStatusEnum>;
+
+export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
+  DRAFT: "Draft",
+  IN_PROGRESS: "In Progress",
+  UNDER_REVIEW: "Under Review",
+  FINAL: "Final",
+  ARCHIVED: "Archived",
+};
+
+export const PROJECT_STATUS_COLORS: Record<ProjectStatus, string> = {
+  DRAFT: "bg-zinc-500/20 text-zinc-400",
+  IN_PROGRESS: "bg-blue-500/20 text-blue-400",
+  UNDER_REVIEW: "bg-amber-500/20 text-amber-400",
+  FINAL: "bg-green-500/20 text-green-400",
+  ARCHIVED: "bg-gray-500/20 text-gray-400",
+};
+
 export const updateProjectSchema = z.object({
   id: z.string(),
   title: z.string().min(1).max(255).optional(),
   description: z.string().max(2000).optional(),
   type: ProjectTypeEnum.optional(),
   language: z.string().min(2).max(5).optional(),
+  status: ProjectStatusEnum.optional(),
 });
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;

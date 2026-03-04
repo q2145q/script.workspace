@@ -29,9 +29,25 @@ model User {
   commentThreads CommentThread[] @relation("ThreadCreator")
   commentMessages CommentMessage[] @relation("MessageAuthor")
   suggestions    Suggestion[]    @relation("SuggestionCreator")
+  profile        UserProfile?
 
   @@unique([email])
   @@map("user")
+}
+
+model UserProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  lastName        String   @default("")
+  position        String   @default("Writer")
+  company         String?
+  defaultLanguage String   @default("en")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profile")
 }
 
 model Session {
@@ -97,14 +113,23 @@ enum ProjectType {
   OTHER
 }
 
+enum ProjectStatus {
+  DRAFT
+  IN_PROGRESS
+  UNDER_REVIEW
+  FINAL
+  ARCHIVED
+}
+
 model Project {
   id          String      @id @default(cuid())
   title       String
   description String?
-  type        ProjectType @default(FEATURE_FILM)
-  language    String      @default("en")
+  type        ProjectType   @default(FEATURE_FILM)
+  status      ProjectStatus @default(DRAFT)
+  language    String        @default("en")
   ownerId     String
-  isPrivate   Boolean     @default(true)
+  isPrivate   Boolean       @default(true)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -112,6 +137,14 @@ model Project {
   members     ProjectMember[]
   documents   Document[]
   aiProviders AIProvider[]
+  chatMessages ChatMessage[]
+  bible        ProjectBible?
+  contextPins  ContextPin[]
+  ragChunks    RAGChunk[]
+  episodes     Episode[]
+  characters   Character[]
+  locations    Location[]
+  terms        Term[]
 
   @@index([ownerId])
   @@map("project")
@@ -143,6 +176,8 @@ model Document {
   project        Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
   commentThreads CommentThread[]
   suggestions    Suggestion[]
+  drafts         Draft[]
+  episode        Episode?
 
   @@index([projectId])
   @@map("document")
@@ -228,4 +263,155 @@ model Suggestion {
   @@index([documentId])
   @@index([documentId, status])
   @@map("suggestion")
+}
+
+// ============================================================
+// CHAT + BIBLE + CONTEXT TABLES
+// ============================================================
+
+enum ChatMessageRole {
+  USER
+  ASSISTANT
+}
+
+enum ContextPinType {
+  TEXT
+  COMMENT
+  CUSTOM
+}
+
+model ChatMessage {
+  id        String          @id @default(cuid())
+  projectId String
+  userId    String
+  role      ChatMessageRole
+  content   String          @db.Text
+  createdAt DateTime        @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
+  @@map("chat_message")
+}
+
+model ProjectBible {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  content   Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_bible")
+}
+
+model ContextPin {
+  id        String         @id @default(cuid())
+  projectId String
+  userId    String
+  type      ContextPinType @default(TEXT)
+  content   String         @db.Text
+  label     String?
+  sortOrder Int            @default(0)
+  createdAt DateTime       @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, sortOrder])
+  @@map("context_pin")
+}
+
+model RAGChunk {
+  id         String   @id @default(cuid())
+  projectId  String
+  sourceType String
+  sourceId   String
+  content    String   @db.Text
+  embedding  Bytes?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("rag_chunk")
+}
+
+// ============================================================
+// DRAFTS + EPISODES + ENTITIES (Phase 8)
+// ============================================================
+
+model Draft {
+  id         String   @id @default(cuid())
+  documentId String
+  name       String?
+  content    Json
+  number     Int
+  createdAt  DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId, number])
+  @@map("draft")
+}
+
+model Episode {
+  id         String   @id @default(cuid())
+  projectId  String
+  title      String
+  number     Int
+  documentId String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, number])
+  @@map("episode")
+}
+
+model Character {
+  id          String   @id @default(cuid())
+  projectId   String
+  name        String
+  description String?  @db.Text
+  traits      String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("character")
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  projectId   String
+  name        String
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("location")
+}
+
+model Term {
+  id         String   @id @default(cuid())
+  projectId  String
+  term       String
+  definition String?  @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("term")
 }

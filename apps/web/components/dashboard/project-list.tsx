@@ -5,12 +5,14 @@ import { motion } from "framer-motion";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { PROJECT_STATUS_LABELS, PROJECT_STATUS_COLORS, type ProjectStatus } from "@script/types";
 
 interface Project {
   id: string;
   title: string;
   description: string | null;
   type: string;
+  status: string;
   updatedAt: Date;
   _count: { documents: number };
 }
@@ -71,9 +73,14 @@ export function ProjectList({ projects }: { projects: Project[] }) {
 
           <div className="mb-3 flex items-start justify-between">
             <h3 className="font-medium text-foreground">{project.title}</h3>
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-              {typeLabels[project.type] ?? project.type}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${PROJECT_STATUS_COLORS[project.status as ProjectStatus] ?? "bg-zinc-500/20 text-zinc-400"}`}>
+                {PROJECT_STATUS_LABELS[project.status as ProjectStatus] ?? project.status}
+              </span>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                {typeLabels[project.type] ?? project.type}
+              </span>
+            </div>
           </div>
 
           {project.description && (

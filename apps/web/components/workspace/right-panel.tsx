@@ -4,22 +4,23 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Editor } from "@script/editor";
 import { CommentsPanel } from "./comments-panel";
-import { SuggestionPreview } from "./suggestion-preview";
-import { SuggestionHistory } from "./suggestion-history";
+import { ChatPanel } from "./chat-panel";
+import { ContextPinsPanel } from "./context-pins-panel";
 
-type Tab = "comments" | "ai" | "context";
+type Tab = "comments" | "chat" | "context";
 
 interface RightPanelProps {
   editor: Editor | null;
   documentId: string;
+  projectId: string;
 }
 
-export function RightPanel({ editor, documentId }: RightPanelProps) {
+export function RightPanel({ editor, documentId, projectId }: RightPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab>("comments");
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "comments", label: "Comments" },
-    { id: "ai", label: "AI" },
+    { id: "chat", label: "Chat" },
     { id: "context", label: "Context" },
   ];
 
@@ -61,28 +62,15 @@ export function RightPanel({ editor, documentId }: RightPanelProps) {
             {activeTab === "comments" && (
               <CommentsPanel editor={editor} documentId={documentId} />
             )}
-            {activeTab === "ai" && (
-              <div className="flex h-full flex-col">
-                <div className="border-b border-border px-3 py-2">
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                    Suggestions
-                  </span>
-                </div>
-                <div className="flex-1 overflow-y-auto">
-                  <SuggestionPreview editor={editor} documentId={documentId} />
-                  <SuggestionHistory documentId={documentId} />
-                  <div className="p-3 text-center text-[10px] text-muted-foreground">
-                    Select text and press <kbd className="rounded border border-border px-1 py-0.5">⌘K</kbd> to rewrite with AI
-                  </div>
-                </div>
-              </div>
+            {activeTab === "chat" && (
+              <ChatPanel
+                editor={editor}
+                documentId={documentId}
+                projectId={projectId}
+              />
             )}
             {activeTab === "context" && (
-              <div className="flex h-full items-center justify-center p-4">
-                <p className="text-sm text-muted-foreground">
-                  Context Pins will be available in Phase 5
-                </p>
-              </div>
+              <ContextPinsPanel projectId={projectId} />
             )}
           </motion.div>
         </AnimatePresence>

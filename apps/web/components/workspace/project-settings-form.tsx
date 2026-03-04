@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { LANGUAGES, PROVIDER_MODELS } from "@script/types";
+import { LANGUAGES, PROVIDER_MODELS, PROJECT_STATUS_LABELS, type ProjectStatus } from "@script/types";
 
 interface ProjectSettingsFormProps {
   project: {
@@ -16,6 +16,7 @@ interface ProjectSettingsFormProps {
     description: string | null;
     type: string;
     language: string;
+    status: string;
   };
   projectId: string;
 }
@@ -37,6 +38,7 @@ export function ProjectSettingsForm({ project, projectId }: ProjectSettingsFormP
   const [description, setDescription] = useState(project.description ?? "");
   const [type, setType] = useState(project.type);
   const [language, setLanguage] = useState(project.language);
+  const [status, setStatus] = useState(project.status);
 
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -58,6 +60,7 @@ export function ProjectSettingsForm({ project, projectId }: ProjectSettingsFormP
       description: description.trim() || undefined,
       type: type as "FEATURE_FILM" | "TV_SERIES" | "SHORT_FILM" | "OTHER",
       language,
+      status: status as ProjectStatus,
     });
   };
 
@@ -103,7 +106,7 @@ export function ProjectSettingsForm({ project, projectId }: ProjectSettingsFormP
               placeholder="Optional description..."
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <label className={labelClass}>Type</label>
               <select
@@ -113,6 +116,18 @@ export function ProjectSettingsForm({ project, projectId }: ProjectSettingsFormP
               >
                 {PROJECT_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelClass}>Status</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className={inputClass}
+              >
+                {Object.entries(PROJECT_STATUS_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
                 ))}
               </select>
             </div>

@@ -1,0 +1,153 @@
+import { TRPCError } from "@trpc/server";
+import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { prisma } from "@script/db";
+import {
+  createEpisodeSchema,
+  updateEpisodeSchema,
+  deleteEpisodeSchema,
+  listEpisodesSchema,
+  reorderEpisodesSchema,
+} from "@script/types";
+
+function assertProjectAccess(projectId: string, userId: string) {
+  return prisma.project.findFirst({
+    where: {
+      id: projectId,
+      OR: [
+        { ownerId: userId },
+        { members: { some: { userId } } },
+      ],
+    },
+  }).then((p) => {
+    if (!p) throw new TRPCError({ code: "NOT_FOUND" });
+    return p;
+  });
+}
+
+function assertProjectEditAccess(projectId: string, userId: string) {
+  return prisma.project.findFirst({
+    where: {
+      id: projectId,
+      OR: [
+        { ownerId: userId },
+        {
+          members: {
+            some: { userId, role: { in: ["OWNER", "EDITOR"] } },
+          },
+        },
+      ],
+    },
+  }).then((p) => {
+    if (!p) throw new TRPCError({ code: "FORBIDDEN" });
+    return p;
+  });
+}
+
+export const episodeRouter = createTRPCRouter({
+  list: protectedProcedure
+    .input(listEpisodesSchema)
+    .query(async ({ ctx, input }) => {
+      await assertProjectAccess(input.projectId, ctx.user.id);
+      return prisma.episode.findMany({
+        where: { projectId: input.projectId },
+        orderBy: { number: "asc" },
+        include: {
+          document: { select: { id: true, title: true } },
+        },
+      });
+    }),
+
+  create: protectedProcedure
+    .input(createEpisodeSchema)
+    .mutation(async ({ ctx, input }) => {
+      await assertProjectEditAccess(input.projectId, ctx.user.id);
+
+      // Auto-number if not provided
+      let number = input.number;
+      if (!number) {
+        const lastEp = await prisma.episode.findFirst({
+          where: { projectId: input.projectId },
+          orderBy: { number: "desc" },
+          select: { number: true },
+        });
+        number = (lastEp?.number ?? 0) + 1;
+      }
+
+      // Create document + episode in transaction
+      return prisma.$transaction(async (tx) => {
+        const doc = await tx.document.create({
+          data: {
+            projectId: input.projectId,
+            title: input.title,
+            content: {
+              type: "doc",
+              content: [{ type: "paragraph" }],
+            },
+          },
+        });
+
+        return tx.episode.create({
+          data: {
+            projectId: input.projectId,
+            title: input.title,
+            number,
+            documentId: doc.id,
+          },
+          include: {
+            document: { select: { id: true, title: true } },
+          },
+        });
+      });
+    }),
+
+  update: protectedProcedure
+    .input(updateEpisodeSchema)
+    .mutation(async ({ ctx, input }) => {
+      const episode = await prisma.episode.findFirst({
+        where: { id: input.id },
+        select: { projectId: true },
+      });
+      if (!episode) throw new TRPCError({ code: "NOT_FOUND" });
+
+      await assertProjectEditAccess(episode.projectId, ctx.user.id);
+
+      const { id, ...data } = input;
+      return prisma.episode.update({ where: { id }, data });
+    }),
+
+  delete: protectedProcedure
+    .input(deleteEpisodeSchema)
+    .mutation(async ({ ctx, input }) => {
+      const episode = await prisma.episode.findFirst({
+        where: { id: input.id },
+        select: { projectId: true, documentId: true },
+      });
+      if (!episode) throw new TRPCError({ code: "NOT_FOUND" });
+
+      await assertProjectEditAccess(episode.projectId, ctx.user.id);
+
+      // Delete episode and its document
+      await prisma.$transaction([
+        prisma.episode.delete({ where: { id: input.id } }),
+        prisma.document.delete({ where: { id: episode.documentId } }),
+      ]);
+
+      return { success: true };
+    }),
+
+  reorder: protectedProcedure
+    .input(reorderEpisodesSchema)
+    .mutation(async ({ ctx, input }) => {
+      await assertProjectEditAccess(input.projectId, ctx.user.id);
+
+      const updates = input.episodeIds.map((id, index) =>
+        prisma.episode.update({
+          where: { id },
+          data: { number: index + 1 },
+        })
+      );
+
+      await prisma.$transaction(updates);
+      return { success: true };
+    }),
+});

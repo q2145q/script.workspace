@@ -34,6 +34,10 @@ export const projectRouter = createTRPCRouter({
         include: {
           documents: { orderBy: { updatedAt: "desc" } },
           members: { include: { user: true } },
+          episodes: {
+            orderBy: { number: "asc" },
+            include: { document: { select: { id: true, title: true } } },
+          },
         },
       });
       if (!project) {

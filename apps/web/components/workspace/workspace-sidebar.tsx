@@ -2,28 +2,44 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { FileText, LayoutList, Users, MapPin, StickyNote, History, Settings } from "lucide-react";
+import { FileText, LayoutList, Users, MapPin, BookOpen, History, Settings } from "lucide-react";
 import type { Editor } from "@script/editor";
 import { SceneNavigator } from "./scene-navigator";
+import { EpisodeNavigator } from "./episode-navigator";
 import { ThemeToggle } from "@/components/theme-toggle";
+import type { WorkspaceMode } from "./workspace-shell";
 
 interface WorkspaceSidebarProps {
   project: {
     id: string;
     title: string;
+    type: string;
     documents: Array<{ id: string; title: string }>;
+    episodes?: Array<{
+      id: string;
+      title: string;
+      number: number;
+      document: { id: string; title: string };
+    }>;
   };
   activeDocumentId: string;
   editor: Editor | null;
+  workspaceMode: WorkspaceMode;
+  onModeChange: (mode: WorkspaceMode) => void;
 }
 
-const navItemsConfig = [
-  { label: "Script", key: "script", icon: FileText, disabled: false },
-  { label: "Outline", key: "outline", icon: LayoutList, disabled: true },
-  { label: "Characters", key: "chars", icon: Users, disabled: true },
-  { label: "Locations", key: "locs", icon: MapPin, disabled: true },
-  { label: "Notes", key: "notes", icon: StickyNote, disabled: true },
-  { label: "Versions", key: "vers", icon: History, disabled: true },
+const navItemsConfig: Array<{
+  label: string;
+  key: string;
+  icon: typeof FileText;
+  mode: WorkspaceMode;
+}> = [
+  { label: "Script", key: "script", icon: FileText, mode: "script" },
+  { label: "Bible", key: "bible", icon: BookOpen, mode: "bible" },
+  { label: "Outline", key: "outline", icon: LayoutList, mode: "outline" },
+  { label: "Characters", key: "chars", icon: Users, mode: "characters" },
+  { label: "Locations", key: "locs", icon: MapPin, mode: "locations" },
+  { label: "Versions", key: "vers", icon: History, mode: "versions" },
 ];
 
 const container = {
@@ -43,7 +59,11 @@ export function WorkspaceSidebar({
   project,
   activeDocumentId,
   editor,
+  workspaceMode,
+  onModeChange,
 }: WorkspaceSidebarProps) {
+  const isSeries = project.type === "TV_SERIES";
+
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-sidebar-border px-4 py-3">
@@ -68,53 +88,67 @@ export function WorkspaceSidebar({
         >
           {navItemsConfig.map((navItem) => (
             <motion.div key={navItem.key} variants={itemVariant}>
-              {navItem.disabled ? (
-                <span className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground/40 cursor-not-allowed">
-                  <navItem.icon className="h-3.5 w-3.5" />
-                  {navItem.label}
-                  <span className="ml-auto rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-medium">
-                    Soon
-                  </span>
-                </span>
-              ) : (
-                <Link
-                  href={`/project/${project.id}`}
-                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-sidebar-foreground transition-all duration-200 hover:bg-accent"
-                >
-                  <navItem.icon className="h-3.5 w-3.5" />
-                  {navItem.label}
-                </Link>
-              )}
+              <button
+                onClick={() => onModeChange(navItem.mode)}
+                className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-all duration-200 ${
+                  workspaceMode === navItem.mode
+                    ? "bg-accent text-accent-foreground"
+                    : "text-sidebar-foreground hover:bg-accent"
+                }`}
+              >
+                <navItem.icon className="h-3.5 w-3.5" />
+                {navItem.label}
+              </button>
             </motion.div>
           ))}
         </motion.nav>
 
-        {editor && (
+        {editor && workspaceMode === "script" && (
           <div className="border-t border-sidebar-border py-2">
             <SceneNavigator editor={editor} />
           </div>
         )}
 
-        {project.documents.length > 0 && (
-          <div className="border-t border-sidebar-border p-2">
-            <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              Documents
-            </p>
-            {project.documents.map((doc) => (
-              <Link
-                key={doc.id}
-                href={`/project/${project.id}/script/${doc.id}`}
-                className={`flex items-center rounded-md px-3 py-1.5 text-sm transition-all duration-200 ${
-                  doc.id === activeDocumentId
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                }`}
-              >
-                {doc.title}
-              </Link>
-            ))}
-          </div>
+        {isSeries && (
+          <EpisodeNavigator
+            projectId={project.id}
+            activeDocumentId={activeDocumentId}
+          />
         )}
+
+        {(() => {
+          // For series: show docs not linked to any episode
+          // For non-series: show all docs
+          const episodeDocIds = new Set(
+            (project.episodes ?? []).map((ep) => ep.document.id)
+          );
+          const docsToShow = isSeries
+            ? project.documents.filter((d) => !episodeDocIds.has(d.id))
+            : project.documents;
+
+          if (docsToShow.length === 0) return null;
+
+          return (
+            <div className="border-t border-sidebar-border p-2">
+              <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                Documents
+              </p>
+              {docsToShow.map((doc) => (
+                <Link
+                  key={doc.id}
+                  href={`/project/${project.id}/script/${doc.id}`}
+                  className={`flex items-center rounded-md px-3 py-1.5 text-sm transition-all duration-200 ${
+                    doc.id === activeDocumentId
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  }`}
+                >
+                  {doc.title}
+                </Link>
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Fixed bottom section — always visible */}

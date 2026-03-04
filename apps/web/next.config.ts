@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     "@script/editor",
     "@script/ai",
   ],
+  serverExternalPackages: ["pdfkit"],
 };
 
 export default nextConfig;

@@ -26,9 +26,12 @@ export default async function DashboardLayout({
             Script Workspace
           </Link>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">
+            <Link
+              href="/profile"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
               {session.user.name}
-            </span>
+            </Link>
             <ThemeToggle />
             <SignOutButton />
           </div>

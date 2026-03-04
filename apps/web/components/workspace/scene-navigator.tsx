@@ -38,7 +38,15 @@ export function SceneNavigator({ editor }: SceneNavigatorProps) {
   }
 
   const handleScrollToScene = (pos: number) => {
-    editor.chain().focus().setTextSelection(pos + 1).scrollIntoView().run();
+    editor.chain().focus().setTextSelection(pos + 1).run();
+    requestAnimationFrame(() => {
+      const domInfo = editor.view.domAtPos(pos + 1);
+      const el =
+        domInfo.node instanceof HTMLElement
+          ? domInfo.node
+          : domInfo.node.parentElement;
+      el?.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
   };
 
   return (

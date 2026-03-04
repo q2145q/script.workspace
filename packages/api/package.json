@@ -17,10 +17,13 @@
     "@script/types": "workspace:*",
     "@trpc/server": "^11.0.0",
     "better-auth": "^1.4.0",
+    "docx": "^9.6.0",
+    "pdfkit": "^0.17.2",
     "superjson": "^2.2.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@types/pdfkit": "^0.17.5",
     "typescript": "^5.7.0"
   }
 }

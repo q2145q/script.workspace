@@ -7,6 +7,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { type JSONContent, type Editor } from "@tiptap/core";
 import { ScreenplayKit } from "../extensions/screenplay-kit";
 import { EditorToolbar } from "./EditorToolbar";
+import { AutocompleteDropdown } from "./AutocompleteDropdown";
 
 export interface ScriptEditorProps {
   content?: JSONContent;
@@ -61,7 +62,7 @@ export function ScriptEditor({
     editorProps: {
       attributes: {
         class:
-          "screenplay-editor focus:outline-none min-h-[calc(100vh-200px)] px-16 py-8",
+          "screenplay-editor focus:outline-none min-h-[calc(100vh-200px)] px-16 pt-8 pb-[50vh]",
       },
     },
   });
@@ -80,6 +81,7 @@ export function ScriptEditor({
         </div>
       )}
       <EditorContent editor={editor} />
+      <AutocompleteDropdown editor={editor} />
     </div>
   );
 }
