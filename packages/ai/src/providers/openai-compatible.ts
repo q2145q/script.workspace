@@ -1,0 +1,61 @@
+import OpenAI from "openai";
+import type { AIProvider, RewriteInput, FormatInput, ProviderConfig, AIRewriteResponse, AIFormatResponse, ProviderId } from "../types";
+import { aiRewriteResponseSchema, aiFormatResponseSchema } from "../types";
+import { buildRewritePrompt, buildFormatPrompt } from "./base";
+import { composePrompt } from "../prompts/compose";
+
+export class OpenAICompatibleProvider implements AIProvider {
+  constructor(
+    public readonly id: ProviderId,
+    private readonly baseURL: string,
+    private readonly defaultModel: string,
+  ) {}
+
+  async rewrite(input: RewriteInput, config: ProviderConfig): Promise<AIRewriteResponse> {
+    const client = new OpenAI({ apiKey: config.apiKey, baseURL: this.baseURL });
+    const systemPrompt = composePrompt(this.id, "rewrite", { USER_LANGUAGE: input.language || "en" });
+    const modelId = config.model || this.defaultModel;
+    const isReasoner = modelId.includes("reasoner");
+
+    const response = await client.chat.completions.create({
+      model: modelId,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: buildRewritePrompt(input) },
+      ],
+      ...(isReasoner ? {} : { temperature: 0.7 }),
+      max_tokens: 4096,
+      response_format: { type: "json_object" },
+    });
+
+    const text = response.choices[0]?.message?.content;
+    if (!text) throw new Error(`Empty response from ${this.id}`);
+
+    const parsed = JSON.parse(text);
+    return aiRewriteResponseSchema.parse(parsed);
+  }
+
+  async format(input: FormatInput, config: ProviderConfig): Promise<AIFormatResponse> {
+    const client = new OpenAI({ apiKey: config.apiKey, baseURL: this.baseURL });
+    const systemPrompt = composePrompt(this.id, "format", { USER_LANGUAGE: input.language || "en" });
+    const modelId = config.model || this.defaultModel;
+    const isReasoner = modelId.includes("reasoner");
+
+    const response = await client.chat.completions.create({
+      model: modelId,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: buildFormatPrompt(input) },
+      ],
+      ...(isReasoner ? {} : { temperature: 0.3 }),
+      max_tokens: 4096,
+      response_format: { type: "json_object" },
+    });
+
+    const text = response.choices[0]?.message?.content;
+    if (!text) throw new Error(`Empty response from ${this.id}`);
+
+    const parsed = JSON.parse(text);
+    return aiFormatResponseSchema.parse(parsed);
+  }
+}

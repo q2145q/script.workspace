@@ -2,11 +2,10 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Square, Trash2, Sparkles, Settings, FileDown, Loader2, Check } from "lucide-react";
-import Link from "next/link";
+import { Send, Square, Trash2, Sparkles, FileDown, Loader2, Check, ChevronDown } from "lucide-react";
 import { Fragment, type Editor } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useChatStream, type ChatMessage } from "@/hooks/use-chat-stream";
 import { SuggestionPreview } from "./suggestion-preview";
@@ -24,7 +23,6 @@ function extractEditorContext(editor: Editor | null) {
   const { doc, selection } = editor.state;
   const cursorPos = selection.from;
 
-  // Find current scene boundaries
   let sceneStart = 0;
   let sceneEnd = doc.content.size;
   let prevSceneStart = 0;
@@ -68,7 +66,6 @@ function extractEditorContext(editor: Editor | null) {
 
 /**
  * Insert text into the editor by formatting it into screenplay blocks.
- * Uses the AI format endpoint for proper screenplay parsing.
  */
 function InsertButton({
   content,
@@ -85,7 +82,6 @@ function InsertButton({
   const formatMutation = useMutation(
     trpc.ai.format.mutationOptions({
       onSuccess: (result) => {
-        // Build screenplay nodes from format result
         const nodes = result.blocks
           .map((block) => {
             const nodeType = editor.schema.nodes[block.type];
@@ -100,7 +96,6 @@ function InsertButton({
         if (nodes.length > 0) {
           const fragment = Fragment.from(nodes);
           const { tr } = editor.state;
-          // Insert at the end of the current block (after cursor)
           const $pos = editor.state.doc.resolve(editor.state.selection.to);
           const insertPos = $pos.after($pos.depth);
           tr.insert(insertPos, fragment);
@@ -118,7 +113,6 @@ function InsertButton({
   );
 
   const handleInsert = () => {
-    // Get context around cursor
     const { selection, doc } = editor.state;
     const contextBefore = doc.textBetween(
       Math.max(0, selection.from - 500),
@@ -225,6 +219,86 @@ function ChatBubble({
   );
 }
 
+function ModelSelector({ projectId }: { projectId: string }) {
+  const [open, setOpen] = useState(false);
+  const trpc = useTRPC();
+
+  const { data: availableModels } = useQuery(
+    trpc.provider.availableModels.queryOptions()
+  );
+
+  const { data: projectData } = useQuery(
+    trpc.project.getById.queryOptions({ id: projectId })
+  );
+
+  const project = projectData as { preferredProvider?: string | null; preferredModel?: string | null } | undefined;
+
+  // Get a display label for the current model
+  let currentLabel = "Auto";
+  if (project?.preferredModel && availableModels) {
+    for (const p of availableModels) {
+      const found = p.models.find((m) => m.id === project.preferredModel);
+      if (found) {
+        currentLabel = found.label;
+        break;
+      }
+    }
+  }
+
+  if (!availableModels || availableModels.length === 0) return null;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      >
+        {currentLabel}
+        <ChevronDown className="h-3 w-3" />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="absolute right-0 top-full z-50 mt-1 max-h-64 w-56 overflow-y-auto rounded-lg border border-border bg-background p-1 shadow-xl"
+          >
+            {availableModels.map((p) => (
+              <div key={p.provider}>
+                <div className="px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {p.provider}
+                </div>
+                {p.models.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => {
+                      // This is a session-level override — stored in the hook
+                      // We dispatch a custom event the hook can listen to
+                      window.dispatchEvent(
+                        new CustomEvent("chat-model-override", {
+                          detail: { provider: p.provider, model: m.id },
+                        })
+                      );
+                      setOpen(false);
+                    }}
+                    className={`w-full rounded px-2 py-1.5 text-left text-xs transition-colors hover:bg-accent ${
+                      project?.preferredModel === m.id ? "text-ai-accent" : "text-foreground"
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -238,7 +312,22 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
     stopStreaming,
     clearHistory,
     hasProvider,
+    overrideProvider,
+    overrideModel,
+    setModelOverride,
   } = useChatStream(projectId);
+
+  // Listen for model override events from the selector
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail && setModelOverride) {
+        setModelOverride(detail.provider, detail.model);
+      }
+    };
+    window.addEventListener("chat-model-override", handler);
+    return () => window.removeEventListener("chat-model-override", handler);
+  }, [setModelOverride]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -276,15 +365,11 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
       <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
         <Sparkles className="h-8 w-8 text-muted-foreground/40" />
         <p className="text-sm text-muted-foreground">
-          Configure an AI provider to start chatting
+          AI features are temporarily unavailable
         </p>
-        <Link
-          href={`/project/${projectId}/settings`}
-          className="flex items-center gap-1.5 rounded-md bg-ai-accent/10 px-3 py-1.5 text-xs font-medium text-ai-accent transition-colors hover:bg-ai-accent/20"
-        >
-          <Settings className="h-3 w-3" />
-          Project Settings
-        </Link>
+        <p className="text-xs text-muted-foreground/60">
+          Contact the administrator to configure AI providers
+        </p>
       </div>
     );
   }
@@ -297,6 +382,7 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
           AI Chat
         </span>
         <div className="flex items-center gap-1">
+          <ModelSelector projectId={projectId} />
           <button
             onClick={() => setShowSuggestions(!showSuggestions)}
             className="rounded p-1 text-[10px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"

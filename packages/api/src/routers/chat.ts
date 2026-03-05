@@ -68,22 +68,18 @@ export const chatRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  /** Check if AI provider is configured for a project */
+  /** Check if any global AI provider is configured */
   status: protectedProcedure
     .input(z.object({ projectId: z.string() }))
     .query(async ({ ctx, input }) => {
       await assertProjectAccess(input.projectId, ctx.user.id);
 
-      const provider = await prisma.aIProvider.findFirst({
-        where: { projectId: input.projectId, isActive: true },
-        select: { provider: true, model: true },
-        orderBy: { createdAt: "asc" },
+      const activeCount = await prisma.globalApiKey.count({
+        where: { isActive: true },
       });
 
       return {
-        hasProvider: !!provider,
-        providerName: provider?.provider,
-        model: provider?.model,
+        hasProvider: activeCount > 0,
       };
     }),
 });

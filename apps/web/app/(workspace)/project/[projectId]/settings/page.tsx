@@ -33,8 +33,13 @@ export default async function ProjectSettingsPage({
             type: project.type,
             language: (project as Record<string, unknown>).language as string ?? "en",
             status: (project as Record<string, unknown>).status as string ?? "DRAFT",
+            preferredProvider: (project as Record<string, unknown>).preferredProvider as string | null ?? null,
+            preferredModel: (project as Record<string, unknown>).preferredModel as string | null ?? null,
+            logline: (project as Record<string, unknown>).logline as string | null ?? null,
+            synopsis: (project as Record<string, unknown>).synopsis as string | null ?? null,
           }}
           projectId={projectId}
+          isOwner={true}
         />
       </div>
     </div>

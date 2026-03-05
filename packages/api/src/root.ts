@@ -13,6 +13,7 @@ import { pinRouter } from "./routers/pin";
 import { draftRouter } from "./routers/draft";
 import { episodeRouter } from "./routers/episode";
 import { entityRouter } from "./routers/entity";
+import { memberRouter } from "./routers/member";
 
 export const appRouter = createTRPCRouter({
   project: projectRouter,
@@ -29,6 +30,7 @@ export const appRouter = createTRPCRouter({
   draft: draftRouter,
   episode: episodeRouter,
   entity: entityRouter,
+  member: memberRouter,
 });
 
 export type AppRouter = typeof appRouter;

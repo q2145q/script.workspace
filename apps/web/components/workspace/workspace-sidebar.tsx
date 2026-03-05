@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { FileText, LayoutList, Users, MapPin, BookOpen, History, Settings } from "lucide-react";
+import { FileText, LayoutList, Users, MapPin, BookOpen, History, Settings, Network } from "lucide-react";
 import type { Editor } from "@script/editor";
 import { SceneNavigator } from "./scene-navigator";
 import { EpisodeNavigator } from "./episode-navigator";
@@ -40,6 +40,7 @@ const navItemsConfig: Array<{
   { label: "Characters", key: "chars", icon: Users, mode: "characters" },
   { label: "Locations", key: "locs", icon: MapPin, mode: "locations" },
   { label: "Versions", key: "vers", icon: History, mode: "versions" },
+  { label: "Graph", key: "graph", icon: Network, mode: "graph" },
 ];
 
 const container = {

@@ -2,6 +2,7 @@ export { getProvider, registerProvider } from "./registry";
 export { encrypt, decrypt } from "./encryption";
 export type {
   AIProvider,
+  AITaskType,
   ProviderId,
   ProviderConfig,
   RewriteInput,
@@ -10,6 +11,7 @@ export type {
   AIFormatResponse,
   FormatBlock,
   PatchOperation,
+  StreamUsageResult,
 } from "./types";
 export {
   ProviderIdEnum,
@@ -19,9 +21,29 @@ export {
   formatBlockSchema,
 } from "./types";
 
-// Chat + Context (Phase 7)
-export { buildChatContext, CHAT_SYSTEM_PROMPT } from "./context";
+// Chat + Context
+export { buildChatContext } from "./context";
 export type { ChatContextInput, ChatContext, ContextLayer } from "./context";
-export { streamChatOpenAI, streamChatAnthropic } from "./chat-stream";
+export { streamChatOpenAI, streamChatAnthropic, streamChatYandex, streamChat } from "./chat-stream";
 export type { ChatStreamInput, StreamCallbacks } from "./chat-stream";
-export { extractTextFromTipTapJson } from "./utils";
+export { extractTextFromTipTapJson, extractScreenplayStructure } from "./utils";
+
+// Non-streaming completion (Phase 3)
+export { completeAI } from "./complete";
+export type { CompleteResult } from "./complete";
+
+// Thinking configuration (Phase 4)
+export { getThinkingConfig } from "./thinking-config";
+
+// Prompt system (Phase 1)
+export { fillTemplate, composePrompt } from "./prompts/compose";
+export type { TemplateVars } from "./prompts/compose";
+export { loadTaskPrompt, clearPromptCache } from "./prompts/loader";
+export { getSystemPrompt } from "./prompts/system/index";
+export {
+  OPENAI_SYSTEM_PROMPT,
+  ANTHROPIC_SYSTEM_PROMPT,
+  DEEPSEEK_SYSTEM_PROMPT,
+  GEMINI_SYSTEM_PROMPT,
+  YANDEX_SYSTEM_PROMPT,
+} from "./prompts/system/index";

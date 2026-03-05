@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@script/api/auth";
+import { prisma } from "@script/db";
 import { headers } from "next/headers";
 
 export default async function WorkspaceLayout({
@@ -13,6 +14,16 @@ export default async function WorkspaceLayout({
 
   if (!session) {
     redirect("/sign-in");
+  }
+
+  // Beta gate
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { betaApproved: true },
+  });
+
+  if (!user?.betaApproved) {
+    redirect("/dashboard");
   }
 
   return <>{children}</>;

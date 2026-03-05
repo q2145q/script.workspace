@@ -8,7 +8,9 @@
     ".": "./src/index.ts",
     "./auth": "./src/auth.ts",
     "./auth-client": "./src/auth-client.ts",
-    "./trpc": "./src/trpc.ts"
+    "./trpc": "./src/trpc.ts",
+    "./usage-logger": "./src/usage-logger.ts",
+    "./global-key-resolver": "./src/global-key-resolver.ts"
   },
   "dependencies": {
     "@better-auth/prisma-adapter": "^1.5.3",

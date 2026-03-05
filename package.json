@@ -10,7 +10,9 @@
     "db:push": "pnpm --filter @script/db db:push",
     "db:migrate": "pnpm --filter @script/db migrate",
     "db:studio": "pnpm --filter @script/db studio",
-    "clean": "turbo clean"
+    "clean": "turbo clean",
+    "test:ai": "pnpm --filter @script/ai test",
+    "test:ai:integration": "pnpm --filter @script/ai test:integration"
   },
   "devDependencies": {
     "turbo": "^2.4.0",

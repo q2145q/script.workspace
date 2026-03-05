@@ -22,6 +22,9 @@ const OutlinePanel = lazy(() =>
 const EntitiesPanel = lazy(() =>
   import("./entities-panel").then((m) => ({ default: m.EntitiesPanel }))
 );
+const KnowledgeGraphPanel = lazy(() =>
+  import("./knowledge-graph-panel").then((m) => ({ default: m.KnowledgeGraphPanel }))
+);
 
 export type WorkspaceMode =
   | "script"
@@ -29,7 +32,8 @@ export type WorkspaceMode =
   | "outline"
   | "characters"
   | "locations"
-  | "versions";
+  | "versions"
+  | "graph";
 
 interface WorkspaceShellProps {
   project: {
@@ -85,7 +89,7 @@ export function WorkspaceShell({ project, document }: WorkspaceShellProps) {
       case "outline":
         return (
           <Suspense fallback={<PanelFallback />}>
-            <OutlinePanel editor={editor} documentId={document.id} />
+            <OutlinePanel editor={editor} documentId={document.id} projectId={project.id} />
           </Suspense>
         );
       case "characters":
@@ -98,6 +102,12 @@ export function WorkspaceShell({ project, document }: WorkspaceShellProps) {
         return (
           <Suspense fallback={<PanelFallback />}>
             <EntitiesPanel projectId={project.id} defaultTab="locations" editor={editor} />
+          </Suspense>
+        );
+      case "graph":
+        return (
+          <Suspense fallback={<PanelFallback />}>
+            <KnowledgeGraphPanel projectId={project.id} editor={editor} />
           </Suspense>
         );
       default:

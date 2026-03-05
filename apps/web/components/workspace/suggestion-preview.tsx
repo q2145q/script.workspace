@@ -4,6 +4,7 @@ import { useCallback, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, Undo2, RefreshCw, Loader2 } from "lucide-react";
 import type { Editor } from "@script/editor";
+import { Fragment } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -16,10 +17,18 @@ interface SuggestionPreviewProps {
 interface AppliedEntry {
   selectedText: string;
   selectionFrom: number;
-  newTextLength: number;
+  selectionTo: number;
+  blocks: Array<{ type: string; text: string }>;
 }
 
 const UNDO_TIMEOUT_MS = 30_000;
+
+/** Detect if stored operations are blocks format (new) vs legacy operations format */
+function isBlocksFormat(data: unknown): data is Array<{ type: string; text: string }> {
+  if (!Array.isArray(data) || data.length === 0) return false;
+  const first = data[0];
+  return typeof first === "object" && first !== null && "text" in first && "type" in first && !("from" in first);
+}
 
 export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps) {
   const trpc = useTRPC();
@@ -76,10 +85,10 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
     trpc.ai.rewrite.mutationOptions({
       onSuccess: (result) => {
         if (!editor) return;
-        const newText = result.operations
-          .filter((op: { type: string }) => op.type === "replace" || op.type === "insert")
-          .map((op: { content?: string }) => op.content ?? "")
-          .join("");
+
+        const newText = result.blocks
+          .map((b) => b.text)
+          .join("\n");
 
         editor.commands.setSuggestion({
           id: result.id,
@@ -98,63 +107,95 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
     (suggestion: { id: string; operations: unknown; selectedText: string; selectionFrom: number; selectionTo: number; nodeType?: string }) => {
       if (!editor) return;
 
-      const ops = suggestion.operations as Array<{
-        type: string;
-        from: number;
-        to: number;
-        content?: string;
-        nodeType?: string;
-      }>;
-
-      // Compute the new text for tracking undo
-      const newText = ops
-        .filter((op) => op.type === "replace" || op.type === "insert")
-        .map((op) => op.content ?? "")
-        .join("");
-
-      // Determine the target node type from the suggestion or from operations
-      const targetNodeType = suggestion.nodeType
-        ?? ops.find((op) => op.nodeType)?.nodeType
-        ?? editor.state.doc.resolve(suggestion.selectionFrom).parent.type.name;
-
-      // Clear the decoration
       editor.commands.clearSuggestion(suggestion.id);
 
-      // Apply text replacement
       const { tr } = editor.state;
-      for (const op of ops) {
-        if (op.type === "replace" && op.content) {
-          tr.replaceWith(
-            suggestion.selectionFrom + op.from,
-            suggestion.selectionFrom + op.to,
-            editor.schema.text(op.content)
-          );
+
+      if (isBlocksFormat(suggestion.operations)) {
+        // New blocks format — create typed screenplay nodes
+        const blocks = suggestion.operations;
+        const nodes = blocks
+          .map((block) => {
+            const nodeType = editor.schema.nodes[block.type];
+            if (!nodeType) return null;
+            return nodeType.create(null, block.text ? editor.schema.text(block.text) : null);
+          })
+          .filter((n): n is NonNullable<typeof n> => n != null);
+
+        if (nodes.length > 0) {
+          const fragment = Fragment.from(nodes);
+          const $from = tr.doc.resolve(suggestion.selectionFrom);
+          const $to = tr.doc.resolve(suggestion.selectionTo);
+          const startBlock = $from.before($from.depth);
+          const endBlock = $to.after($to.depth);
+          tr.replaceWith(startBlock, endBlock, fragment);
         }
-      }
 
-      // Ensure the parent node type is preserved after replacement
-      const schemaNodeType = editor.schema.nodes[targetNodeType];
-      if (schemaNodeType) {
-        const $pos = tr.doc.resolve(suggestion.selectionFrom);
-        const parentNode = $pos.parent;
-        if (parentNode.type.name !== targetNodeType) {
-          const blockStart = $pos.before($pos.depth);
-          tr.setNodeMarkup(blockStart, schemaNodeType, parentNode.attrs);
-        }
-      }
+        editor.view.dispatch(tr);
 
-      editor.view.dispatch(tr);
-
-      // Track for undo
-      setRecentlyApplied((prev) => {
-        const next = new Map(prev);
-        next.set(suggestion.id, {
-          selectedText: suggestion.selectedText,
-          selectionFrom: suggestion.selectionFrom,
-          newTextLength: newText.length,
+        // Track for undo — store blocks and positions
+        setRecentlyApplied((prev) => {
+          const next = new Map(prev);
+          next.set(suggestion.id, {
+            selectedText: suggestion.selectedText,
+            selectionFrom: suggestion.selectionFrom,
+            selectionTo: suggestion.selectionTo,
+            blocks,
+          });
+          return next;
         });
-        return next;
-      });
+      } else {
+        // Legacy operations format (backward compat for old DB suggestions)
+        const ops = suggestion.operations as Array<{
+          type: string;
+          from: number;
+          to: number;
+          content?: string;
+          nodeType?: string;
+        }>;
+
+        const newText = ops
+          .filter((op) => op.type === "replace" || op.type === "insert")
+          .map((op) => op.content ?? "")
+          .join("");
+
+        const targetNodeType = suggestion.nodeType
+          ?? ops.find((op) => op.nodeType)?.nodeType
+          ?? editor.state.doc.resolve(suggestion.selectionFrom).parent.type.name;
+
+        for (const op of ops) {
+          if (op.type === "replace" && op.content) {
+            tr.replaceWith(
+              suggestion.selectionFrom + op.from,
+              suggestion.selectionFrom + op.to,
+              editor.schema.text(op.content)
+            );
+          }
+        }
+
+        const schemaNodeType = editor.schema.nodes[targetNodeType];
+        if (schemaNodeType) {
+          const $pos = tr.doc.resolve(suggestion.selectionFrom);
+          const parentNode = $pos.parent;
+          if (parentNode.type.name !== targetNodeType) {
+            const blockStart = $pos.before($pos.depth);
+            tr.setNodeMarkup(blockStart, schemaNodeType, parentNode.attrs);
+          }
+        }
+
+        editor.view.dispatch(tr);
+
+        setRecentlyApplied((prev) => {
+          const next = new Map(prev);
+          next.set(suggestion.id, {
+            selectedText: suggestion.selectedText,
+            selectionFrom: suggestion.selectionFrom,
+            selectionTo: suggestion.selectionTo,
+            blocks: [{ type: targetNodeType, text: newText }],
+          });
+          return next;
+        });
+      }
 
       applyMutation.mutate({ id: suggestion.id });
     },
@@ -173,12 +214,19 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
     }) => {
       if (!editor) return;
 
-      // Compute what the AI returned last time
-      const ops = suggestion.operations as Array<{ type: string; content?: string }>;
-      const previousResult = ops
-        .filter((op) => op.type === "replace" || op.type === "insert")
-        .map((op) => op.content ?? "")
-        .join("");
+      // Convert blocks or operations to previousResult string
+      let previousResult: string;
+      if (isBlocksFormat(suggestion.operations)) {
+        previousResult = suggestion.operations
+          .map((b) => `[${b.type}] ${b.text}`)
+          .join("\n");
+      } else {
+        const ops = suggestion.operations as Array<{ type: string; content?: string }>;
+        previousResult = ops
+          .filter((op) => op.type === "replace" || op.type === "insert")
+          .map((op) => op.content ?? "")
+          .join("");
+      }
 
       // Clear the current decoration and reject it
       editor.commands.clearSuggestion(suggestion.id);
@@ -188,16 +236,25 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
       const contextBefore = editor.state.doc.textBetween(
         Math.max(0, suggestion.selectionFrom - 500),
         suggestion.selectionFrom,
-        " "
+        "\n"
       );
       const contextAfter = editor.state.doc.textBetween(
         suggestion.selectionTo,
         Math.min(editor.state.doc.content.size, suggestion.selectionTo + 500),
-        " "
+        "\n"
       );
 
       const $from = editor.state.doc.resolve(suggestion.selectionFrom);
       const nodeType = suggestion.nodeType || $from.parent.type.name;
+
+      // Extract current blocks from selection for retry
+      const blocks: Array<{ type: string; text: string }> = [];
+      editor.state.doc.nodesBetween(suggestion.selectionFrom, suggestion.selectionTo, (node) => {
+        if (node.isBlock && node.isTextblock) {
+          blocks.push({ type: node.type.name, text: node.textContent });
+          return false;
+        }
+      });
 
       // Request a new rewrite with the previous result
       rewriteMutation.mutate({
@@ -210,6 +267,7 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
         contextAfter,
         nodeType,
         previousResult,
+        blocks: blocks.length > 0 ? blocks : undefined,
       });
     },
     [editor, documentId, rejectMutation, rewriteMutation]
@@ -230,13 +288,31 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
       const entry = recentlyApplied.get(suggestionId);
       if (!entry) return;
 
-      // Replace the applied text with the original
+      // Undo by restoring original text as single text in the original node type
+      // The best approach: use ProseMirror history (Ctrl+Z behavior)
+      // But for our tracking mechanism, we need a simple undo:
       const { tr } = editor.state;
-      tr.replaceWith(
-        entry.selectionFrom,
-        entry.selectionFrom + entry.newTextLength,
-        editor.schema.text(entry.selectedText)
-      );
+      const $from = tr.doc.resolve(entry.selectionFrom);
+      const $to = tr.doc.resolve(entry.selectionTo);
+
+      // Try to find block range to replace
+      try {
+        const startBlock = $from.before($from.depth);
+        const endBlock = $to.after($to.depth);
+
+        // Reconstruct original text as a single node (best effort)
+        const parentType = editor.schema.nodes[$from.parent.type.name] || editor.schema.nodes.action;
+        const originalNode = parentType.create(null, editor.schema.text(entry.selectedText));
+        tr.replaceWith(startBlock, endBlock, originalNode);
+      } catch {
+        // Fallback: simple text replacement at original position
+        tr.replaceWith(
+          entry.selectionFrom,
+          entry.selectionTo,
+          editor.schema.text(entry.selectedText)
+        );
+      }
+
       editor.view.dispatch(tr);
 
       // Remove from recently applied

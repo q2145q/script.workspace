@@ -1,8 +1,15 @@
 import { z } from "zod";
 
 /** Supported AI providers */
-export const ProviderIdEnum = z.enum(["openai", "anthropic"]);
+export const ProviderIdEnum = z.enum(["openai", "anthropic", "deepseek", "gemini", "yandex", "grok"]);
 export type ProviderId = z.infer<typeof ProviderIdEnum>;
+
+/** Token usage result from a streaming/non-streaming AI call */
+export interface StreamUsageResult {
+  tokensIn: number;
+  tokensOut: number;
+  durationMs: number;
+}
 
 /** A single patch operation returned by AI */
 export const patchOperationSchema = z.object({
@@ -14,9 +21,12 @@ export const patchOperationSchema = z.object({
 });
 export type PatchOperation = z.infer<typeof patchOperationSchema>;
 
-/** Full AI rewrite response */
+/** Full AI rewrite response — typed blocks */
 export const aiRewriteResponseSchema = z.object({
-  operations: z.array(patchOperationSchema),
+  blocks: z.array(z.object({
+    type: z.string(),
+    text: z.string(),
+  })),
   explanation: z.string().optional(),
 });
 export type AIRewriteResponse = z.infer<typeof aiRewriteResponseSchema>;
@@ -28,6 +38,7 @@ export interface RewriteInput {
   contextBefore: string;
   contextAfter: string;
   nodeType: string;
+  blocks?: Array<{ type: string; text: string }>;
   previousResult?: string;
   language?: string;
 }
@@ -36,6 +47,7 @@ export interface RewriteInput {
 export interface ProviderConfig {
   apiKey: string;
   model: string;
+  baseURL?: string;
 }
 
 /** A screenplay block in a format response */
@@ -59,6 +71,20 @@ export interface FormatInput {
   contextAfter: string;
   language?: string;
 }
+
+/** Task types for AI operations */
+export type AITaskType =
+  | "chat"
+  | "rewrite"
+  | "format"
+  | "analysis"
+  | "character-analysis"
+  | "structure-analysis"
+  | "logline"
+  | "synopsis"
+  | "describe-character"
+  | "describe-location"
+  | "knowledge-graph";
 
 /** The abstract interface every provider must implement */
 export interface AIProvider {

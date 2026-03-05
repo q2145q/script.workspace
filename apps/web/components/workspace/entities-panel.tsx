@@ -12,6 +12,8 @@ import {
   X,
   ChevronDown,
   ChevronRight,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import type { Editor } from "@script/editor";
 import { useEditorState } from "@script/editor";
@@ -122,6 +124,33 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
       onError: (err) => toast.error(err.message),
     })
   );
+
+  const [aiDescribingId, setAiDescribingId] = useState<string | null>(null);
+  const describeMutation = useMutation(
+    trpc.ai.describeCharacter.mutationOptions({
+      onError: (err) => {
+        toast.error(err.message);
+        setAiDescribingId(null);
+      },
+    })
+  );
+
+  const handleAIDescribe = async (charId: string, charName: string) => {
+    setAiDescribingId(charId);
+    const context = editor
+      ? editor.state.doc.textBetween(0, Math.min(editor.state.doc.content.size, 10000), "\n")
+      : "";
+    try {
+      const result = await describeMutation.mutateAsync({
+        projectId,
+        characterName: charName,
+        characterContext: context,
+      });
+      updateMutation.mutate({ id: charId, description: result.description });
+    } finally {
+      setAiDescribingId(null);
+    }
+  };
 
   const resetForm = () => {
     setShowForm(false);
@@ -301,6 +330,21 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      handleAIDescribe(char.id, char.name);
+                    }}
+                    disabled={aiDescribingId === char.id}
+                    className="rounded p-0.5 text-muted-foreground hover:text-ai-accent disabled:opacity-50"
+                    title="AI describe"
+                  >
+                    {aiDescribingId === char.id ? (
+                      <Loader2 className="h-3 w-3 animate-spin text-ai-accent" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
                       startEdit(char);
                     }}
                     className="rounded p-0.5 text-muted-foreground hover:text-foreground"
@@ -442,6 +486,33 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
     })
   );
 
+  const [aiDescribingId, setAiDescribingId] = useState<string | null>(null);
+  const describeLocMutation = useMutation(
+    trpc.ai.describeLocation.mutationOptions({
+      onError: (err) => {
+        toast.error(err.message);
+        setAiDescribingId(null);
+      },
+    })
+  );
+
+  const handleAIDescribe = async (locId: string, locName: string) => {
+    setAiDescribingId(locId);
+    const context = editor
+      ? editor.state.doc.textBetween(0, Math.min(editor.state.doc.content.size, 10000), "\n")
+      : "";
+    try {
+      const result = await describeLocMutation.mutateAsync({
+        projectId,
+        locationName: locName,
+        locationContext: context,
+      });
+      updateMutation.mutate({ id: locId, description: result.description });
+    } finally {
+      setAiDescribingId(null);
+    }
+  };
+
   const resetForm = () => {
     setShowForm(false);
     setEditId(null);
@@ -564,6 +635,21 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
                   {loc.name}
                 </span>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAIDescribe(loc.id, loc.name);
+                    }}
+                    disabled={aiDescribingId === loc.id}
+                    className="rounded p-0.5 text-muted-foreground hover:text-ai-accent disabled:opacity-50"
+                    title="AI describe"
+                  >
+                    {aiDescribingId === loc.id ? (
+                      <Loader2 className="h-3 w-3 animate-spin text-ai-accent" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
+                  </button>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

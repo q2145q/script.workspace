@@ -6,8 +6,9 @@ import type { Editor } from "@script/editor";
 import { CommentsPanel } from "./comments-panel";
 import { ChatPanel } from "./chat-panel";
 import { ContextPinsPanel } from "./context-pins-panel";
+import { AnalysisPanel } from "./analysis-panel";
 
-type Tab = "comments" | "chat" | "context";
+type Tab = "comments" | "chat" | "context" | "analysis";
 
 interface RightPanelProps {
   editor: Editor | null;
@@ -22,6 +23,7 @@ export function RightPanel({ editor, documentId, projectId }: RightPanelProps) {
     { id: "comments", label: "Comments" },
     { id: "chat", label: "Chat" },
     { id: "context", label: "Context" },
+    { id: "analysis", label: "Analysis" },
   ];
 
   return (
@@ -71,6 +73,9 @@ export function RightPanel({ editor, documentId, projectId }: RightPanelProps) {
             )}
             {activeTab === "context" && (
               <ContextPinsPanel projectId={projectId} />
+            )}
+            {activeTab === "analysis" && (
+              <AnalysisPanel editor={editor} projectId={projectId} />
             )}
           </motion.div>
         </AnimatePresence>

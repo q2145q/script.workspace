@@ -68,5 +68,37 @@ export const updateProjectSchema = z.object({
   type: ProjectTypeEnum.optional(),
   language: z.string().min(2).max(5).optional(),
   status: ProjectStatusEnum.optional(),
+  preferredProvider: z.string().nullish(),
+  preferredModel: z.string().nullish(),
+  logline: z.string().max(1000).nullish(),
+  synopsis: z.string().max(10000).nullish(),
+  knowledgeGraph: z.any().nullish(),
 });
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
+
+// ============================================================
+// MEMBER SCHEMAS
+// ============================================================
+
+export const MemberRoleEnum = z.enum(["EDITOR", "COMMENTER", "VIEWER"]);
+export type MemberRole = z.infer<typeof MemberRoleEnum>;
+
+export const inviteMemberSchema = z.object({
+  projectId: z.string(),
+  email: z.string().email(),
+  role: MemberRoleEnum,
+});
+export type InviteMemberInput = z.infer<typeof inviteMemberSchema>;
+
+export const updateMemberRoleSchema = z.object({
+  projectId: z.string(),
+  userId: z.string(),
+  role: MemberRoleEnum,
+});
+export type UpdateMemberRoleInput = z.infer<typeof updateMemberRoleSchema>;
+
+export const removeMemberSchema = z.object({
+  projectId: z.string(),
+  userId: z.string(),
+});
+export type RemoveMemberInput = z.infer<typeof removeMemberSchema>;

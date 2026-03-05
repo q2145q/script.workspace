@@ -63,4 +63,32 @@ export const documentRouter = createTRPCRouter({
         },
       });
     }),
+
+  /** Save document metadata (e.g. scene synopses) */
+  saveMetadata: protectedProcedure
+    .input(z.object({
+      id: z.string(),
+      metadata: z.any(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const doc = await prisma.document.findFirst({
+        where: {
+          id: input.id,
+          project: {
+            OR: [
+              { ownerId: ctx.user.id },
+              { members: { some: { userId: ctx.user.id, role: { in: ["OWNER", "EDITOR"] } } } },
+            ],
+          },
+        },
+      });
+      if (!doc) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      return prisma.document.update({
+        where: { id: input.id },
+        data: { metadata: input.metadata },
+      });
+    }),
 });

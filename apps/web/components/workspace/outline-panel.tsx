@@ -2,16 +2,17 @@
 
 import { useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
-import { LayoutList, GripVertical } from "lucide-react";
+import { LayoutList, GripVertical, Sparkles, Loader2 } from "lucide-react";
 import type { Editor, JSONContent } from "@script/editor";
 import { useEditorState } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 interface OutlinePanelProps {
   editor: Editor | null;
   documentId: string;
+  projectId: string;
 }
 
 interface SceneCard {
@@ -47,16 +48,40 @@ function extractScenes(editor: Editor): SceneCard[] {
   return scenes;
 }
 
-export function OutlinePanel({ editor, documentId }: OutlinePanelProps) {
+function extractSceneText(editor: Editor, scene: SceneCard): string {
+  const doc = editor.state.doc;
+  let endPos = doc.content.size;
+
+  doc.descendants((node, pos) => {
+    if (node.type.name === "sceneHeading" && pos > scene.pos && endPos === doc.content.size) {
+      endPos = pos;
+    }
+  });
+
+  return doc.textBetween(scene.pos, endPos, "\n");
+}
+
+export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProps) {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const dragNodeRef = useRef<HTMLDivElement | null>(null);
+  const [generatingScene, setGeneratingScene] = useState<string | null>(null);
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
 
   const scenes = useEditorState({
     editor: editor as Editor,
     selector: (ctx) => extractScenes(ctx.editor),
   }) as SceneCard[] | null;
+
+  // Load saved synopses from document metadata
+  const { data: docData } = useQuery(
+    trpc.document.getById.queryOptions({ id: documentId })
+  );
+
+  const savedSynopses: Record<string, string> =
+    (docData?.metadata as Record<string, unknown> | null)?.sceneSynopses as Record<string, string> ?? {};
 
   const saveMutation = useMutation(
     trpc.document.save.mutationOptions({
@@ -70,13 +95,87 @@ export function OutlinePanel({ editor, documentId }: OutlinePanelProps) {
     })
   );
 
+  const saveMetadataMutation = useMutation(
+    trpc.document.saveMetadata.mutationOptions({
+      onError: (err) => toast.error(err.message),
+    })
+  );
+
+  const sceneSynopsisMutation = useMutation(
+    trpc.ai.generateSceneSynopsis.mutationOptions({
+      onError: (err) => toast.error(err.message),
+    })
+  );
+
+  const allSynopsesMutation = useMutation(
+    trpc.ai.generateAllSceneSynopses.mutationOptions({
+      onError: (err) => toast.error(err.message),
+    })
+  );
+
+  const handleGenerateSynopsis = async (scene: SceneCard) => {
+    if (!editor) return;
+    setGeneratingScene(scene.heading);
+
+    try {
+      const sceneText = extractSceneText(editor, scene);
+      const result = await sceneSynopsisMutation.mutateAsync({
+        projectId,
+        sceneHeading: scene.heading,
+        sceneText,
+      });
+
+      const updated = { ...savedSynopses, [scene.heading]: result.synopsis };
+      await saveMetadataMutation.mutateAsync({
+        id: documentId,
+        metadata: { sceneSynopses: updated },
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: trpc.document.getById.queryKey({ id: documentId }),
+      });
+    } finally {
+      setGeneratingScene(null);
+    }
+  };
+
+  const handleGenerateAll = async () => {
+    if (!editor || !scenes || scenes.length === 0) return;
+    setIsGeneratingAll(true);
+
+    try {
+      const scenesWithText = scenes.map((scene) => ({
+        heading: scene.heading,
+        text: extractSceneText(editor, scene),
+      }));
+
+      const result = await allSynopsesMutation.mutateAsync({
+        projectId,
+        scenes: scenesWithText,
+      });
+
+      await saveMetadataMutation.mutateAsync({
+        id: documentId,
+        metadata: { sceneSynopses: result.synopses },
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: trpc.document.getById.queryKey({ id: documentId }),
+      });
+
+      const count = Object.values(result.synopses).filter(Boolean).length;
+      toast.success(`Generated synopses for ${count} scenes`);
+    } finally {
+      setIsGeneratingAll(false);
+    }
+  };
+
   const reorderScenes = useCallback(
     (fromIndex: number, toIndex: number) => {
       if (!editor || !scenes || fromIndex === toIndex) return;
 
       const doc = editor.state.doc;
 
-      // Collect scene blocks: each block = [sceneHeading, ...following non-heading nodes]
       const sceneBlocks: JSONContent[][] = [];
       const preSceneNodes: JSONContent[] = [];
       let currentBlock: JSONContent[] | null = null;
@@ -100,7 +199,6 @@ export function OutlinePanel({ editor, documentId }: OutlinePanelProps) {
 
       if (sceneBlocks.length <= 1) return;
 
-      // Move block from fromIndex to toIndex
       const [moved] = sceneBlocks.splice(fromIndex, 1);
       sceneBlocks.splice(toIndex, 0, moved);
 
@@ -112,7 +210,6 @@ export function OutlinePanel({ editor, documentId }: OutlinePanelProps) {
         ],
       };
 
-      // Snapshot before reorder
       createDraftMutation.mutate({
         documentId,
         name: "Before scene reorder (auto)",
@@ -131,7 +228,6 @@ export function OutlinePanel({ editor, documentId }: OutlinePanelProps) {
       setDragIndex(index);
       e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData("text/plain", String(index));
-      // Make the dragged element semi-transparent
       if (e.currentTarget) {
         dragNodeRef.current = e.currentTarget;
         requestAnimationFrame(() => {
@@ -215,6 +311,21 @@ export function OutlinePanel({ editor, documentId }: OutlinePanelProps) {
         <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
           {sceneList.length} scenes
         </span>
+        <div className="flex-1" />
+        {sceneList.length > 0 && (
+          <button
+            onClick={handleGenerateAll}
+            disabled={isGeneratingAll}
+            className="flex items-center gap-1 rounded-md bg-ai-accent px-2 py-1 text-[10px] font-medium text-white hover:bg-ai-accent/80 disabled:opacity-50"
+          >
+            {isGeneratingAll ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Sparkles className="h-3 w-3" />
+            )}
+            {Object.keys(savedSynopses).length > 0 ? "Regenerate All" : "Generate All"}
+          </button>
+        )}
       </div>
 
       {/* Cards */}
@@ -253,13 +364,33 @@ export function OutlinePanel({ editor, documentId }: OutlinePanelProps) {
                       <span className="flex-shrink-0 rounded bg-muted px-1 py-0.5 text-[9px] font-mono font-bold text-muted-foreground">
                         {i + 1}
                       </span>
-                      <p className="truncate text-xs font-semibold text-foreground">
+                      <p className="flex-1 truncate text-xs font-semibold text-foreground">
                         {scene.heading}
                       </p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleGenerateSynopsis(scene);
+                        }}
+                        disabled={generatingScene === scene.heading || isGeneratingAll}
+                        className="flex-shrink-0 rounded p-0.5 text-muted-foreground/30 opacity-0 transition-opacity hover:text-ai-accent group-hover:opacity-100 disabled:opacity-50"
+                        title="Generate synopsis"
+                      >
+                        {generatingScene === scene.heading ? (
+                          <Loader2 className="h-3 w-3 animate-spin text-ai-accent" />
+                        ) : (
+                          <Sparkles className="h-3 w-3" />
+                        )}
+                      </button>
                     </div>
                     {scene.preview && (
                       <p className="mt-1.5 line-clamp-2 text-[10px] leading-relaxed text-muted-foreground">
                         {scene.preview}
+                      </p>
+                    )}
+                    {savedSynopses[scene.heading] && (
+                      <p className="mt-1 line-clamp-2 text-[10px] italic leading-relaxed text-ai-accent/70">
+                        {savedSynopses[scene.heading]}
                       </p>
                     )}
                   </div>

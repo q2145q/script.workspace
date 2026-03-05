@@ -16,6 +16,8 @@ export function useChatStream(projectId: string) {
   const [streamingContent, setStreamingContent] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [optimisticUserMsg, setOptimisticUserMsg] = useState<ChatMessage | null>(null);
+  const [overrideProvider, setOverrideProvider] = useState<string | null>(null);
+  const [overrideModel, setOverrideModel] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -65,7 +67,6 @@ export function useChatStream(projectId: string) {
 
   const sendMessage = useCallback(
     async (content: string, editorContext?: { currentSceneText?: string; adjacentScenesText?: string; documentSummary?: string }) => {
-      // Optimistic user message
       setOptimisticUserMsg({
         id: `optimistic-${Date.now()}`,
         role: "USER",
@@ -83,7 +84,13 @@ export function useChatStream(projectId: string) {
         const res = await fetch("/api/chat/stream", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ projectId, content, editorContext }),
+          body: JSON.stringify({
+            projectId,
+            content,
+            editorContext,
+            overrideProvider: overrideProvider || undefined,
+            overrideModel: overrideModel || undefined,
+          }),
           signal: controller.signal,
         });
 
@@ -114,7 +121,6 @@ export function useChatStream(projectId: string) {
                   setStreamingContent(fullText);
                 }
                 if (data.done) {
-                  // Refresh history from DB
                   setOptimisticUserMsg(null);
                   queryClient.invalidateQueries({
                     queryKey: trpc.chat.list.queryKey({ projectId, limit: 50 }),
@@ -140,7 +146,7 @@ export function useChatStream(projectId: string) {
         abortRef.current = null;
       }
     },
-    [projectId, queryClient, trpc]
+    [projectId, queryClient, trpc, overrideProvider, overrideModel]
   );
 
   const stopStreaming = useCallback(() => {
@@ -150,6 +156,11 @@ export function useChatStream(projectId: string) {
   const clearHistory = useCallback(() => {
     clearMutation.mutate({ projectId });
   }, [clearMutation, projectId]);
+
+  const setModelOverride = useCallback((provider: string | null, model: string | null) => {
+    setOverrideProvider(provider);
+    setOverrideModel(model);
+  }, []);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -165,6 +176,8 @@ export function useChatStream(projectId: string) {
     stopStreaming,
     clearHistory,
     hasProvider: statusData?.hasProvider ?? false,
-    providerName: statusData?.providerName,
+    overrideProvider,
+    overrideModel,
+    setModelOverride,
   };
 }

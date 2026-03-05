@@ -19,6 +19,7 @@ model User {
   image         String?
   createdAt     DateTime
   updatedAt     DateTime
+  betaApproved  Boolean   @default(false)
 
   sessions Session[]
   accounts Account[]
@@ -30,6 +31,7 @@ model User {
   commentMessages CommentMessage[] @relation("MessageAuthor")
   suggestions    Suggestion[]    @relation("SuggestionCreator")
   profile        UserProfile?
+  apiUsageLogs   ApiUsageLog[]
 
   @@unique([email])
   @@map("user")
@@ -130,6 +132,11 @@ model Project {
   language    String        @default("en")
   ownerId     String
   isPrivate   Boolean       @default(true)
+  preferredProvider String?
+  preferredModel    String?
+  logline         String?   @db.Text
+  synopsis        String?   @db.Text
+  knowledgeGraph  Json?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -170,6 +177,7 @@ model Document {
   projectId String
   title     String   @default("Untitled")
   content   Json     @default("{}")
+  metadata  Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -414,4 +422,57 @@ model Term {
 
   @@index([projectId])
   @@map("term")
+}
+
+// ============================================================
+// ADMIN + GLOBAL CONFIGURATION
+// ============================================================
+
+model GlobalApiKey {
+  id        String   @id @default(cuid())
+  provider  String   @unique // "deepseek" | "anthropic" | "openai" | "gemini" | "yandex" | "grok"
+  apiKeyEnc String            // encrypted (AES-256-GCM)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("global_api_key")
+}
+
+model GlobalModelConfig {
+  id                   String   @id @default(cuid())
+  provider             String
+  modelId              String
+  modelLabel           String
+  isEnabled            Boolean  @default(true)
+  costInputPerMillion  Float    @default(0)
+  costOutputPerMillion Float    @default(0)
+  sortOrder            Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@unique([provider, modelId])
+  @@map("global_model_config")
+}
+
+model ApiUsageLog {
+  id         String   @id @default(cuid())
+  userId     String
+  projectId  String?
+  provider   String
+  model      String
+  feature    String   // "chat" | "rewrite" | "format"
+  tokensIn   Int
+  tokensOut  Int
+  durationMs Int?
+  costUsd    Float?
+  keySource  String   @default("global") // "global" | "user"
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([provider, createdAt])
+  @@index([createdAt])
+  @@map("api_usage_log")
 }

@@ -24,6 +24,7 @@ export function AICommandBar({ editor, documentId }: AICommandBarProps) {
     to: number;
     text: string;
     nodeType: string;
+    blocks: Array<{ type: string; text: string }>;
     contextBefore: string;
     contextAfter: string;
   } | null>(null);
@@ -35,10 +36,10 @@ export function AICommandBar({ editor, documentId }: AICommandBarProps) {
       onSuccess: (result) => {
         if (!editor || !selection) return;
 
-        const newText = result.operations
-          .filter((op) => op.type === "replace" || op.type === "insert")
-          .map((op) => op.content ?? "")
-          .join("");
+        // Compute preview text from blocks
+        const newText = result.blocks
+          .map((b) => b.text)
+          .join("\n");
 
         const suggestionData: SuggestionData = {
           id: result.id,
@@ -114,23 +115,32 @@ export function AICommandBar({ editor, documentId }: AICommandBarProps) {
           return;
         }
 
-        const text = editor.state.doc.textBetween(from, to, " ");
+        const text = editor.state.doc.textBetween(from, to, "\n");
 
         const $from = editor.state.doc.resolve(from);
         const nodeType = $from.parent.type.name;
 
+        // Extract typed blocks from selection
+        const blocks: Array<{ type: string; text: string }> = [];
+        editor.state.doc.nodesBetween(from, to, (node) => {
+          if (node.isBlock && node.isTextblock) {
+            blocks.push({ type: node.type.name, text: node.textContent });
+            return false; // don't descend into inline children
+          }
+        });
+
         const contextBefore = editor.state.doc.textBetween(
           Math.max(0, from - 500),
           from,
-          " "
+          "\n"
         );
         const contextAfter = editor.state.doc.textBetween(
           to,
           Math.min(editor.state.doc.content.size, to + 500),
-          " "
+          "\n"
         );
 
-        setSelection({ from, to, text, nodeType, contextBefore, contextAfter });
+        setSelection({ from, to, text, nodeType, blocks, contextBefore, contextAfter });
         setOpen(true);
       }
     };
@@ -172,6 +182,7 @@ export function AICommandBar({ editor, documentId }: AICommandBarProps) {
         contextBefore: selection.contextBefore,
         contextAfter: selection.contextAfter,
         nodeType: selection.nodeType,
+        blocks: selection.blocks,
       });
     }
   }, [instruction, selection, documentId, rewriteMutation, formatMutation]);

@@ -1,7 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { AIProvider, RewriteInput, FormatInput, ProviderConfig, AIRewriteResponse, AIFormatResponse } from "../types";
 import { aiRewriteResponseSchema, aiFormatResponseSchema } from "../types";
-import { SYSTEM_PROMPT, FORMAT_SYSTEM_PROMPT, buildRewritePrompt, buildFormatPrompt } from "./base";
+import { buildRewritePrompt, buildFormatPrompt } from "./base";
+import { composePrompt } from "../prompts/compose";
 
 function stripCodeFences(text: string): string {
   let raw = text.trim();
@@ -16,11 +17,18 @@ export class AnthropicProvider implements AIProvider {
 
   async rewrite(input: RewriteInput, config: ProviderConfig): Promise<AIRewriteResponse> {
     const client = new Anthropic({ apiKey: config.apiKey });
+    const systemPrompt = composePrompt(this.id, "rewrite", { USER_LANGUAGE: input.language || "en" });
 
     const response = await client.messages.create({
       model: config.model || "claude-sonnet-4-6",
       max_tokens: 4096,
-      system: SYSTEM_PROMPT,
+      system: [
+        {
+          type: "text" as const,
+          text: systemPrompt,
+          cache_control: { type: "ephemeral" },
+        } as Anthropic.TextBlockParam,
+      ],
       messages: [
         { role: "user", content: buildRewritePrompt(input) },
       ],
@@ -35,11 +43,18 @@ export class AnthropicProvider implements AIProvider {
 
   async format(input: FormatInput, config: ProviderConfig): Promise<AIFormatResponse> {
     const client = new Anthropic({ apiKey: config.apiKey });
+    const systemPrompt = composePrompt(this.id, "format", { USER_LANGUAGE: input.language || "en" });
 
     const response = await client.messages.create({
       model: config.model || "claude-sonnet-4-6",
       max_tokens: 4096,
-      system: FORMAT_SYSTEM_PROMPT,
+      system: [
+        {
+          type: "text" as const,
+          text: systemPrompt,
+          cache_control: { type: "ephemeral" },
+        } as Anthropic.TextBlockParam,
+      ],
       messages: [
         { role: "user", content: buildFormatPrompt(input) },
       ],
