@@ -1,51 +1,54 @@
 "use client";
 
-import { useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  ScriptEditor,
-  useEditorAutosave,
-  type JSONContent,
-} from "@script/editor";
-import { useTRPC } from "@/lib/trpc/client";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useMemo, useState } from "react";
+import { ScriptEditor, HocuspocusProvider } from "@script/editor";
+import type { CollaborationConfig } from "@script/editor";
 import { BookOpen } from "lucide-react";
+import { OnlineUsers } from "./online-users";
+import { CollabStatus } from "./collab-status";
+import type { CurrentUser } from "./workspace-shell";
+
+// Deterministic color from user ID
+function hashToColor(str: string): string {
+  const colors = [
+    "#E57373", "#F06292", "#BA68C8", "#9575CD",
+    "#7986CB", "#64B5F6", "#4FC3F7", "#4DD0E1",
+    "#4DB6AC", "#81C784", "#AED581", "#FFD54F",
+    "#FFB74D", "#FF8A65", "#A1887F", "#90A4AE",
+  ];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+}
 
 interface BibleEditorProps {
   projectId: string;
+  currentUser: CurrentUser;
 }
 
-export function BibleEditor({ projectId }: BibleEditorProps) {
-  const trpc = useTRPC();
+export function BibleEditor({ projectId, currentUser }: BibleEditorProps) {
+  const [collabProvider, setCollabProvider] = useState<HocuspocusProvider | null>(null);
 
-  const { data: bible, isLoading } = useQuery(
-    trpc.bible.get.queryOptions({ projectId })
-  );
+  const collabConfig: CollaborationConfig = useMemo(() => {
+    let wsUrl = process.env.NEXT_PUBLIC_COLLAB_WS_URL || "";
+    if (!wsUrl && typeof window !== "undefined") {
+      const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+      wsUrl = `${proto}//${window.location.hostname}:3004`;
+    }
+    if (!wsUrl) wsUrl = "ws://localhost:3004";
 
-  const saveMutation = useMutation(
-    trpc.bible.save.mutationOptions({
-      onError: (err) => toast.error(`Failed to save bible: ${err.message}`),
-    })
-  );
-
-  const saveFn = useCallback(
-    async (content: JSONContent) => {
-      await saveMutation.mutateAsync({ projectId, content });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [projectId]
-  );
-
-  const handleUpdate = useEditorAutosave(saveFn);
-
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-ai-accent border-t-transparent" />
-      </div>
-    );
-  }
+    return {
+      documentName: `bible:${projectId}`,
+      wsUrl,
+      user: {
+        id: currentUser.id,
+        name: currentUser.name,
+        color: hashToColor(currentUser.id),
+      },
+    };
+  }, [projectId, currentUser]);
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -56,27 +59,17 @@ export function BibleEditor({ projectId }: BibleEditorProps) {
           <span className="text-sm font-medium text-foreground">
             Project Bible
           </span>
+          <OnlineUsers provider={collabProvider} />
         </div>
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={saveMutation.isPending ? "saving" : "saved"}
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            transition={{ duration: 0.15 }}
-            className="text-xs text-muted-foreground"
-          >
-            {saveMutation.isPending ? "Saving..." : "Saved"}
-          </motion.span>
-        </AnimatePresence>
+        <CollabStatus provider={collabProvider} />
       </div>
 
       {/* Editor content */}
       <div className="flex-1 overflow-y-auto">
         <ScriptEditor
           key="bible"
-          content={(bible?.content as JSONContent) ?? undefined}
-          onUpdate={handleUpdate}
+          collaboration={collabConfig}
+          onCollabProvider={setCollabProvider}
           hideToolbar={false}
         />
       </div>

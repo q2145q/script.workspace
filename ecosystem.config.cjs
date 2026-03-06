@@ -29,5 +29,19 @@ module.exports = {
       autorestart: true,
       max_memory_restart: "256M",
     },
+    {
+      name: "script-collab",
+      cwd: "/root/projects/site/script.workspace/apps/collab",
+      script: "dist/index.js",
+      interpreter: "node",
+      env: {
+        NODE_ENV: "production",
+        COLLAB_PORT: "3004",
+      },
+      instances: 1,
+      exec_mode: "fork",
+      autorestart: true,
+      max_memory_restart: "256M",
+    },
   ],
 };

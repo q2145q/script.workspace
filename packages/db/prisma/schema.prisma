@@ -140,10 +140,10 @@ model Project {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  owner       User            @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  members     ProjectMember[]
-  documents   Document[]
-  aiProviders AIProvider[]
+  owner        User            @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members      ProjectMember[]
+  documents    Document[]
+  aiProviders  AIProvider[]
   chatMessages ChatMessage[]
   bible        ProjectBible?
   contextPins  ContextPin[]
@@ -152,6 +152,8 @@ model Project {
   characters   Character[]
   locations    Location[]
   terms        Term[]
+  activityLogs ActivityLog[]
+  notes        ProjectNote[]
 
   @@index([ownerId])
   @@map("project")
@@ -177,6 +179,7 @@ model Document {
   projectId String
   title     String   @default("Untitled")
   content   Json     @default("{}")
+  yjsState  Bytes?
   metadata  Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -186,6 +189,7 @@ model Document {
   suggestions    Suggestion[]
   drafts         Draft[]
   episode        Episode?
+  activityLogs   ActivityLog[]
 
   @@index([projectId])
   @@map("document")
@@ -306,6 +310,7 @@ model ProjectBible {
   id        String   @id @default(cuid())
   projectId String   @unique
   content   Json     @default("{}")
+  yjsState  Bytes?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -422,6 +427,45 @@ model Term {
 
   @@index([projectId])
   @@map("term")
+}
+
+// ============================================================
+// NOTES
+// ============================================================
+
+model ProjectNote {
+  id        String   @id @default(cuid())
+  projectId String
+  title     String   @default("Untitled Note")
+  content   Json     @default("{}")
+  yjsState  Bytes?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("project_note")
+}
+
+// ============================================================
+// ACTIVITY LOG
+// ============================================================
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  projectId  String
+  documentId String?
+  userId     String
+  action     String
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  document Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
+  @@map("activity_log")
 }
 
 // ============================================================

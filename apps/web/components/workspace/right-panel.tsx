@@ -2,21 +2,24 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { PanelRightClose } from "lucide-react";
 import type { Editor } from "@script/editor";
 import { CommentsPanel } from "./comments-panel";
 import { ChatPanel } from "./chat-panel";
 import { ContextPinsPanel } from "./context-pins-panel";
 import { AnalysisPanel } from "./analysis-panel";
+import { ActivityPanel } from "./activity-panel";
 
-type Tab = "comments" | "chat" | "context" | "analysis";
+type Tab = "comments" | "chat" | "context" | "analysis" | "activity";
 
 interface RightPanelProps {
   editor: Editor | null;
   documentId: string;
   projectId: string;
+  onToggle?: () => void;
 }
 
-export function RightPanel({ editor, documentId, projectId }: RightPanelProps) {
+export function RightPanel({ editor, documentId, projectId, onToggle }: RightPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab>("comments");
 
   const tabs: { id: Tab; label: string }[] = [
@@ -24,6 +27,7 @@ export function RightPanel({ editor, documentId, projectId }: RightPanelProps) {
     { id: "chat", label: "Chat" },
     { id: "context", label: "Context" },
     { id: "analysis", label: "Analysis" },
+    { id: "activity", label: "Activity" },
   ];
 
   return (
@@ -33,7 +37,7 @@ export function RightPanel({ editor, documentId, projectId }: RightPanelProps) {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`relative flex-1 px-3 py-2.5 text-xs font-medium transition-colors duration-200 ${
+            className={`relative flex-1 px-2 py-2.5 text-xs font-medium transition-colors duration-200 ${
               activeTab === tab.id
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground"
@@ -49,6 +53,15 @@ export function RightPanel({ editor, documentId, projectId }: RightPanelProps) {
             )}
           </button>
         ))}
+        {onToggle && (
+          <button
+            onClick={onToggle}
+            className="flex items-center px-1.5 py-2.5 text-muted-foreground transition-colors hover:text-foreground"
+            title="Hide panel"
+          >
+            <PanelRightClose className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-hidden">
@@ -76,6 +89,9 @@ export function RightPanel({ editor, documentId, projectId }: RightPanelProps) {
             )}
             {activeTab === "analysis" && (
               <AnalysisPanel editor={editor} projectId={projectId} />
+            )}
+            {activeTab === "activity" && (
+              <ActivityPanel projectId={projectId} />
             )}
           </motion.div>
         </AnimatePresence>

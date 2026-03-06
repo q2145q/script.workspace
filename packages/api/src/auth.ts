@@ -9,4 +9,11 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  trustedOrigins: [
+    "http://localhost:3001",
+    "http://localhost:3002",
+    "http://164.90.224.171:3001",
+    "http://164.90.224.171:3002",
+    "https://script.yomimovie.art",
+  ],
 });

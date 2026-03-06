@@ -176,8 +176,15 @@ export const AutocompleteExtension = Extension.create({
         },
 
         view() {
+          // Skip autocomplete during initial editor mount / Yjs sync
+          // to prevent the dropdown from appearing immediately on open
+          const mountTime = Date.now();
+          const MOUNT_GRACE_MS = 500;
+
           return {
             update(view, prevState) {
+              if (Date.now() - mountTime < MOUNT_GRACE_MS) return;
+
               const prev = autocompletePluginKey.getState(prevState);
               // Reset dismissed flag when the cursor moves or text changes
               const prevDismissed =

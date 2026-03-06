@@ -11,6 +11,8 @@ export const ParagraphGuard = Extension.create({
       new Plugin({
         key: new PluginKey("paragraphGuard"),
         appendTransaction(transactions, _oldState, newState) {
+          // Skip Yjs-originated transactions to prevent infinite loops in collab mode
+          if (transactions.some((tr) => tr.getMeta("y-sync$"))) return null;
           if (!transactions.some((tr) => tr.docChanged)) return null;
 
           const actionType = editor.schema.nodes.action;

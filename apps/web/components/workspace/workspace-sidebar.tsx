@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { FileText, LayoutList, Users, MapPin, BookOpen, History, Settings, Network } from "lucide-react";
+import { FileText, LayoutList, Users, MapPin, BookOpen, History, Settings, Network, Presentation, StickyNote } from "lucide-react";
 import type { Editor } from "@script/editor";
 import { SceneNavigator } from "./scene-navigator";
 import { EpisodeNavigator } from "./episode-navigator";
@@ -39,6 +39,8 @@ const navItemsConfig: Array<{
   { label: "Outline", key: "outline", icon: LayoutList, mode: "outline" },
   { label: "Characters", key: "chars", icon: Users, mode: "characters" },
   { label: "Locations", key: "locs", icon: MapPin, mode: "locations" },
+  { label: "One Pager", key: "pager", icon: Presentation, mode: "one-pager" },
+  { label: "Notes", key: "notes", icon: StickyNote, mode: "notes" },
   { label: "Versions", key: "vers", icon: History, mode: "versions" },
   { label: "Graph", key: "graph", icon: Network, mode: "graph" },
 ];

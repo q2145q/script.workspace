@@ -92,9 +92,9 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // 7. Load conversation history
+  // 7. Load conversation history (per-user — each user has their own thread)
   const history = await prisma.chatMessage.findMany({
-    where: { projectId },
+    where: { projectId, userId: session.user.id },
     orderBy: { createdAt: "asc" },
     take: 40,
   });

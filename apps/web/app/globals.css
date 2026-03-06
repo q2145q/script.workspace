@@ -233,6 +233,34 @@ body {
 }
 
 /* ============================================================
+   COLLABORATION CURSORS
+   ============================================================ */
+
+.collaboration-cursor__caret {
+  border-left: 1px solid;
+  border-right: 1px solid;
+  margin-left: -1px;
+  margin-right: -1px;
+  pointer-events: none;
+  position: relative;
+  word-break: normal;
+}
+
+.collaboration-cursor__label {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px 3px 3px 0;
+  position: absolute;
+  top: -1.4em;
+  left: -1px;
+  user-select: none;
+  white-space: nowrap;
+  color: #fff;
+}
+
+/* ============================================================
    AUTOCOMPLETE DROPDOWN
    ============================================================ */
 

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, lazy, Suspense } from "react";
+import { useState, useRef, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
+import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import type { Editor } from "@script/editor";
+import type { ImperativePanelHandle } from "react-resizable-panels";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -25,6 +27,12 @@ const EntitiesPanel = lazy(() =>
 const KnowledgeGraphPanel = lazy(() =>
   import("./knowledge-graph-panel").then((m) => ({ default: m.KnowledgeGraphPanel }))
 );
+const OnePagerPanel = lazy(() =>
+  import("./one-pager-panel").then((m) => ({ default: m.OnePagerPanel }))
+);
+const NotesPanel = lazy(() =>
+  import("./notes-panel").then((m) => ({ default: m.NotesPanel }))
+);
 
 export type WorkspaceMode =
   | "script"
@@ -33,7 +41,15 @@ export type WorkspaceMode =
   | "characters"
   | "locations"
   | "versions"
-  | "graph";
+  | "graph"
+  | "one-pager"
+  | "notes";
+
+export interface CurrentUser {
+  id: string;
+  name: string;
+  email: string;
+}
 
 interface WorkspaceShellProps {
   project: {
@@ -53,6 +69,7 @@ interface WorkspaceShellProps {
     title: string;
     content: unknown;
   };
+  currentUser: CurrentUser;
 }
 
 function PanelFallback() {
@@ -63,9 +80,11 @@ function PanelFallback() {
   );
 }
 
-export function WorkspaceShell({ project, document }: WorkspaceShellProps) {
+export function WorkspaceShell({ project, document, currentUser }: WorkspaceShellProps) {
   const [editor, setEditor] = useState<Editor | null>(null);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("script");
+  const [rightPanelOpen, setRightPanelOpen] = useState(true);
+  const rightPanelRef = useRef<ImperativePanelHandle>(null);
 
   const renderCenterPanel = () => {
     switch (workspaceMode) {
@@ -76,10 +95,11 @@ export function WorkspaceShell({ project, document }: WorkspaceShellProps) {
             projectTitle={project.title}
             projectId={project.id}
             onEditorReady={setEditor}
+            currentUser={currentUser}
           />
         );
       case "bible":
-        return <BibleEditor projectId={project.id} />;
+        return <BibleEditor projectId={project.id} currentUser={currentUser} />;
       case "versions":
         return (
           <Suspense fallback={<PanelFallback />}>
@@ -108,6 +128,18 @@ export function WorkspaceShell({ project, document }: WorkspaceShellProps) {
         return (
           <Suspense fallback={<PanelFallback />}>
             <KnowledgeGraphPanel projectId={project.id} editor={editor} />
+          </Suspense>
+        );
+      case "one-pager":
+        return (
+          <Suspense fallback={<PanelFallback />}>
+            <OnePagerPanel projectId={project.id} />
+          </Suspense>
+        );
+      case "notes":
+        return (
+          <Suspense fallback={<PanelFallback />}>
+            <NotesPanel projectId={project.id} currentUser={currentUser} />
           </Suspense>
         );
       default:
@@ -140,19 +172,47 @@ export function WorkspaceShell({ project, document }: WorkspaceShellProps) {
 
         <ResizableHandle className="w-px bg-border/50 transition-colors hover:bg-ai-accent/30" />
 
-        <ResizablePanel defaultSize={60} minSize={40}>
-          {renderCenterPanel()}
+        <ResizablePanel defaultSize={rightPanelOpen ? 60 : 85} minSize={40}>
+          <div className="relative h-full">
+            {renderCenterPanel()}
+            {/* Show reopen button when right panel is collapsed */}
+            {!rightPanelOpen && (
+              <button
+                onClick={() => rightPanelRef.current?.expand()}
+                className="absolute right-2 top-2.5 z-20 rounded-md border border-border bg-background/80 p-1 text-muted-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-muted hover:text-foreground"
+                title="Show panel"
+              >
+                <PanelRightOpen className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </ResizablePanel>
 
         <ResizableHandle className="w-px bg-border/50 transition-colors hover:bg-ai-accent/30" />
 
         <ResizablePanel
+          ref={rightPanelRef}
           defaultSize={25}
           minSize={15}
           maxSize={35}
+          collapsible
+          collapsedSize={0}
+          onCollapse={() => setRightPanelOpen(false)}
+          onExpand={() => setRightPanelOpen(true)}
           className="glass-panel border-l border-sidebar-border"
         >
-          <RightPanel editor={editor} documentId={document.id} projectId={project.id} />
+          <RightPanel
+            editor={editor}
+            documentId={document.id}
+            projectId={project.id}
+            onToggle={() => {
+              if (rightPanelOpen) {
+                rightPanelRef.current?.collapse();
+              } else {
+                rightPanelRef.current?.expand();
+              }
+            }}
+          />
         </ResizablePanel>
       </ResizablePanelGroup>
     </motion.div>

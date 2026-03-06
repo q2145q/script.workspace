@@ -14,6 +14,8 @@ import { draftRouter } from "./routers/draft";
 import { episodeRouter } from "./routers/episode";
 import { entityRouter } from "./routers/entity";
 import { memberRouter } from "./routers/member";
+import { activityRouter } from "./routers/activity";
+import { noteRouter } from "./routers/note";
 
 export const appRouter = createTRPCRouter({
   project: projectRouter,
@@ -31,6 +33,8 @@ export const appRouter = createTRPCRouter({
   episode: episodeRouter,
   entity: entityRouter,
   member: memberRouter,
+  activity: activityRouter,
+  note: noteRouter,
 });
 
 export type AppRouter = typeof appRouter;

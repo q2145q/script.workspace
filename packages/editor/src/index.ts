@@ -9,3 +9,6 @@ export { Fragment } from "@tiptap/pm/model";
 export type { SuggestionData } from "./extensions/suggestion-decoration";
 export type { AutocompleteState } from "./extensions/autocomplete/autocomplete-extension";
 export { autocompletePluginKey } from "./extensions/autocomplete/autocomplete-extension";
+export { getScreenplaySchema } from "./schema";
+export type { CollaborationConfig } from "./components/Editor";
+export { HocuspocusProvider } from "@hocuspocus/provider";

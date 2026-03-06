@@ -31,6 +31,7 @@ export const chatRouter = createTRPCRouter({
       const messages = await prisma.chatMessage.findMany({
         where: {
           projectId: input.projectId,
+          userId: ctx.user.id,
           ...(input.cursor ? { createdAt: { lt: new Date(input.cursor) } } : {}),
         },
         orderBy: { createdAt: "asc" },
@@ -45,24 +46,15 @@ export const chatRouter = createTRPCRouter({
       };
     }),
 
-  /** Clear all chat history for a project */
+  /** Clear current user's chat history for a project */
   clear: protectedProcedure
     .input(clearChatSchema)
     .mutation(async ({ ctx, input }) => {
-      const project = await assertProjectAccess(input.projectId, ctx.user.id);
+      await assertProjectAccess(input.projectId, ctx.user.id);
 
-      // Only owner or editors can clear chat
-      if (project.ownerId !== ctx.user.id) {
-        const member = await prisma.projectMember.findUnique({
-          where: { projectId_userId: { projectId: input.projectId, userId: ctx.user.id } },
-        });
-        if (!member || !["OWNER", "EDITOR"].includes(member.role)) {
-          throw new TRPCError({ code: "FORBIDDEN" });
-        }
-      }
-
+      // Each user can only clear their own chat
       await prisma.chatMessage.deleteMany({
-        where: { projectId: input.projectId },
+        where: { projectId: input.projectId, userId: ctx.user.id },
       });
 
       return { success: true };

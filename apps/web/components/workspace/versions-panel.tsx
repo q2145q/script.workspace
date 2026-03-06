@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { History, Plus, RotateCcw, Eye } from "lucide-react";
+import { History, Plus, RotateCcw, Eye, GitCompare, X } from "lucide-react";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -11,12 +11,96 @@ interface VersionsPanelProps {
   documentId: string;
 }
 
+// Extract plain text from TipTap JSONContent
+function extractText(content: unknown): string {
+  if (!content || typeof content !== "object") return "";
+  const doc = content as { type?: string; content?: unknown[]; text?: string };
+  if (doc.text) return doc.text;
+  if (!doc.content || !Array.isArray(doc.content)) return "";
+
+  return doc.content
+    .map((node) => {
+      const n = node as { type?: string; content?: unknown[]; text?: string };
+      const nodeType = n.type || "";
+      const text = extractText(n);
+      if (!text) return "";
+
+      // Format based on screenplay node type
+      switch (nodeType) {
+        case "sceneHeading":
+          return text.toUpperCase();
+        case "character":
+          return `\t\t\t${text.toUpperCase()}`;
+        case "dialogue":
+          return `\t\t${text}`;
+        case "parenthetical":
+          return `\t\t${text}`;
+        case "transition":
+          return `\t\t\t\t\t${text.toUpperCase()}`;
+        default:
+          return text;
+      }
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+// Simple line-by-line diff algorithm (no external deps)
+interface DiffLine {
+  type: "same" | "added" | "removed";
+  text: string;
+}
+
+function computeDiff(oldText: string, newText: string): DiffLine[] {
+  const oldLines = oldText.split("\n");
+  const newLines = newText.split("\n");
+  const result: DiffLine[] = [];
+
+  // Simple LCS-based diff
+  const m = oldLines.length;
+  const n = newLines.length;
+
+  // Build LCS table
+  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (oldLines[i - 1] === newLines[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+  }
+
+  // Backtrack to produce diff
+  let i = m, j = n;
+  const stack: DiffLine[] = [];
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && oldLines[i - 1] === newLines[j - 1]) {
+      stack.push({ type: "same", text: oldLines[i - 1] });
+      i--; j--;
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      stack.push({ type: "added", text: newLines[j - 1] });
+      j--;
+    } else {
+      stack.push({ type: "removed", text: oldLines[i - 1] });
+      i--;
+    }
+  }
+
+  stack.reverse();
+  return stack;
+}
+
 export function VersionsPanel({ documentId }: VersionsPanelProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [draftName, setDraftName] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [diffMode, setDiffMode] = useState(false);
+  const [diffFromId, setDiffFromId] = useState<string | null>(null);
+  const [diffToId, setDiffToId] = useState<string | null>(null);
 
   const draftsQuery = useQuery(
     trpc.draft.list.queryOptions({ documentId })
@@ -25,7 +109,21 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
   const previewQuery = useQuery(
     trpc.draft.getById.queryOptions(
       { id: previewId! },
-      { enabled: !!previewId }
+      { enabled: !!previewId && !diffMode }
+    )
+  );
+
+  const diffFromQuery = useQuery(
+    trpc.draft.getById.queryOptions(
+      { id: diffFromId! },
+      { enabled: !!diffFromId && diffMode }
+    )
+  );
+
+  const diffToQuery = useQuery(
+    trpc.draft.getById.queryOptions(
+      { id: diffToId! },
+      { enabled: !!diffToId && diffMode }
     )
   );
 
@@ -62,7 +160,39 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
     });
   };
 
+  const diffResult = useMemo(() => {
+    if (!diffFromQuery.data?.content || !diffToQuery.data?.content) return null;
+    const oldText = extractText(diffFromQuery.data.content);
+    const newText = extractText(diffToQuery.data.content);
+    return computeDiff(oldText, newText);
+  }, [diffFromQuery.data, diffToQuery.data]);
+
   const drafts = draftsQuery.data ?? [];
+
+  const handleDraftClick = (draftId: string) => {
+    if (diffMode) {
+      if (!diffFromId) {
+        setDiffFromId(draftId);
+      } else if (!diffToId) {
+        setDiffToId(draftId);
+      } else {
+        // Reset and start over
+        setDiffFromId(draftId);
+        setDiffToId(null);
+      }
+    } else {
+      setPreviewId(previewId === draftId ? null : draftId);
+    }
+  };
+
+  const getDraftBorder = (draftId: string) => {
+    if (diffMode) {
+      if (draftId === diffFromId) return "border-red-400/50 bg-red-500/5";
+      if (draftId === diffToId) return "border-emerald-400/50 bg-emerald-500/5";
+    }
+    if (previewId === draftId) return "border-ai-accent/50 bg-ai-accent/5";
+    return "border-transparent hover:bg-accent";
+  };
 
   return (
     <div className="flex h-full flex-col bg-background">
@@ -75,14 +205,43 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
             {drafts.length}
           </span>
         </div>
-        <button
-          onClick={() => setShowCreate(!showCreate)}
-          className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          <Plus className="h-3 w-3" />
-          Save Draft
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => {
+              setDiffMode(!diffMode);
+              setDiffFromId(null);
+              setDiffToId(null);
+              setPreviewId(null);
+            }}
+            className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+              diffMode
+                ? "bg-ai-accent/10 text-ai-accent"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground"
+            }`}
+          >
+            <GitCompare className="h-3 w-3" />
+            Diff
+          </button>
+          <button
+            onClick={() => setShowCreate(!showCreate)}
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <Plus className="h-3 w-3" />
+            Save
+          </button>
+        </div>
       </div>
+
+      {/* Diff mode instruction */}
+      {diffMode && (
+        <div className="border-b border-border bg-muted/30 px-3 py-1.5 text-xs text-muted-foreground">
+          {!diffFromId
+            ? "Select the older version (from)"
+            : !diffToId
+            ? "Select the newer version (to)"
+            : "Showing diff"}
+        </div>
+      )}
 
       {/* Create draft form */}
       <AnimatePresence>
@@ -117,7 +276,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
       </AnimatePresence>
 
       {/* Drafts list */}
-      <div className="flex-1 overflow-y-auto">
+      <div className={`overflow-y-auto ${diffResult || previewId ? "h-[40%] shrink-0" : "flex-1"}`}>
         {draftsQuery.isLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
@@ -138,11 +297,8 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03 }}
-                className={`group rounded-md border px-3 py-2.5 transition-colors ${
-                  previewId === draft.id
-                    ? "border-ai-accent/50 bg-ai-accent/5"
-                    : "border-transparent hover:bg-accent"
-                }`}
+                className={`group cursor-pointer rounded-md border px-3 py-2.5 transition-colors ${getDraftBorder(draft.id)}`}
+                onClick={() => handleDraftClick(draft.id)}
               >
                 <div className="flex items-start justify-between">
                   <div className="min-w-0 flex-1">
@@ -159,25 +315,33 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
                       })}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button
-                      onClick={() =>
-                        setPreviewId(previewId === draft.id ? null : draft.id)
-                      }
-                      className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-                      title="Preview"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => restoreMutation.mutate({ id: draft.id })}
-                      disabled={restoreMutation.isPending}
-                      className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-                      title="Restore this draft"
-                    >
-                      <RotateCcw className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
+                  {!diffMode && (
+                    <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewId(previewId === draft.id ? null : draft.id);
+                        }}
+                        className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                        title="Preview"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm("Restore this draft? A safety snapshot will be created.")) {
+                            restoreMutation.mutate({ id: draft.id });
+                          }
+                        }}
+                        disabled={restoreMutation.isPending}
+                        className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                        title="Restore this draft"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}
@@ -185,30 +349,88 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
         )}
       </div>
 
-      {/* Preview pane */}
+      {/* Diff view */}
+      {diffMode && diffResult && (
+        <div className="flex flex-1 flex-col overflow-hidden border-t border-border">
+          <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
+            <span className="text-xs text-muted-foreground">
+              <span className="text-red-400">{diffFromQuery.data?.name || `Draft ${diffFromQuery.data?.number}`}</span>
+              {" → "}
+              <span className="text-emerald-400">{diffToQuery.data?.name || `Draft ${diffToQuery.data?.number}`}</span>
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground">
+                <span className="text-red-400">-{diffResult.filter((l) => l.type === "removed").length}</span>
+                {" / "}
+                <span className="text-emerald-400">+{diffResult.filter((l) => l.type === "added").length}</span>
+              </span>
+              <button
+                onClick={() => { setDiffFromId(null); setDiffToId(null); }}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 font-mono text-xs">
+            {diffResult.map((line, i) => (
+              <div
+                key={i}
+                className={`whitespace-pre-wrap px-2 py-0.5 ${
+                  line.type === "removed"
+                    ? "bg-red-500/10 text-red-400"
+                    : line.type === "added"
+                    ? "bg-emerald-500/10 text-emerald-400"
+                    : "text-muted-foreground"
+                }`}
+              >
+                <span className="mr-2 inline-block w-3 select-none text-right opacity-50">
+                  {line.type === "removed" ? "-" : line.type === "added" ? "+" : " "}
+                </span>
+                {line.text || " "}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Preview pane (non-diff mode) */}
       <AnimatePresence>
-        {previewId && previewQuery.data && (
+        {!diffMode && previewId && previewQuery.data && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "40%", opacity: 1 }}
+            animate={{ height: "60%", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-t border-border"
+            className="flex flex-col overflow-hidden border-t border-border"
           >
             <div className="flex items-center justify-between border-b border-border px-3 py-2">
               <span className="text-xs font-medium text-muted-foreground">
-                Preview: {previewQuery.data.name || `Draft ${previewQuery.data.number}`}
+                {previewQuery.data.name || `Draft ${previewQuery.data.number}`}
               </span>
-              <button
-                onClick={() => setPreviewId(null)}
-                className="text-xs text-muted-foreground hover:text-foreground"
-              >
-                Close
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (confirm("Restore this draft? A safety snapshot will be created.")) {
+                      restoreMutation.mutate({ id: previewId! });
+                    }
+                  }}
+                  disabled={restoreMutation.isPending}
+                  className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-ai-accent hover:bg-ai-accent/10"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Restore
+                </button>
+                <button
+                  onClick={() => setPreviewId(null)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
-            <div className="h-full overflow-y-auto p-3">
-              <pre className="whitespace-pre-wrap font-mono text-xs text-muted-foreground">
-                {JSON.stringify(previewQuery.data.content, null, 2).slice(0, 2000)}
-                {JSON.stringify(previewQuery.data.content).length > 2000 && "\n..."}
+            <div className="flex-1 overflow-y-auto p-3">
+              <pre className="whitespace-pre-wrap font-mono text-xs text-muted-foreground leading-relaxed">
+                {extractText(previewQuery.data.content)}
               </pre>
             </div>
           </motion.div>
