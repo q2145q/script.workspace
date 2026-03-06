@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState, useRef } from "react";
 import { ScriptEditor, EditorToolbar, useEditorState, useEditorAutosave, type JSONContent, type Editor, HocuspocusProvider } from "@script/editor";
+import { useTranslations } from "next-intl";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -43,6 +44,7 @@ interface EditorAreaProps {
 }
 
 function PinButton({ editor, projectId }: { editor: Editor; projectId: string }) {
+  const t = useTranslations("Editor");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -80,19 +82,21 @@ function PinButton({ editor, projectId }: { editor: Editor; projectId: string })
       onClick={handlePin}
       disabled={pinMutation.isPending}
       className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-ai-accent/10 hover:text-ai-accent disabled:opacity-50"
-      title="Pin selection to AI context"
+      title={t("pinSelection")}
     >
       <Pin className="h-3 w-3" />
-      Pin
+      {t("pin")}
     </button>
   );
 }
 
 function SaveDraftButton({ documentId }: { documentId: string }) {
+  const t = useTranslations("Editor");
+  const tVersions = useTranslations("Versions");
   const trpc = useTRPC();
   const draftMutation = useMutation(
     trpc.draft.create.mutationOptions({
-      onSuccess: () => toast.success("Draft saved"),
+      onSuccess: () => toast.success(tVersions("draftSaved")),
       onError: (err) => toast.error(err.message),
     })
   );
@@ -102,11 +106,21 @@ function SaveDraftButton({ documentId }: { documentId: string }) {
       onClick={() => draftMutation.mutate({ documentId })}
       disabled={draftMutation.isPending}
       className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-ai-accent/10 hover:text-ai-accent disabled:opacity-50"
-      title="Save current version as draft"
+      title={t("saveDraft")}
     >
       <Save className="h-3 w-3" />
-      Draft
+      {t("draft")}
     </button>
+  );
+}
+
+function AutoSaveLabel() {
+  const t = useTranslations("Editor");
+  return (
+    <span className="flex items-center gap-1 text-[10px] text-emerald-500" title={t("autoSaveTitle")}>
+      <Save className="h-3 w-3" />
+      {t("autoSave")}
+    </span>
   );
 }
 
@@ -186,10 +200,7 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
           {useCollab ? (
             <CollabStatus provider={collabProvider} />
           ) : (
-            <span className="flex items-center gap-1 text-[10px] text-emerald-500" title="Auto-saving to database">
-              <Save className="h-3 w-3" />
-              Auto-save
-            </span>
+            <AutoSaveLabel />
           )}
         </div>
       </div>

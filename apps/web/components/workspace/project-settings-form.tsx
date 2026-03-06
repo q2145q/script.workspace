@@ -7,7 +7,8 @@ import Link from "next/link";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { LANGUAGES, PROJECT_STATUS_LABELS, type ProjectStatus } from "@script/types";
+import { LANGUAGES, type ProjectStatus } from "@script/types";
+import { useTranslations } from "next-intl";
 
 interface ProjectSettingsFormProps {
   project: {
@@ -26,20 +27,17 @@ interface ProjectSettingsFormProps {
   isOwner?: boolean;
 }
 
-const PROJECT_TYPES = [
-  { value: "FEATURE_FILM", label: "Feature Film" },
-  { value: "TV_SERIES", label: "TV Series" },
-  { value: "SHORT_FILM", label: "Short Film" },
-  { value: "OTHER", label: "Other" },
-];
-
-const MEMBER_ROLES = [
-  { value: "EDITOR", label: "Editor" },
-  { value: "COMMENTER", label: "Commenter" },
-  { value: "VIEWER", label: "Viewer" },
-];
+const PROJECT_TYPE_VALUES = ["FEATURE_FILM", "TV_SERIES", "SHORT_FILM", "OTHER"] as const;
+const MEMBER_ROLE_VALUES = ["EDITOR", "COMMENTER", "VIEWER"] as const;
+const PROJECT_STATUS_VALUES = ["DRAFT", "IN_PROGRESS", "UNDER_REVIEW", "FINAL", "ARCHIVED"] as const;
 
 export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSettingsFormProps) {
+  const t = useTranslations("ProjectSettings");
+  const tTypes = useTranslations("ProjectTypes");
+  const tStatus = useTranslations("ProjectStatus");
+  const tRoles = useTranslations("MemberRoles");
+  const tCommon = useTranslations("Common");
+
   const [title, setTitle] = useState(project.title);
   const [description, setDescription] = useState(project.description ?? "");
   const [type, setType] = useState(project.type);
@@ -59,7 +57,7 @@ export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSett
     trpc.project.update.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.project.getById.queryKey({ id: projectId }) });
-        toast.success("Settings saved");
+        toast.success(t("settingsSaved"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -102,17 +100,17 @@ export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSett
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div>
-          <h1 className="text-lg font-semibold text-foreground">Project Settings</h1>
+          <h1 className="text-lg font-semibold text-foreground">{t("title")}</h1>
           <p className="text-xs text-muted-foreground">{project.title}</p>
         </div>
       </div>
 
       {/* General */}
       <section className="mb-8">
-        <h2 className="mb-4 text-sm font-semibold text-foreground">General</h2>
+        <h2 className="mb-4 text-sm font-semibold text-foreground">{t("general")}</h2>
         <div className="space-y-4 rounded-xl border border-border bg-muted/10 p-4">
           <div>
-            <label className={labelClass}>Title</label>
+            <label className={labelClass}>{t("projectTitle")}</label>
             <input
               type="text"
               value={title}
@@ -121,42 +119,42 @@ export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSett
             />
           </div>
           <div>
-            <label className={labelClass}>Description</label>
+            <label className={labelClass}>{t("description")}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               className={inputClass + " resize-none"}
-              placeholder="Optional description..."
+              placeholder={t("descriptionPlaceholder")}
             />
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className={labelClass}>Type</label>
+              <label className={labelClass}>{t("type")}</label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
                 className={inputClass}
               >
-                {PROJECT_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
+                {PROJECT_TYPE_VALUES.map((value) => (
+                  <option key={value} value={value}>{tTypes(value)}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className={labelClass}>Status</label>
+              <label className={labelClass}>{t("status")}</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
                 className={inputClass}
               >
-                {Object.entries(PROJECT_STATUS_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
+                {PROJECT_STATUS_VALUES.map((value) => (
+                  <option key={value} value={value}>{tStatus(value)}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className={labelClass}>Language</label>
+              <label className={labelClass}>{t("language")}</label>
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
@@ -175,19 +173,19 @@ export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSett
       <section className="mb-8">
         <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
           <Cpu className="h-4 w-4 text-ai-accent" />
-          AI Model
+          {t("aiModel")}
         </h2>
         <div className="space-y-4 rounded-xl border border-border bg-muted/10 p-4">
           {availableModels && availableModels.length > 0 ? (
             <>
               <div>
-                <label className={labelClass}>Provider</label>
+                <label className={labelClass}>{t("provider")}</label>
                 <select
                   value={selectedProvider}
                   onChange={(e) => handleProviderChange(e.target.value)}
                   className={inputClass}
                 >
-                  <option value="">Auto (default)</option>
+                  <option value="">{t("autoDefault")}</option>
                   {availableModels.map((p) => (
                     <option key={p.provider} value={p.provider}>
                       {p.provider.charAt(0).toUpperCase() + p.provider.slice(1)}
@@ -197,7 +195,7 @@ export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSett
               </div>
               {selectedProvider && currentProviderModels.length > 0 && (
                 <div>
-                  <label className={labelClass}>Model</label>
+                  <label className={labelClass}>{t("model")}</label>
                   <select
                     value={selectedModel}
                     onChange={(e) => setSelectedModel(e.target.value)}
@@ -210,12 +208,12 @@ export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSett
                 </div>
               )}
               <p className="text-xs text-muted-foreground">
-                Choose a default AI model for this project. You can also change the model per-chat session.
+                {t("aiModelHint")}
               </p>
             </>
           ) : (
             <p className="text-sm text-muted-foreground">
-              No AI providers are currently available. Contact the administrator.
+              {t("noProviders")}
             </p>
           )}
         </div>
@@ -225,7 +223,7 @@ export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSett
       <section className="mb-8">
         <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
           <Sparkles className="h-4 w-4 text-ai-accent" />
-          AI Tools
+          {t("aiTools")}
         </h2>
         <div className="space-y-4 rounded-xl border border-border bg-muted/10 p-4">
           <LoglineGenerator projectId={projectId} savedLogline={project.logline} />
@@ -242,7 +240,7 @@ export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSett
           className="flex items-center gap-2 rounded-lg bg-ai-accent px-4 py-2 text-sm font-medium text-ai-accent-foreground transition-all hover:opacity-90 disabled:opacity-50"
         >
           {updateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          Save Changes
+          {t("saveChanges")}
         </button>
       </section>
 
@@ -251,7 +249,7 @@ export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSett
         <section className="mb-8">
           <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
             <Users className="h-4 w-4" />
-            Members
+            {t("members")}
           </h2>
           <MembersSection projectId={projectId} />
         </section>
@@ -261,6 +259,8 @@ export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSett
 }
 
 function LoglineGenerator({ projectId, savedLogline }: { projectId: string; savedLogline: string | null }) {
+  const t = useTranslations("ProjectSettings");
+  const tCommon = useTranslations("Common");
   const trpc = useTRPC();
   const [userRequest, setUserRequest] = useState("");
   const [logline, setLogline] = useState(savedLogline ?? "");
@@ -270,7 +270,7 @@ function LoglineGenerator({ projectId, savedLogline }: { projectId: string; save
     trpc.ai.generateLogline.mutationOptions({
       onSuccess: (data) => {
         setLogline(data.logline);
-        toast.success("Logline generated");
+        toast.success(t("loglineGenerated"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -287,14 +287,14 @@ function LoglineGenerator({ projectId, savedLogline }: { projectId: string; save
   return (
     <div>
       <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-        Generate Logline
+        {t("generateLogline")}
       </label>
       <div className="flex gap-2">
         <input
           type="text"
           value={userRequest}
           onChange={(e) => setUserRequest(e.target.value)}
-          placeholder="Optional: specific instructions..."
+          placeholder={t("instructionsPlaceholder")}
           className={inputClass}
         />
         <button
@@ -307,7 +307,7 @@ function LoglineGenerator({ projectId, savedLogline }: { projectId: string; save
           ) : (
             <Sparkles className="h-4 w-4" />
           )}
-          {logline ? "Regenerate" : "Generate"}
+          {logline ? tCommon("regenerate") : tCommon("generate")}
         </button>
       </div>
       {logline && (
@@ -316,20 +316,22 @@ function LoglineGenerator({ projectId, savedLogline }: { projectId: string; save
           <button
             onClick={handleCopy}
             className="flex-shrink-0 rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
-            title="Copy"
+            title={tCommon("copy")}
           >
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
           </button>
         </div>
       )}
       <p className="mt-1 text-[10px] text-muted-foreground">
-        AI analyzes your screenplay to create a concise logline.
+        {t("loglineHint")}
       </p>
     </div>
   );
 }
 
 function SynopsisGenerator({ projectId, savedSynopsis }: { projectId: string; savedSynopsis: string | null }) {
+  const t = useTranslations("ProjectSettings");
+  const tCommon = useTranslations("Common");
   const trpc = useTRPC();
   const [synopsis, setSynopsis] = useState(savedSynopsis ?? "");
   const [copied, setCopied] = useState(false);
@@ -338,7 +340,7 @@ function SynopsisGenerator({ projectId, savedSynopsis }: { projectId: string; sa
     trpc.ai.generateSynopsis.mutationOptions({
       onSuccess: (data) => {
         setSynopsis(data.synopsis);
-        toast.success("Synopsis generated");
+        toast.success(t("synopsisGenerated"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -353,7 +355,7 @@ function SynopsisGenerator({ projectId, savedSynopsis }: { projectId: string; sa
   return (
     <div>
       <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-        Generate Synopsis
+        {t("generateSynopsis")}
       </label>
       <button
         onClick={() => mutation.mutate({ projectId })}
@@ -365,7 +367,7 @@ function SynopsisGenerator({ projectId, savedSynopsis }: { projectId: string; sa
         ) : (
           <FileText className="h-4 w-4" />
         )}
-        {synopsis ? "Regenerate Synopsis" : "Generate Synopsis"}
+        {synopsis ? t("regenerateSynopsis") : t("generateSynopsis")}
       </button>
       {synopsis && (
         <div className="mt-2 rounded-lg border border-border bg-muted/30 p-3">
@@ -373,7 +375,7 @@ function SynopsisGenerator({ projectId, savedSynopsis }: { projectId: string; sa
             <button
               onClick={handleCopy}
               className="rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
-              title="Copy"
+              title={tCommon("copy")}
             >
               {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
             </button>
@@ -382,13 +384,17 @@ function SynopsisGenerator({ projectId, savedSynopsis }: { projectId: string; sa
         </div>
       )}
       <p className="mt-1 text-[10px] text-muted-foreground">
-        AI reads your full screenplay and generates a detailed synopsis.
+        {t("synopsisHint")}
       </p>
     </div>
   );
 }
 
 function MembersSection({ projectId }: { projectId: string }) {
+  const t = useTranslations("ProjectSettings");
+  const tRoles = useTranslations("MemberRoles");
+  const tCommon = useTranslations("Common");
+
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"EDITOR" | "COMMENTER" | "VIEWER">("EDITOR");
   const trpc = useTRPC();
@@ -402,7 +408,7 @@ function MembersSection({ projectId }: { projectId: string }) {
     trpc.member.invite.mutationOptions({
       onSuccess: (result) => {
         queryClient.invalidateQueries({ queryKey: trpc.member.list.queryKey({ projectId }) });
-        toast.success(`${result.user.name || result.user.email} invited`);
+        toast.success(t("invited", { name: result.user.name || result.user.email }));
         setInviteEmail("");
       },
       onError: (err) => toast.error(err.message),
@@ -413,7 +419,7 @@ function MembersSection({ projectId }: { projectId: string }) {
     trpc.member.updateRole.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.member.list.queryKey({ projectId }) });
-        toast.success("Role updated");
+        toast.success(t("roleUpdated"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -423,7 +429,7 @@ function MembersSection({ projectId }: { projectId: string }) {
     trpc.member.remove.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.member.list.queryKey({ projectId }) });
-        toast.success("Member removed");
+        toast.success(t("memberRemoved"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -441,7 +447,7 @@ function MembersSection({ projectId }: { projectId: string }) {
             <span className="text-sm font-medium text-foreground">{data.owner.name}</span>
             <span className="text-xs text-muted-foreground">{data.owner.email}</span>
           </div>
-          <span className="text-xs font-medium text-amber-500">Owner</span>
+          <span className="text-xs font-medium text-amber-500">{tCommon("owner")}</span>
         </div>
       )}
 
@@ -470,15 +476,15 @@ function MembersSection({ projectId }: { projectId: string }) {
                   disabled={updateRoleMutation.isPending}
                   className="rounded border border-border bg-muted/50 px-2 py-1 text-xs text-foreground"
                 >
-                  {MEMBER_ROLES.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
+                  {MEMBER_ROLE_VALUES.map((value) => (
+                    <option key={value} value={value}>{tRoles(value)}</option>
                   ))}
                 </select>
                 <button
                   onClick={() => removeMutation.mutate({ projectId, userId: member.userId })}
                   disabled={removeMutation.isPending}
                   className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                  title="Remove member"
+                  title={t("removeMember")}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -491,12 +497,12 @@ function MembersSection({ projectId }: { projectId: string }) {
       {/* Invite form */}
       <div className="flex items-end gap-2">
         <div className="flex-1">
-          <label className="mb-1.5 block text-xs font-medium text-muted-foreground">Invite by email</label>
+          <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("inviteByEmail")}</label>
           <input
             type="email"
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
-            placeholder="user@example.com"
+            placeholder={t("emailPlaceholder")}
             className={inputClass}
           />
         </div>
@@ -505,8 +511,8 @@ function MembersSection({ projectId }: { projectId: string }) {
           onChange={(e) => setInviteRole(e.target.value as "EDITOR" | "COMMENTER" | "VIEWER")}
           className="rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-foreground"
         >
-          {MEMBER_ROLES.map((r) => (
-            <option key={r.value} value={r.value}>{r.label}</option>
+          {MEMBER_ROLE_VALUES.map((value) => (
+            <option key={value} value={value}>{tRoles(value)}</option>
           ))}
         </select>
         <button
@@ -521,7 +527,7 @@ function MembersSection({ projectId }: { projectId: string }) {
           ) : (
             <UserPlus className="h-4 w-4" />
           )}
-          Invite
+          {tCommon("invite")}
         </button>
       </div>
     </div>

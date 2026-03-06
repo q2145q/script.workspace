@@ -2,6 +2,7 @@
 
 import { useState, useRef, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import type { Editor } from "@script/editor";
 import type { ImperativePanelHandle } from "react-resizable-panels";
@@ -81,6 +82,7 @@ function PanelFallback() {
 }
 
 export function WorkspaceShell({ project, document, currentUser }: WorkspaceShellProps) {
+  const t = useTranslations("Editor");
   const [editor, setEditor] = useState<Editor | null>(null);
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("script");
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
@@ -180,7 +182,7 @@ export function WorkspaceShell({ project, document, currentUser }: WorkspaceShel
               <button
                 onClick={() => rightPanelRef.current?.expand()}
                 className="absolute right-2 top-2.5 z-20 rounded-md border border-border bg-background/80 p-1 text-muted-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-muted hover:text-foreground"
-                title="Show panel"
+                title={t("showPanel")}
               >
                 <PanelRightOpen className="h-4 w-4" />
               </button>

@@ -1,10 +1,12 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { signOut } from "@script/api/auth-client";
 import { useRouter } from "next/navigation";
 
 export function SignOutButton() {
   const router = useRouter();
+  const t = useTranslations("Auth");
 
   return (
     <button
@@ -14,7 +16,7 @@ export function SignOutButton() {
       }}
       className="text-sm text-muted-foreground hover:text-foreground"
     >
-      Sign out
+      {t("signOut")}
     </button>
   );
 }

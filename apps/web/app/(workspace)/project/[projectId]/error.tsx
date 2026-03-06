@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 export default function ProjectError({
@@ -10,6 +11,8 @@ export default function ProjectError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("Errors");
+
   useEffect(() => {
     console.error("Project error:", error);
   }, [error]);
@@ -18,23 +21,23 @@ export default function ProjectError({
     <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="text-center space-y-4">
         <h2 className="text-xl font-semibold text-foreground">
-          Project error
+          {t("projectError")}
         </h2>
         <p className="text-sm text-muted-foreground max-w-md">
-          Failed to load the project. It may have been deleted or you may not have access.
+          {t("projectLoadFailed")}
         </p>
         <div className="flex items-center justify-center gap-3">
           <button
             onClick={reset}
             className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 transition-colors"
           >
-            Try again
+            {t("tryAgain")}
           </button>
           <Link
             href="/dashboard"
             className="rounded-md border border-border px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
           >
-            Back to dashboard
+            {t("backToDashboard")}
           </Link>
         </div>
       </div>

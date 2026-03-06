@@ -8,6 +8,7 @@ import { Fragment } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface AICommandBarProps {
   editor: Editor | null;
@@ -17,6 +18,8 @@ interface AICommandBarProps {
 const FORMAT_PATTERN = /^\/?format$/i;
 
 export function AICommandBar({ editor, documentId }: AICommandBarProps) {
+  const t = useTranslations("Editor");
+
   const [open, setOpen] = useState(false);
   const [instruction, setInstruction] = useState("");
   const [selection, setSelection] = useState<{
@@ -87,7 +90,7 @@ export function AICommandBar({ editor, documentId }: AICommandBarProps) {
           tr.replaceWith(startBlock, endBlock, fragment);
           editor.view.dispatch(tr);
 
-          toast.success(result.explanation || "Text formatted into screenplay blocks");
+          toast.success(result.explanation || t("textFormatted"));
         }
 
         setOpen(false);
@@ -111,7 +114,7 @@ export function AICommandBar({ editor, documentId }: AICommandBarProps) {
 
         const { from, to } = editor.state.selection;
         if (from === to) {
-          toast.error("Select some text first");
+          toast.error(t("selectTextFirst"));
           return;
         }
 
@@ -147,7 +150,7 @@ export function AICommandBar({ editor, documentId }: AICommandBarProps) {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [editor]);
+  }, [editor, t]);
 
   // Focus input when opened
   useEffect(() => {
@@ -231,7 +234,7 @@ export function AICommandBar({ editor, documentId }: AICommandBarProps) {
                     handleClose();
                   }
                 }}
-                placeholder='Rewrite instruction or "/format" to auto-format...'
+                placeholder={t("commandPlaceholder")}
                 disabled={isPending}
                 className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
               />
@@ -239,7 +242,7 @@ export function AICommandBar({ editor, documentId }: AICommandBarProps) {
                 <Loader2 className="h-4 w-4 animate-spin text-ai-accent" />
               ) : instruction.trim() ? (
                 <kbd className="shrink-0 rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                  Enter
+                  {t("enter")}
                 </kbd>
               ) : null}
             </div>
@@ -247,7 +250,7 @@ export function AICommandBar({ editor, documentId }: AICommandBarProps) {
             {selection && (
               <div className="border-t border-border/50 px-3 py-1.5">
                 <p className="truncate text-[10px] text-muted-foreground">
-                  Selected: &ldquo;{selection.text.slice(0, 80)}
+                  {t("selected")}&ldquo;{selection.text.slice(0, 80)}
                   {selection.text.length > 80 ? "..." : ""}&rdquo;
                 </p>
               </div>

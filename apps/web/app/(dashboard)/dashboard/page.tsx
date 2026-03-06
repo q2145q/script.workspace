@@ -3,11 +3,13 @@
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { ProjectList } from "@/components/dashboard/project-list";
 import { CreateProjectDialog } from "@/components/dashboard/create-project-dialog";
 
 export default function DashboardPage() {
   const trpc = useTRPC();
+  const t = useTranslations("Dashboard");
   const { data: projects, isLoading } = useQuery(
     trpc.project.list.queryOptions()
   );
@@ -20,9 +22,9 @@ export default function DashboardPage() {
     >
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Projects</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{t("projects")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your screenwriting projects
+            {t("projectsSubtitle")}
           </p>
         </div>
         <CreateProjectDialog />
@@ -41,9 +43,9 @@ export default function DashboardPage() {
         <ProjectList projects={projects} />
       ) : (
         <div className="flex h-60 flex-col items-center justify-center rounded-xl border border-dashed border-border">
-          <p className="mb-2 text-muted-foreground">No projects yet</p>
+          <p className="mb-2 text-muted-foreground">{t("noProjects")}</p>
           <p className="text-sm text-muted-foreground">
-            Create your first project to get started
+            {t("createFirst")}
           </p>
         </div>
       )}

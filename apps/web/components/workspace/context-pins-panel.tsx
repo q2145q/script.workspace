@@ -6,6 +6,7 @@ import { Pin, X, Plus, GripVertical } from "lucide-react";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface ContextPinsPanelProps {
   projectId: string;
@@ -17,6 +18,8 @@ export function ContextPinsPanel({ projectId }: ContextPinsPanelProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const t = useTranslations("ContextPins");
+  const tCommon = useTranslations("Common");
 
   const queryKey = trpc.pin.list.queryKey({ projectId });
 
@@ -30,7 +33,7 @@ export function ContextPinsPanel({ projectId }: ContextPinsPanelProps) {
         queryClient.invalidateQueries({ queryKey });
         setNewPinContent("");
         setIsAdding(false);
-        toast.success("Pin added to context");
+        toast.success(t("pinAdded"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -127,7 +130,7 @@ export function ContextPinsPanel({ projectId }: ContextPinsPanelProps) {
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Context Pins
+            {t("title")}
           </span>
           {pins.length > 0 && (
             <span className="rounded-full bg-ai-accent/10 px-1.5 py-0.5 text-[9px] font-medium text-ai-accent">
@@ -141,7 +144,7 @@ export function ContextPinsPanel({ projectId }: ContextPinsPanelProps) {
             setTimeout(() => textareaRef.current?.focus(), 50);
           }}
           className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          title="Add custom pin"
+          title={t("addCustom")}
         >
           <Plus className="h-3 w-3" />
         </button>
@@ -153,10 +156,10 @@ export function ContextPinsPanel({ projectId }: ContextPinsPanelProps) {
           <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center">
             <Pin className="h-6 w-6 text-muted-foreground/30" />
             <p className="text-xs text-muted-foreground">
-              Pin text from the editor or add custom context for AI conversations
+              {t("emptyState")}
             </p>
             <p className="text-[10px] text-muted-foreground/60">
-              Select text in the editor and click the pin icon
+              {t("emptyHint")}
             </p>
           </div>
         )}
@@ -215,7 +218,7 @@ export function ContextPinsPanel({ projectId }: ContextPinsPanelProps) {
                     ref={textareaRef}
                     value={newPinContent}
                     onChange={(e) => setNewPinContent(e.target.value)}
-                    placeholder="Add context for AI..."
+                    placeholder={t("placeholder")}
                     rows={3}
                     className="w-full resize-none rounded border-none bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
                   />
@@ -227,14 +230,14 @@ export function ContextPinsPanel({ projectId }: ContextPinsPanelProps) {
                       }}
                       className="rounded px-2 py-1 text-[10px] text-muted-foreground hover:bg-accent"
                     >
-                      Cancel
+                      {tCommon("cancel")}
                     </button>
                     <button
                       onClick={handleAddPin}
                       disabled={!newPinContent.trim() || createMutation.isPending}
                       className="rounded bg-ai-accent/10 px-2 py-1 text-[10px] font-medium text-ai-accent hover:bg-ai-accent/20 disabled:opacity-30"
                     >
-                      Add Pin
+                      {tCommon("add")}
                     </button>
                   </div>
                 </div>
@@ -247,7 +250,7 @@ export function ContextPinsPanel({ projectId }: ContextPinsPanelProps) {
       {/* Footer hint */}
       {pins.length > 0 && (
         <div className="border-t border-border p-2 text-center text-[9px] text-muted-foreground/50">
-          Pins are included in every AI chat message
+          {t("footerHint")}
         </div>
       )}
     </div>

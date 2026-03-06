@@ -6,6 +6,7 @@ import { History, Plus, RotateCcw, Eye, GitCompare, X } from "lucide-react";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface VersionsPanelProps {
   documentId: string;
@@ -93,6 +94,8 @@ function computeDiff(oldText: string, newText: string): DiffLine[] {
 }
 
 export function VersionsPanel({ documentId }: VersionsPanelProps) {
+  const t = useTranslations("Versions");
+  const tc = useTranslations("Common");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [draftName, setDraftName] = useState("");
@@ -135,7 +138,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
         });
         setDraftName("");
         setShowCreate(false);
-        toast.success("Draft saved");
+        toast.success(t("draftSaved"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -147,7 +150,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
         queryClient.invalidateQueries({
           queryKey: trpc.draft.list.queryKey({ documentId }),
         });
-        toast.success("Draft restored. Reload the page to see changes.");
+        toast.success(t("draftRestored"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -200,7 +203,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
       <div className="glass-panel flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <History className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Versions</span>
+          <span className="text-sm font-medium">{t("title")}</span>
           <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
             {drafts.length}
           </span>
@@ -220,14 +223,14 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
             }`}
           >
             <GitCompare className="h-3 w-3" />
-            Diff
+            {t("diff")}
           </button>
           <button
             onClick={() => setShowCreate(!showCreate)}
             className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <Plus className="h-3 w-3" />
-            Save
+            {tc("save")}
           </button>
         </div>
       </div>
@@ -236,10 +239,10 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
       {diffMode && (
         <div className="border-b border-border bg-muted/30 px-3 py-1.5 text-xs text-muted-foreground">
           {!diffFromId
-            ? "Select the older version (from)"
+            ? t("selectOlder")
             : !diffToId
-            ? "Select the newer version (to)"
-            : "Showing diff"}
+            ? t("selectNewer")
+            : t("showingDiff")}
         </div>
       )}
 
@@ -257,7 +260,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
                 type="text"
                 value={draftName}
                 onChange={(e) => setDraftName(e.target.value)}
-                placeholder="Draft name (optional)"
+                placeholder={t("draftNamePlaceholder")}
                 className="flex-1 rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleCreate();
@@ -268,7 +271,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
                 disabled={createMutation.isPending}
                 className="rounded-md bg-ai-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-ai-accent/80 disabled:opacity-50"
               >
-                Save
+                {tc("save")}
               </button>
             </div>
           </motion.div>
@@ -284,9 +287,9 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
         ) : drafts.length === 0 ? (
           <div className="px-4 py-8 text-center">
             <History className="mx-auto h-8 w-8 text-muted-foreground/30" />
-            <p className="mt-2 text-sm text-muted-foreground">No drafts yet</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t("noDrafts")}</p>
             <p className="mt-1 text-xs text-muted-foreground/60">
-              Save a draft to create a snapshot of your current document.
+              {t("noDraftsHint")}
             </p>
           </div>
         ) : (
@@ -303,7 +306,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
                 <div className="flex items-start justify-between">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">
-                      {draft.name || `Draft ${draft.number}`}
+                      {draft.name || t("draftFallback", { number: draft.number })}
                     </p>
                     <p className="mt-0.5 text-[10px] text-muted-foreground">
                       #{draft.number} &middot;{" "}
@@ -323,20 +326,20 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
                           setPreviewId(previewId === draft.id ? null : draft.id);
                         }}
                         className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-                        title="Preview"
+                        title={tc("preview")}
                       >
                         <Eye className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (confirm("Restore this draft? A safety snapshot will be created.")) {
+                          if (confirm(t("restoreConfirm"))) {
                             restoreMutation.mutate({ id: draft.id });
                           }
                         }}
                         disabled={restoreMutation.isPending}
                         className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-                        title="Restore this draft"
+                        title={t("restoreTitle")}
                       >
                         <RotateCcw className="h-3.5 w-3.5" />
                       </button>
@@ -354,9 +357,9 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
         <div className="flex flex-1 flex-col overflow-hidden border-t border-border">
           <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
             <span className="text-xs text-muted-foreground">
-              <span className="text-red-400">{diffFromQuery.data?.name || `Draft ${diffFromQuery.data?.number}`}</span>
+              <span className="text-red-400">{diffFromQuery.data?.name || t("draftFallback", { number: diffFromQuery.data?.number ?? 0 })}</span>
               {" → "}
-              <span className="text-emerald-400">{diffToQuery.data?.name || `Draft ${diffToQuery.data?.number}`}</span>
+              <span className="text-emerald-400">{diffToQuery.data?.name || t("draftFallback", { number: diffToQuery.data?.number ?? 0 })}</span>
             </span>
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-muted-foreground">
@@ -405,12 +408,12 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
           >
             <div className="flex items-center justify-between border-b border-border px-3 py-2">
               <span className="text-xs font-medium text-muted-foreground">
-                {previewQuery.data.name || `Draft ${previewQuery.data.number}`}
+                {previewQuery.data.name || t("draftFallback", { number: previewQuery.data.number })}
               </span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
-                    if (confirm("Restore this draft? A safety snapshot will be created.")) {
+                    if (confirm(t("restoreConfirm"))) {
                       restoreMutation.mutate({ id: previewId! });
                     }
                   }}
@@ -418,7 +421,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
                   className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-ai-accent hover:bg-ai-accent/10"
                 >
                   <RotateCcw className="h-3 w-3" />
-                  Restore
+                  {tc("restore")}
                 </button>
                 <button
                   onClick={() => setPreviewId(null)}

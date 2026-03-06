@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -12,6 +13,9 @@ export function CreateProjectDialog() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<string>("FEATURE_FILM");
+  const t = useTranslations("Dashboard");
+  const tTypes = useTranslations("ProjectTypes");
+  const tCommon = useTranslations("Common");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -20,7 +24,7 @@ export function CreateProjectDialog() {
     trpc.project.create.mutationOptions({
       onSuccess: (project) => {
         queryClient.invalidateQueries({ queryKey: trpc.project.list.queryKey() });
-        toast.success("Project created");
+        toast.success(t("projectCreated"));
         setOpen(false);
         setTitle("");
         setDescription("");
@@ -38,7 +42,7 @@ export function CreateProjectDialog() {
         onClick={() => setOpen(true)}
         className="rounded-lg bg-ai-accent px-4 py-2 text-sm font-medium text-ai-accent-foreground transition-all duration-200 hover:opacity-90"
       >
-        New Project
+        {t("newProject")}
       </button>
     );
   }
@@ -61,7 +65,7 @@ export function CreateProjectDialog() {
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="glass-panel relative z-10 w-full max-w-md rounded-xl border border-border p-6 shadow-2xl"
           >
-            <h2 className="mb-4 text-lg font-semibold text-foreground">New Project</h2>
+            <h2 className="mb-4 text-lg font-semibold text-foreground">{t("newProject")}</h2>
 
             <form
               onSubmit={(e) => {
@@ -75,41 +79,41 @@ export function CreateProjectDialog() {
               className="space-y-4"
             >
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">Title</label>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">{t("projectTitle")}</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
                   className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="My Screenplay"
+                  placeholder={t("projectTitlePlaceholder")}
                 />
               </div>
 
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-foreground">
-                  Description (optional)
+                  {t("descriptionOptional")}
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-                  placeholder="A brief description of your project"
+                  placeholder={t("descriptionPlaceholder")}
                 />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">Type</label>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">{t("projectType")}</label>
                 <select
                   value={type}
                   onChange={(e) => setType(e.target.value)}
                   className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                  <option value="FEATURE_FILM">Feature Film</option>
-                  <option value="TV_SERIES">TV Series</option>
-                  <option value="SHORT_FILM">Short Film</option>
-                  <option value="OTHER">Other</option>
+                  <option value="FEATURE_FILM">{tTypes("FEATURE_FILM")}</option>
+                  <option value="TV_SERIES">{tTypes("TV_SERIES")}</option>
+                  <option value="SHORT_FILM">{tTypes("SHORT_FILM")}</option>
+                  <option value="OTHER">{tTypes("OTHER")}</option>
                 </select>
               </div>
 
@@ -119,14 +123,14 @@ export function CreateProjectDialog() {
                   onClick={() => setOpen(false)}
                   className="rounded-lg border border-border px-4 py-2 text-sm text-foreground transition-colors duration-200 hover:bg-muted"
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={createMutation.isPending}
                   className="rounded-lg bg-ai-accent px-4 py-2 text-sm font-medium text-ai-accent-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-50"
                 >
-                  {createMutation.isPending ? "Creating..." : "Create"}
+                  {createMutation.isPending ? t("creating") : tCommon("create")}
                 </button>
               </div>
             </form>

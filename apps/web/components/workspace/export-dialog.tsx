@@ -6,6 +6,7 @@ import { useTRPC } from "@/lib/trpc/client";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Download, FileText, FileIcon, Loader2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ExportDialogProps {
   documentId: string;
@@ -13,6 +14,8 @@ interface ExportDialogProps {
 }
 
 export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
+  const t = useTranslations("Export");
+
   const [open, setOpen] = useState(false);
   const [format, setFormat] = useState<"pdf" | "docx">("pdf");
   const [titlePage, setTitlePage] = useState(true);
@@ -39,11 +42,11 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
         a.download = result.filename;
         a.click();
         URL.revokeObjectURL(url);
-        toast.success(`Exported ${result.filename}`);
+        toast.success(t("exported", { filename: result.filename }));
         setOpen(false);
       },
       onError: (err) => {
-        toast.error(`Export failed: ${err.message}`);
+        toast.error(t("exportFailed", { message: err.message }));
       },
     })
   );
@@ -71,10 +74,10 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
       <button
         onClick={() => setOpen(true)}
         className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        title="Export screenplay"
+        title={t("exportScreenplay")}
       >
         <Download className="h-3.5 w-3.5" />
-        Export
+        {t("export")}
       </button>
 
       <AnimatePresence>
@@ -101,7 +104,7 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
             >
               <div className="mb-5 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-foreground">
-                  Export Screenplay
+                  {t("title")}
                 </h2>
                 <button
                   onClick={() => setOpen(false)}
@@ -116,7 +119,7 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
                 {/* Format selector */}
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                    Format
+                    {t("format")}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -147,20 +150,20 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
                 {/* Toggle options */}
                 <div className="space-y-2.5">
                   <ToggleOption
-                    label="Title Page"
-                    description="Includes title, author, and contact info"
+                    label={t("titlePage")}
+                    description={t("titlePageDesc")}
                     checked={titlePage}
                     onChange={setTitlePage}
                   />
                   <ToggleOption
-                    label="Scene Numbering"
-                    description="Numbers scenes on the left margin"
+                    label={t("sceneNumbering")}
+                    description={t("sceneNumberingDesc")}
                     checked={sceneNumbering}
                     onChange={setSceneNumbering}
                   />
                   <ToggleOption
-                    label="Page Numbering"
-                    description="Page numbers in the top-right corner"
+                    label={t("pageNumbering")}
+                    description={t("pageNumberingDesc")}
                     checked={pageNumbering}
                     onChange={setPageNumbering}
                   />
@@ -169,7 +172,7 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
                 {/* Paper size */}
                 <div>
                   <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                    Paper Size
+                    {t("paperSize")}
                   </label>
                   <select
                     value={paperSize}
@@ -178,19 +181,19 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
                     }
                     className={inputClass}
                   >
-                    <option value="US_LETTER">US Letter (8.5 x 11)</option>
-                    <option value="A4">A4 (210 x 297 mm)</option>
+                    <option value="US_LETTER">{t("usLetter")}</option>
+                    <option value="A4">{t("a4")}</option>
                   </select>
                 </div>
 
                 {/* Watermark (PDF only) */}
                 <div>
                   <ToggleOption
-                    label="Watermark"
+                    label={t("watermark")}
                     description={
                       format === "docx"
-                        ? "Available for PDF only"
-                        : "Diagonal text across each page"
+                        ? t("watermarkPdfOnly")
+                        : t("watermarkDesc")
                     }
                     checked={watermarkEnabled}
                     onChange={setWatermarkEnabled}
@@ -207,7 +210,7 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
                         type="text"
                         value={watermarkText}
                         onChange={(e) => setWatermarkText(e.target.value)}
-                        placeholder="Watermark text..."
+                        placeholder={t("watermarkPlaceholder")}
                         maxLength={100}
                         className={inputClass}
                       />
@@ -224,12 +227,12 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
                   {exportMutation.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Generating...
+                      {t("generating")}
                     </>
                   ) : (
                     <>
                       <Download className="h-4 w-4" />
-                      Export {format.toUpperCase()}
+                      {t("exportFormat", { format: format.toUpperCase() })}
                     </>
                   )}
                 </button>

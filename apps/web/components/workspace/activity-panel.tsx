@@ -3,38 +3,49 @@
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, FileText, LogIn, LogOut, MessageSquare, CheckCircle, Pencil } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ActivityPanelProps {
   projectId: string;
 }
 
-const actionConfig: Record<string, { label: string; icon: typeof Activity; color: string }> = {
-  edit: { label: "edited", icon: Pencil, color: "text-blue-400" },
-  join: { label: "joined", icon: LogIn, color: "text-emerald-400" },
-  leave: { label: "left", icon: LogOut, color: "text-muted-foreground" },
-  comment_add: { label: "added a comment", icon: MessageSquare, color: "text-amber-400" },
-  comment_resolve: { label: "resolved a comment", icon: CheckCircle, color: "text-emerald-400" },
+const actionIcons: Record<string, { icon: typeof Activity; color: string }> = {
+  edit: { icon: Pencil, color: "text-blue-400" },
+  join: { icon: LogIn, color: "text-emerald-400" },
+  leave: { icon: LogOut, color: "text-muted-foreground" },
+  comment_add: { icon: MessageSquare, color: "text-amber-400" },
+  comment_resolve: { icon: CheckCircle, color: "text-emerald-400" },
 };
 
-function timeAgo(date: Date): string {
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  return date.toLocaleDateString();
-}
+const actionLabelKeys: Record<string, string> = {
+  edit: "edited",
+  join: "joined",
+  leave: "left",
+  comment_add: "addedComment",
+  comment_resolve: "resolvedComment",
+};
 
 export function ActivityPanel({ projectId }: ActivityPanelProps) {
+  const t = useTranslations("Activity");
+  const tc = useTranslations("Common");
   const trpc = useTRPC();
 
   const { data, isLoading } = useQuery({
     ...trpc.activity.list.queryOptions({ projectId, limit: 50 }),
     refetchInterval: 30_000,
   });
+
+  function timeAgo(date: Date): string {
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (seconds < 60) return tc("timeJustNow");
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return tc("timeMinutesAgo", { minutes });
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return tc("timeHoursAgo", { hours });
+    const days = Math.floor(hours / 24);
+    if (days < 30) return tc("timeDaysAgo", { days });
+    return date.toLocaleDateString();
+  }
 
   if (isLoading) {
     return (
@@ -50,7 +61,7 @@ export function ActivityPanel({ projectId }: ActivityPanelProps) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
         <Activity className="h-8 w-8 text-muted-foreground/40" />
-        <p className="text-sm text-muted-foreground">No activity yet</p>
+        <p className="text-sm text-muted-foreground">{t("noActivity")}</p>
       </div>
     );
   }
@@ -61,8 +72,10 @@ export function ActivityPanel({ projectId }: ActivityPanelProps) {
         {items.map((item) => {
           const details = item.details as { userName?: string; documentType?: string } | null;
           const userName = details?.userName || "Unknown";
-          const config = actionConfig[item.action] || { label: item.action, icon: Activity, color: "text-muted-foreground" };
-          const Icon = config.icon;
+          const iconConfig = actionIcons[item.action] || { icon: Activity, color: "text-muted-foreground" };
+          const labelKey = actionLabelKeys[item.action];
+          const label = labelKey ? t(labelKey) : item.action;
+          const Icon = iconConfig.icon;
           const docTitle = (item as { document?: { title: string } | null }).document?.title;
 
           return (
@@ -70,13 +83,13 @@ export function ActivityPanel({ projectId }: ActivityPanelProps) {
               key={item.id}
               className="flex items-start gap-2 rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-muted/30"
             >
-              <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted ${config.color}`}>
+              <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted ${iconConfig.color}`}>
                 <Icon className="h-3 w-3" />
               </div>
               <div className="min-w-0 flex-1">
                 <div>
                   <span className="font-medium text-foreground">{userName}</span>{" "}
-                  <span className="text-muted-foreground">{config.label}</span>
+                  <span className="text-muted-foreground">{label}</span>
                   {docTitle && (
                     <>
                       {" "}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -29,6 +30,8 @@ interface NotesPanelProps {
 }
 
 export function NotesPanel({ projectId, currentUser }: NotesPanelProps) {
+  const t = useTranslations("Notes");
+  const tCommon = useTranslations("Common");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
@@ -42,7 +45,7 @@ export function NotesPanel({ projectId, currentUser }: NotesPanelProps) {
       onSuccess: (note) => {
         queryClient.invalidateQueries({ queryKey: trpc.note.list.queryKey({ projectId }) });
         setSelectedNoteId(note.id);
-        toast.success("Note created");
+        toast.success(t("noteCreated"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -53,7 +56,7 @@ export function NotesPanel({ projectId, currentUser }: NotesPanelProps) {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.note.list.queryKey({ projectId }) });
         setSelectedNoteId(null);
-        toast.success("Note deleted");
+        toast.success(t("noteDeleted"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -67,7 +70,7 @@ export function NotesPanel({ projectId, currentUser }: NotesPanelProps) {
       <div className="glass-panel flex items-center justify-between border-b border-border px-4 py-2">
         <div className="flex items-center gap-2">
           <StickyNote className="h-4 w-4 text-ai-accent" />
-          <span className="text-sm font-medium text-foreground">Notes</span>
+          <span className="text-sm font-medium text-foreground">{t("title")}</span>
         </div>
         <button
           onClick={() => createMutation.mutate({ projectId })}
@@ -75,7 +78,7 @@ export function NotesPanel({ projectId, currentUser }: NotesPanelProps) {
           className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <Plus className="h-3.5 w-3.5" />
-          New
+          {t("new")}
         </button>
       </div>
 
@@ -95,7 +98,7 @@ export function NotesPanel({ projectId, currentUser }: NotesPanelProps) {
                   isSelected={note.id === selectedNoteId}
                   onSelect={() => setSelectedNoteId(note.id)}
                   onDelete={() => {
-                    if (confirm("Delete this note?")) {
+                    if (confirm(t("deleteNote"))) {
                       deleteMutation.mutate({ id: note.id });
                     }
                   }}
@@ -106,12 +109,12 @@ export function NotesPanel({ projectId, currentUser }: NotesPanelProps) {
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
               <StickyNote className="h-8 w-8 text-muted-foreground/30" />
-              <p className="text-xs text-muted-foreground">No notes yet</p>
+              <p className="text-xs text-muted-foreground">{t("noNotes")}</p>
               <button
                 onClick={() => createMutation.mutate({ projectId })}
                 className="text-xs text-ai-accent hover:underline"
               >
-                Create first note
+                {t("createFirst")}
               </button>
             </div>
           )}
@@ -128,8 +131,8 @@ export function NotesPanel({ projectId, currentUser }: NotesPanelProps) {
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
               {notes && notes.length > 0
-                ? "Select a note to edit"
-                : "Create a note to get started"}
+                ? t("selectNote")
+                : t("createToStart")}
             </div>
           )}
         </div>
@@ -225,6 +228,7 @@ function NoteEditor({
   projectId: string;
   currentUser: CurrentUser;
 }) {
+  const t = useTranslations("Notes");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [collabProvider, setCollabProvider] = useState<HocuspocusProvider | null>(null);
@@ -262,7 +266,7 @@ function NoteEditor({
         queryClient.invalidateQueries({ queryKey: trpc.note.list.queryKey({ projectId }) });
       },
       onError: (err) => {
-        toast.error("Failed to save note");
+        toast.error(t("failedSave"));
         console.error("Note autosave failed:", err.message);
       },
     })
@@ -310,7 +314,7 @@ function NoteEditor({
         ) : (
           <span className="flex items-center gap-1 text-[10px] text-emerald-500">
             <Save className="h-3 w-3" />
-            Auto-save
+            {t("autoSave")}
           </span>
         )}
       </div>

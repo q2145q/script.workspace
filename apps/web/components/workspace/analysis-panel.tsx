@@ -15,6 +15,7 @@ import {
   Target,
   Eye,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { Editor } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation } from "@tanstack/react-query";
@@ -56,10 +57,10 @@ function extractFullText(editor: Editor): string {
   return editor.state.doc.textBetween(0, editor.state.doc.content.size, "\n");
 }
 
-const TABS: { key: AnalysisTab; label: string; icon: typeof Film }[] = [
-  { key: "scene", label: "Scene", icon: Film },
-  { key: "characters", label: "Characters", icon: Users },
-  { key: "structure", label: "Structure", icon: Layers },
+const TABS: { key: AnalysisTab; labelKey: "scene" | "characters" | "structure"; icon: typeof Film }[] = [
+  { key: "scene", labelKey: "scene", icon: Film },
+  { key: "characters", labelKey: "characters", icon: Users },
+  { key: "structure", labelKey: "structure", icon: Layers },
 ];
 
 // ============================================================
@@ -67,6 +68,7 @@ const TABS: { key: AnalysisTab; label: string; icon: typeof Film }[] = [
 // ============================================================
 
 function SceneAnalysisView({ data }: { data: SceneAnalysis }) {
+  const t = useTranslations("Analysis");
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["summary", "characters", "conflict"])
   );
@@ -81,11 +83,11 @@ function SceneAnalysisView({ data }: { data: SceneAnalysis }) {
   };
 
   const sections = [
-    { key: "summary", label: "Summary", content: data.summary },
-    { key: "function", label: "Scene Function", content: data.scene_function },
+    { key: "summary", label: t("summary"), content: data.summary },
+    { key: "function", label: t("sceneFunction"), content: data.scene_function },
     {
       key: "characters",
-      label: "Characters",
+      label: t("characters"),
       content: null,
       render: () => (
         <div className="space-y-1.5">
@@ -104,13 +106,13 @@ function SceneAnalysisView({ data }: { data: SceneAnalysis }) {
         </div>
       ),
     },
-    { key: "conflict", label: "Conflict", content: data.conflict },
-    { key: "stakes", label: "Stakes", content: data.stakes },
-    { key: "tone", label: "Emotional Tone", content: data.emotional_tone },
-    { key: "pacing", label: "Pacing", content: data.pacing },
+    { key: "conflict", label: t("conflict"), content: data.conflict },
+    { key: "stakes", label: t("stakes"), content: data.stakes },
+    { key: "tone", label: t("emotionalTone"), content: data.emotional_tone },
+    { key: "pacing", label: t("pacing"), content: data.pacing },
     {
       key: "events",
-      label: "Key Events",
+      label: t("keyEvents"),
       content: null,
       render: () => (
         <ul className="space-y-1">
@@ -125,7 +127,7 @@ function SceneAnalysisView({ data }: { data: SceneAnalysis }) {
     },
     {
       key: "visual",
-      label: "Visual Elements",
+      label: t("visualElements"),
       content: null,
       render: () => (
         <div className="flex flex-wrap gap-1">
@@ -142,7 +144,7 @@ function SceneAnalysisView({ data }: { data: SceneAnalysis }) {
     },
     {
       key: "problems",
-      label: "Problems",
+      label: t("problems"),
       icon: AlertTriangle,
       content: null,
       render: () =>
@@ -156,12 +158,12 @@ function SceneAnalysisView({ data }: { data: SceneAnalysis }) {
             ))}
           </ul>
         ) : (
-          <p className="text-xs text-muted-foreground/50 italic">No problems found</p>
+          <p className="text-xs text-muted-foreground/50 italic">{t("noProblems")}</p>
         ),
     },
     {
       key: "suggestions",
-      label: "Suggestions",
+      label: t("suggestions"),
       icon: Lightbulb,
       content: null,
       render: () =>
@@ -175,7 +177,7 @@ function SceneAnalysisView({ data }: { data: SceneAnalysis }) {
             ))}
           </ul>
         ) : (
-          <p className="text-xs text-muted-foreground/50 italic">No suggestions</p>
+          <p className="text-xs text-muted-foreground/50 italic">{t("noSuggestions")}</p>
         ),
     },
   ];
@@ -224,6 +226,7 @@ function SceneAnalysisView({ data }: { data: SceneAnalysis }) {
 // ============================================================
 
 function CharacterAnalysisView({ data }: { data: CharacterAnalysis }) {
+  const t = useTranslations("Analysis");
   const [expandedId, setExpandedId] = useState<string | null>(
     data.characters[0]?.name ?? null
   );
@@ -257,12 +260,12 @@ function CharacterAnalysisView({ data }: { data: CharacterAnalysis }) {
 
                   {/* Traits */}
                   <div className="flex flex-wrap gap-1">
-                    {char.traits.map((t) => (
+                    {char.traits.map((trait) => (
                       <span
-                        key={t}
+                        key={trait}
                         className="rounded-full bg-ai-accent/10 px-1.5 py-0.5 text-[10px] font-medium text-ai-accent"
                       >
-                        {t}
+                        {trait}
                       </span>
                     ))}
                   </div>
@@ -271,7 +274,7 @@ function CharacterAnalysisView({ data }: { data: CharacterAnalysis }) {
                   {char.goals.length > 0 && (
                     <div>
                       <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                        Goals
+                        {t("goals")}
                       </p>
                       <ul className="space-y-0.5">
                         {char.goals.map((g, i) => (
@@ -287,7 +290,7 @@ function CharacterAnalysisView({ data }: { data: CharacterAnalysis }) {
                   {/* Motivations */}
                   <div>
                     <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                      Motivations
+                      {t("motivations")}
                     </p>
                     <p className="text-xs text-muted-foreground">{char.motivations}</p>
                   </div>
@@ -296,13 +299,13 @@ function CharacterAnalysisView({ data }: { data: CharacterAnalysis }) {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                        Internal Conflict
+                        {t("internalConflict")}
                       </p>
                       <p className="text-xs text-muted-foreground">{char.internal_conflict}</p>
                     </div>
                     <div>
                       <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                        External Conflict
+                        {t("externalConflict")}
                       </p>
                       <p className="text-xs text-muted-foreground">{char.external_conflict}</p>
                     </div>
@@ -312,7 +315,7 @@ function CharacterAnalysisView({ data }: { data: CharacterAnalysis }) {
                   {char.relationships.length > 0 && (
                     <div>
                       <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                        Relationships
+                        {t("relationships")}
                       </p>
                       <div className="space-y-0.5">
                         {char.relationships.map((r, i) => (
@@ -340,6 +343,7 @@ function CharacterAnalysisView({ data }: { data: CharacterAnalysis }) {
 // ============================================================
 
 function StructureAnalysisView({ data }: { data: StructureAnalysis }) {
+  const t = useTranslations("Analysis");
   return (
     <div className="space-y-3 p-3">
       {/* Act + Phase */}
@@ -354,13 +358,13 @@ function StructureAnalysisView({ data }: { data: StructureAnalysis }) {
       <div className="grid grid-cols-2 gap-2">
         <div>
           <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Tension
+            {t("tension")}
           </p>
           <p className="text-sm font-medium text-foreground">{data.tension_level}</p>
         </div>
         <div>
           <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Progress
+            {t("progress")}
           </p>
           <p className="text-sm font-medium text-foreground">{data.story_progress}</p>
         </div>
@@ -369,7 +373,7 @@ function StructureAnalysisView({ data }: { data: StructureAnalysis }) {
       {/* Narrative Function */}
       <div>
         <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-          Narrative Function
+          {t("narrativeFunction")}
         </p>
         <p className="text-xs text-muted-foreground">{data.narrative_function}</p>
       </div>
@@ -377,7 +381,7 @@ function StructureAnalysisView({ data }: { data: StructureAnalysis }) {
       {/* Stakes */}
       <div>
         <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-          Stakes
+          {t("stakes")}
         </p>
         <p className="text-xs text-muted-foreground">{data.stakes}</p>
       </div>
@@ -386,7 +390,7 @@ function StructureAnalysisView({ data }: { data: StructureAnalysis }) {
       {data.turning_points.length > 0 && (
         <div>
           <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Turning Points
+            {t("turningPoints")}
           </p>
           <ul className="space-y-1">
             {data.turning_points.map((tp, i) => (
@@ -403,7 +407,7 @@ function StructureAnalysisView({ data }: { data: StructureAnalysis }) {
       {data.conflicts.length > 0 && (
         <div>
           <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Conflicts
+            {t("conflicts")}
           </p>
           <ul className="space-y-1">
             {data.conflicts.map((c, i) => (
@@ -420,7 +424,7 @@ function StructureAnalysisView({ data }: { data: StructureAnalysis }) {
       {data.structure_problems.length > 0 && (
         <div>
           <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Problems
+            {t("problems")}
           </p>
           <ul className="space-y-1">
             {data.structure_problems.map((p, i) => (
@@ -437,7 +441,7 @@ function StructureAnalysisView({ data }: { data: StructureAnalysis }) {
       {data.suggestions.length > 0 && (
         <div>
           <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Suggestions
+            {t("suggestions")}
           </p>
           <ul className="space-y-1">
             {data.suggestions.map((s, i) => (
@@ -458,6 +462,7 @@ function StructureAnalysisView({ data }: { data: StructureAnalysis }) {
 // ============================================================
 
 export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
+  const t = useTranslations("Analysis");
   const trpc = useTRPC();
   const [activeTab, setActiveTab] = useState<AnalysisTab>("scene");
 
@@ -490,7 +495,7 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
 
   const handleAnalyze = () => {
     if (!editor) {
-      toast.error("Editor not ready");
+      toast.error(t("editorNotReady"));
       return;
     }
 
@@ -500,7 +505,7 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
         : extractCurrentSceneText(editor);
 
     if (!text.trim()) {
-      toast.error("No text to analyze");
+      toast.error(t("noText"));
       return;
     }
 
@@ -535,7 +540,7 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
             }`}
           >
             <tab.icon className="h-3 w-3" />
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>
@@ -550,30 +555,30 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
           {isLoading ? (
             <>
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Analyzing...
+              {t("analyzing")}
             </>
           ) : (
             <>
               <Sparkles className="h-3.5 w-3.5" />
-              {activeTab === "scene" && "Analyze Current Scene"}
-              {activeTab === "characters" && "Analyze Characters"}
-              {activeTab === "structure" && "Analyze Structure"}
+              {activeTab === "scene" && t("analyzeScene")}
+              {activeTab === "characters" && t("analyzeCharacters")}
+              {activeTab === "structure" && t("analyzeStructure")}
             </>
           )}
         </button>
         {activeTab === "scene" && (
           <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
-            Analyzes the scene at cursor position
+            {t("sceneDescription")}
           </p>
         )}
         {activeTab === "characters" && (
           <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
-            Analyzes all characters in the document
+            {t("charactersDescription")}
           </p>
         )}
         {activeTab === "structure" && (
           <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
-            Analyzes narrative structure of current scene
+            {t("structureDescription")}
           </p>
         )}
       </div>
@@ -592,21 +597,21 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
               (sceneResult ? (
                 <SceneAnalysisView data={sceneResult} />
               ) : (
-                <EmptyAnalysis label="Run scene analysis to see results" />
+                <EmptyAnalysis label={t("runScene")} />
               ))}
 
             {activeTab === "characters" &&
               (charResult ? (
                 <CharacterAnalysisView data={charResult} />
               ) : (
-                <EmptyAnalysis label="Run character analysis to see results" />
+                <EmptyAnalysis label={t("runCharacters")} />
               ))}
 
             {activeTab === "structure" &&
               (structResult ? (
                 <StructureAnalysisView data={structResult} />
               ) : (
-                <EmptyAnalysis label="Run structure analysis to see results" />
+                <EmptyAnalysis label={t("runStructure")} />
               ))}
           </motion.div>
         </AnimatePresence>

@@ -7,23 +7,24 @@ import type { Editor } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface CommentPopoverProps {
   editor: Editor | null;
   documentId: string;
 }
 
-function timeAgo(date: Date): string {
+function timeAgo(date: Date, tc: (key: string, values?: Record<string, number>) => string): string {
   const now = Date.now();
   const d = new Date(date).getTime();
   const seconds = Math.floor((now - d) / 1000);
-  if (seconds < 60) return "just now";
+  if (seconds < 60) return tc("timeJustNow");
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return tc("timeMinutesAgo", { minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return tc("timeHoursAgo", { hours });
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
+  if (days < 7) return tc("timeDaysAgo", { days });
   return new Date(date).toLocaleDateString();
 }
 
@@ -66,6 +67,8 @@ function removeCommentMark(editor: Editor, threadId: string) {
 }
 
 export function CommentPopover({ editor, documentId }: CommentPopoverProps) {
+  const t = useTranslations("Comments");
+  const tc = useTranslations("Common");
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const [replyText, setReplyText] = useState("");
@@ -277,13 +280,13 @@ export function CommentPopover({ editor, documentId }: CommentPopoverProps) {
                 : "text-ai-accent"
             }`}
           >
-            {thread.resolved ? "Resolved" : "Comment"}
+            {thread.resolved ? t("resolved") : t("comment")}
           </span>
           <div className="flex items-center gap-0.5">
             <button
               onClick={() => resolveMutation.mutate({ id: thread.id })}
               className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              title={thread.resolved ? "Reopen" : "Resolve"}
+              title={thread.resolved ? t("reopen") : t("resolve")}
             >
               {thread.resolved ? (
                 <RotateCcw className="h-3 w-3" />
@@ -297,7 +300,7 @@ export function CommentPopover({ editor, documentId }: CommentPopoverProps) {
                 deleteMutation.mutate({ id: thread.id });
               }}
               className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
-              title="Delete"
+              title={tc("delete")}
             >
               <Trash2 className="h-3 w-3" />
             </button>
@@ -323,7 +326,7 @@ export function CommentPopover({ editor, documentId }: CommentPopoverProps) {
                       {firstMessage.author.name}
                     </span>
                     <span className="text-[10px] text-muted-foreground">
-                      {timeAgo(firstMessage.createdAt)}
+                      {timeAgo(firstMessage.createdAt, tc)}
                     </span>
                   </div>
                   <p className="mt-0.5 text-[12px] leading-relaxed text-foreground/90">
@@ -346,7 +349,7 @@ export function CommentPopover({ editor, documentId }: CommentPopoverProps) {
                         {msg.author.name}
                       </span>
                       <span className="text-[10px] text-muted-foreground">
-                        {timeAgo(msg.createdAt)}
+                        {timeAgo(msg.createdAt, tc)}
                       </span>
                     </div>
                     <p className="mt-0.5 text-[12px] leading-relaxed text-foreground/90">
@@ -380,7 +383,7 @@ export function CommentPopover({ editor, documentId }: CommentPopoverProps) {
                     close();
                   }
                 }}
-                placeholder="Reply..."
+                placeholder={t("replyPlaceholder")}
                 className="flex-1 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-[11px] text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
                 autoFocus={false}
               />
@@ -395,7 +398,7 @@ export function CommentPopover({ editor, documentId }: CommentPopoverProps) {
                   disabled={replyMutation.isPending}
                   className="shrink-0 rounded-full bg-primary px-2.5 py-1 text-[10px] font-medium text-primary-foreground transition-all hover:opacity-90 disabled:opacity-50"
                 >
-                  Reply
+                  {tc("reply")}
                 </button>
               )}
             </div>

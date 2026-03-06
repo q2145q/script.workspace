@@ -1,6 +1,7 @@
 "use client";
 
 import { type Editor, useEditorState } from "@script/editor";
+import { useTranslations } from "next-intl";
 
 interface Scene {
   pos: number;
@@ -13,6 +14,7 @@ interface SceneNavigatorProps {
 }
 
 export function SceneNavigator({ editor }: SceneNavigatorProps) {
+  const t = useTranslations("Editor");
   const scenes = useEditorState({
     editor: editor!,
     selector: (ctx): Scene[] => {
@@ -52,11 +54,11 @@ export function SceneNavigator({ editor }: SceneNavigatorProps) {
   return (
     <div className="flex flex-col">
       <div className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-        Scenes
+        {t("scenes")}
       </div>
       {scenes.length === 0 ? (
         <div className="px-3 py-2 text-xs text-muted-foreground">
-          No scenes yet. Type INT. or EXT. to create one.
+          {t("noScenes")}
         </div>
       ) : (
         <div className="space-y-0.5">

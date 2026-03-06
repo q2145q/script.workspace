@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface CommentAuthor {
   id: string;
@@ -50,17 +51,17 @@ function Avatar({ name }: { name: string }) {
   );
 }
 
-function timeAgo(date: Date): string {
+function timeAgo(date: Date, tc: (key: string, values?: Record<string, number>) => string): string {
   const now = Date.now();
   const d = new Date(date).getTime();
   const seconds = Math.floor((now - d) / 1000);
-  if (seconds < 60) return "just now";
+  if (seconds < 60) return tc("timeJustNow");
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return tc("timeMinutesAgo", { minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return tc("timeHoursAgo", { hours });
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
+  if (days < 7) return tc("timeDaysAgo", { days });
   return new Date(date).toLocaleDateString();
 }
 
@@ -73,6 +74,8 @@ export function CommentThreadCard({
   onReply,
   isReplying,
 }: CommentThreadCardProps) {
+  const t = useTranslations("Comments");
+  const tc = useTranslations("Common");
   const [replyText, setReplyText] = useState("");
   const [showActions, setShowActions] = useState(false);
 
@@ -108,7 +111,7 @@ export function CommentThreadCard({
                     {firstMessage.author.name}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    {timeAgo(firstMessage.createdAt)}
+                    {timeAgo(firstMessage.createdAt, tc)}
                   </span>
                 </div>
                 {/* Actions menu */}
@@ -121,9 +124,9 @@ export function CommentThreadCard({
                         onResolve();
                       }}
                       className="rounded-md px-1.5 py-0.5 text-[10px] text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground"
-                      title={thread.resolved ? "Reopen" : "Resolve"}
+                      title={thread.resolved ? t("reopen") : t("resolve")}
                     >
-                      {thread.resolved ? "Reopen" : "Resolve"}
+                      {thread.resolved ? t("reopen") : t("resolve")}
                     </button>
                     <button
                       type="button"
@@ -132,9 +135,9 @@ export function CommentThreadCard({
                         onDelete();
                       }}
                       className="rounded-md px-1.5 py-0.5 text-[10px] text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-destructive"
-                      title="Delete"
+                      title={tc("delete")}
                     >
-                      Delete
+                      {tc("delete")}
                     </button>
                   </div>
                 )}
@@ -159,7 +162,7 @@ export function CommentThreadCard({
                     {msg.author.name}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    {timeAgo(msg.createdAt)}
+                    {timeAgo(msg.createdAt, tc)}
                   </span>
                 </div>
                 <p className="mt-0.5 text-[13px] leading-relaxed text-foreground/90">
@@ -186,7 +189,7 @@ export function CommentThreadCard({
                 }
               }}
               onClick={(e) => e.stopPropagation()}
-              placeholder="Reply..."
+              placeholder={t("replyPlaceholder")}
               className="flex-1 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-ring"
             />
             {replyText.trim() && (
@@ -199,7 +202,7 @@ export function CommentThreadCard({
                 disabled={isReplying}
                 className="rounded-full bg-primary px-3 py-1.5 text-[10px] font-medium text-primary-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-50"
               >
-                Reply
+                {tc("reply")}
               </button>
             )}
           </div>

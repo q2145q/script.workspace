@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { PROJECT_STATUS_LABELS, PROJECT_STATUS_COLORS, type ProjectStatus } from "@script/types";
+import { PROJECT_STATUS_COLORS, type ProjectStatus } from "@script/types";
 
 interface Project {
   id: string;
@@ -16,13 +17,6 @@ interface Project {
   updatedAt: Date;
   _count: { documents: number };
 }
-
-const typeLabels: Record<string, string> = {
-  FEATURE_FILM: "Feature Film",
-  TV_SERIES: "TV Series",
-  SHORT_FILM: "Short Film",
-  OTHER: "Other",
-};
 
 const container = {
   hidden: { opacity: 0 },
@@ -40,12 +34,16 @@ const item = {
 export function ProjectList({ projects }: { projects: Project[] }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const t = useTranslations("Dashboard");
+  const tTypes = useTranslations("ProjectTypes");
+  const tStatus = useTranslations("ProjectStatus");
+  const tCommon = useTranslations("Common");
 
   const deleteMutation = useMutation(
     trpc.project.delete.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.project.list.queryKey() });
-        toast.success("Project deleted");
+        toast.success(t("projectDeleted"));
       },
       onError: (err) => {
         toast.error(err.message);
@@ -75,10 +73,10 @@ export function ProjectList({ projects }: { projects: Project[] }) {
             <h3 className="font-medium text-foreground">{project.title}</h3>
             <div className="flex items-center gap-1.5">
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${PROJECT_STATUS_COLORS[project.status as ProjectStatus] ?? "bg-zinc-500/20 text-zinc-400"}`}>
-                {PROJECT_STATUS_LABELS[project.status as ProjectStatus] ?? project.status}
+                {tStatus(project.status as ProjectStatus)}
               </span>
               <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                {typeLabels[project.type] ?? project.type}
+                {tTypes(project.type as string)}
               </span>
             </div>
           </div>
@@ -91,20 +89,19 @@ export function ProjectList({ projects }: { projects: Project[] }) {
 
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>
-              {project._count.documents}{" "}
-              {project._count.documents === 1 ? "document" : "documents"}
+              {t("document", { count: project._count.documents })}
             </span>
             <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (confirm("Delete this project?")) {
+                if (confirm(t("deleteProject"))) {
                   deleteMutation.mutate({ id: project.id });
                 }
               }}
               className="relative z-20 text-muted-foreground transition-colors duration-200 hover:text-destructive"
             >
-              Delete
+              {tCommon("delete")}
             </button>
           </div>
         </motion.div>

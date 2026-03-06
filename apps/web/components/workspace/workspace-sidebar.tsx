@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { FileText, LayoutList, Users, MapPin, BookOpen, History, Settings, Network, Presentation, StickyNote } from "lucide-react";
 import type { Editor } from "@script/editor";
 import { SceneNavigator } from "./scene-navigator";
@@ -29,20 +30,20 @@ interface WorkspaceSidebarProps {
 }
 
 const navItemsConfig: Array<{
-  label: string;
+  tKey: string;
   key: string;
   icon: typeof FileText;
   mode: WorkspaceMode;
 }> = [
-  { label: "Script", key: "script", icon: FileText, mode: "script" },
-  { label: "Bible", key: "bible", icon: BookOpen, mode: "bible" },
-  { label: "Outline", key: "outline", icon: LayoutList, mode: "outline" },
-  { label: "Characters", key: "chars", icon: Users, mode: "characters" },
-  { label: "Locations", key: "locs", icon: MapPin, mode: "locations" },
-  { label: "One Pager", key: "pager", icon: Presentation, mode: "one-pager" },
-  { label: "Notes", key: "notes", icon: StickyNote, mode: "notes" },
-  { label: "Versions", key: "vers", icon: History, mode: "versions" },
-  { label: "Graph", key: "graph", icon: Network, mode: "graph" },
+  { tKey: "script", key: "script", icon: FileText, mode: "script" },
+  { tKey: "bible", key: "bible", icon: BookOpen, mode: "bible" },
+  { tKey: "outline", key: "outline", icon: LayoutList, mode: "outline" },
+  { tKey: "characters", key: "chars", icon: Users, mode: "characters" },
+  { tKey: "locations", key: "locs", icon: MapPin, mode: "locations" },
+  { tKey: "onePager", key: "pager", icon: Presentation, mode: "one-pager" },
+  { tKey: "notes", key: "notes", icon: StickyNote, mode: "notes" },
+  { tKey: "versions", key: "vers", icon: History, mode: "versions" },
+  { tKey: "graph", key: "graph", icon: Network, mode: "graph" },
 ];
 
 const container = {
@@ -65,6 +66,8 @@ export function WorkspaceSidebar({
   workspaceMode,
   onModeChange,
 }: WorkspaceSidebarProps) {
+  const t = useTranslations("Sidebar");
+  const tCommon = useTranslations("Common");
   const isSeries = project.type === "TV_SERIES";
 
   return (
@@ -74,7 +77,7 @@ export function WorkspaceSidebar({
           href="/dashboard"
           className="text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground"
         >
-          &larr; Back
+          &larr; {tCommon("back")}
         </Link>
         <h2 className="mt-1 truncate text-sm font-semibold text-sidebar-foreground">
           {project.title}
@@ -100,7 +103,7 @@ export function WorkspaceSidebar({
                 }`}
               >
                 <navItem.icon className="h-3.5 w-3.5" />
-                {navItem.label}
+                {t(navItem.tKey)}
               </button>
             </motion.div>
           ))}
@@ -134,7 +137,7 @@ export function WorkspaceSidebar({
           return (
             <div className="border-t border-sidebar-border p-2">
               <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                Documents
+                {t("documents")}
               </p>
               {docsToShow.map((doc) => (
                 <Link
@@ -161,12 +164,12 @@ export function WorkspaceSidebar({
           className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-foreground"
         >
           <Settings className="h-3.5 w-3.5" />
-          Settings
+          {t("settings")}
         </Link>
       </div>
 
       <div className="shrink-0 flex items-center justify-between border-t border-sidebar-border px-3 py-2">
-        <span className="text-[10px] text-muted-foreground">Theme</span>
+        <span className="text-[10px] text-muted-foreground">{t("theme")}</span>
         <ThemeToggle />
       </div>
     </div>

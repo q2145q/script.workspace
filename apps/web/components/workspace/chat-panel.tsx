@@ -7,6 +7,7 @@ import { Fragment, type Editor } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { useChatStream, type ChatMessage } from "@/hooks/use-chat-stream";
 import { SuggestionPreview } from "./suggestion-preview";
 import { SuggestionHistory } from "./suggestion-history";
@@ -77,6 +78,7 @@ function InsertButton({
   documentId: string;
 }) {
   const trpc = useTRPC();
+  const t = useTranslations("Chat");
   const [inserted, setInserted] = useState(false);
 
   const formatMutation = useMutation(
@@ -100,14 +102,14 @@ function InsertButton({
           const insertPos = $pos.after($pos.depth);
           tr.insert(insertPos, fragment);
           editor.view.dispatch(tr);
-          toast.success("Scene inserted into document");
+          toast.success(t("sceneInserted"));
           setInserted(true);
         } else {
-          toast.error("Could not format text into screenplay blocks");
+          toast.error(t("couldNotFormat"));
         }
       },
       onError: (err) => {
-        toast.error(`Format error: ${err.message}`);
+        toast.error(t("formatError", { message: err.message }));
       },
     })
   );
@@ -139,7 +141,7 @@ function InsertButton({
     return (
       <span className="flex items-center gap-1 text-[9px] text-green-500">
         <Check className="h-3 w-3" />
-        Inserted
+        {t("inserted")}
       </span>
     );
   }
@@ -149,14 +151,14 @@ function InsertButton({
       onClick={handleInsert}
       disabled={formatMutation.isPending}
       className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] text-muted-foreground transition-colors hover:bg-ai-accent/10 hover:text-ai-accent disabled:opacity-50"
-      title="Format and insert into document at cursor"
+      title={t("insertTitle")}
     >
       {formatMutation.isPending ? (
         <Loader2 className="h-3 w-3 animate-spin" />
       ) : (
         <FileDown className="h-3 w-3" />
       )}
-      Insert into document
+      {t("insert")}
     </button>
   );
 }
@@ -222,6 +224,7 @@ function ChatBubble({
 function ModelSelector({ projectId }: { projectId: string }) {
   const [open, setOpen] = useState(false);
   const trpc = useTRPC();
+  const t = useTranslations("Chat");
 
   const { data: availableModels } = useQuery(
     trpc.provider.availableModels.queryOptions()
@@ -234,7 +237,7 @@ function ModelSelector({ projectId }: { projectId: string }) {
   const project = projectData as { preferredProvider?: string | null; preferredModel?: string | null } | undefined;
 
   // Get a display label for the current model
-  let currentLabel = "Auto";
+  let currentLabel = t("auto");
   if (project?.preferredModel && availableModels) {
     for (const p of availableModels) {
       const found = p.models.find((m) => m.id === project.preferredModel);
@@ -304,6 +307,7 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const t = useTranslations("Chat");
 
   const {
     messages,
@@ -365,10 +369,10 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
       <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
         <Sparkles className="h-8 w-8 text-muted-foreground/40" />
         <p className="text-sm text-muted-foreground">
-          AI features are temporarily unavailable
+          {t("aiUnavailable")}
         </p>
         <p className="text-xs text-muted-foreground/60">
-          Contact the administrator to configure AI providers
+          {t("contactAdmin")}
         </p>
       </div>
     );
@@ -379,14 +383,14 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
         <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-          AI Chat
+          {t("title")}
         </span>
         <div className="flex items-center gap-1">
           <ModelSelector projectId={projectId} />
           <button
             onClick={() => setShowSuggestions(!showSuggestions)}
             className="rounded p-1 text-[10px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            title="Toggle suggestions"
+            title={t("toggleSuggestions")}
           >
             <Sparkles className="h-3 w-3" />
           </button>
@@ -394,7 +398,7 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
             <button
               onClick={clearHistory}
               className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-              title="Clear chat history"
+              title={t("clearHistory")}
             >
               <Trash2 className="h-3 w-3" />
             </button>
@@ -408,7 +412,7 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
             <Sparkles className="h-6 w-6 text-ai-accent/40" />
             <p className="text-xs text-muted-foreground">
-              Ask about your screenplay, brainstorm ideas, or get feedback
+              {t("emptyState")}
             </p>
           </div>
         )}
@@ -453,7 +457,7 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about your screenplay..."
+            placeholder={t("placeholder")}
             rows={1}
             disabled={isStreaming}
             className="flex-1 resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ai-accent focus:outline-none disabled:opacity-50"
@@ -462,7 +466,7 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
             <button
               onClick={stopStreaming}
               className="shrink-0 rounded-md bg-destructive/10 p-2 text-destructive transition-colors hover:bg-destructive/20"
-              title="Stop generating"
+              title={t("stopGenerating")}
             >
               <Square className="h-4 w-4" />
             </button>
@@ -471,14 +475,14 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
               onClick={handleSend}
               disabled={!input.trim()}
               className="shrink-0 rounded-md bg-ai-accent/10 p-2 text-ai-accent transition-colors hover:bg-ai-accent/20 disabled:opacity-30"
-              title="Send message"
+              title={t("sendMessage")}
             >
               <Send className="h-4 w-4" />
             </button>
           )}
         </div>
         <p className="mt-1 text-center text-[9px] text-muted-foreground/50">
-          Shift+Enter for new line
+          {t("shiftEnter")}
         </p>
       </div>
     </div>

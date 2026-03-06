@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   transpilePackages: [
@@ -12,4 +13,5 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["164.90.224.171"],
 };
 
-export default nextConfig;
+const withNextIntl = createNextIntlPlugin();
+export default withNextIntl(nextConfig);

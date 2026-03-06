@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { signUp } from "@script/api/auth-client";
 import { POSITIONS, LANGUAGES } from "@script/types";
 import { useTRPC } from "@/lib/trpc/client";
@@ -19,6 +20,9 @@ const selectClass =
 
 export default function SignUpPage() {
   const router = useRouter();
+  const t = useTranslations("Auth");
+  const tCommon = useTranslations("Common");
+  const tPos = useTranslations("Positions");
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -44,7 +48,7 @@ export default function SignUpPage() {
     });
 
     if (error) {
-      setError(error.message ?? "Failed to sign up");
+      setError(error.message ?? t("failedSignUp"));
       setLoading(false);
       return;
     }
@@ -71,9 +75,9 @@ export default function SignUpPage() {
       className="glass-panel rounded-xl border border-border p-8 shadow-lg"
     >
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-semibold text-foreground">Create Account</h1>
+        <h1 className="text-2xl font-semibold text-foreground">{t("createAccount")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Start writing your screenplay
+          {t("startWriting")}
         </p>
       </div>
 
@@ -91,7 +95,7 @@ export default function SignUpPage() {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="name" className={labelClass}>
-              First Name
+              {t("firstName")}
             </label>
             <input
               id="name"
@@ -100,12 +104,12 @@ export default function SignUpPage() {
               onChange={(e) => setName(e.target.value)}
               required
               className={inputClass}
-              placeholder="John"
+              placeholder={t("firstNamePlaceholder")}
             />
           </div>
           <div>
             <label htmlFor="lastName" className={labelClass}>
-              Last Name
+              {t("lastName")}
             </label>
             <input
               id="lastName"
@@ -114,14 +118,14 @@ export default function SignUpPage() {
               onChange={(e) => setLastName(e.target.value)}
               required
               className={inputClass}
-              placeholder="Doe"
+              placeholder={t("lastNamePlaceholder")}
             />
           </div>
         </div>
 
         <div>
           <label htmlFor="email" className={labelClass}>
-            Email
+            {t("email")}
           </label>
           <input
             id="email"
@@ -130,13 +134,13 @@ export default function SignUpPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             className={inputClass}
-            placeholder="you@example.com"
+            placeholder={t("emailPlaceholder")}
           />
         </div>
 
         <div>
           <label htmlFor="password" className={labelClass}>
-            Password
+            {t("password")}
           </label>
           <input
             id="password"
@@ -146,13 +150,13 @@ export default function SignUpPage() {
             required
             minLength={8}
             className={inputClass}
-            placeholder="Min. 8 characters"
+            placeholder={t("passwordPlaceholder")}
           />
         </div>
 
         <div>
           <label htmlFor="position" className={labelClass}>
-            Position
+            {t("position")}
           </label>
           <select
             id="position"
@@ -162,7 +166,7 @@ export default function SignUpPage() {
           >
             {POSITIONS.map((p) => (
               <option key={p} value={p}>
-                {p}
+                {tPos(p)}
               </option>
             ))}
           </select>
@@ -170,7 +174,7 @@ export default function SignUpPage() {
 
         <div>
           <label htmlFor="company" className={labelClass}>
-            Company <span className="text-muted-foreground">(optional)</span>
+            {t("company")} <span className="text-muted-foreground">{tCommon("optional")}</span>
           </label>
           <input
             id="company"
@@ -178,13 +182,13 @@ export default function SignUpPage() {
             value={company}
             onChange={(e) => setCompany(e.target.value)}
             className={inputClass}
-            placeholder="Studio or production company"
+            placeholder={t("companyPlaceholder")}
           />
         </div>
 
         <div>
           <label htmlFor="defaultLanguage" className={labelClass}>
-            Default Language
+            {t("defaultLanguage")}
           </label>
           <select
             id="defaultLanguage"
@@ -205,14 +209,14 @@ export default function SignUpPage() {
           disabled={loading}
           className="w-full rounded-lg bg-ai-accent px-3 py-2.5 text-sm font-medium text-ai-accent-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-50"
         >
-          {loading ? "Creating account..." : "Create Account"}
+          {loading ? t("creatingAccount") : t("createAccount")}
         </button>
       </form>
 
       <p className="mt-4 text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
+        {t("hasAccount")}{" "}
         <Link href="/sign-in" className="text-ai-accent transition-colors hover:underline">
-          Sign in
+          {t("signIn")}
         </Link>
       </p>
     </motion.div>

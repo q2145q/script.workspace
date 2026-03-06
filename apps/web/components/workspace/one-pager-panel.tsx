@@ -17,12 +17,17 @@ import {
   UserCircle,
   Download,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface OnePagerPanelProps {
   projectId: string;
 }
 
 export function OnePagerPanel({ projectId }: OnePagerPanelProps) {
+  const t = useTranslations("OnePager");
+  const tTypes = useTranslations("OnePagerTypes");
+  const tCommon = useTranslations("Common");
+  const tEntities = useTranslations("Entities");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -65,7 +70,7 @@ export function OnePagerPanel({ projectId }: OnePagerPanelProps) {
       <div className="glass-panel flex items-center justify-between border-b border-border px-4 py-2">
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-ai-accent" />
-          <span className="text-sm font-medium text-foreground">One Pager</span>
+          <span className="text-sm font-medium text-foreground">{t("title")}</span>
         </div>
         <ExportButton projectId={projectId} />
       </div>
@@ -76,22 +81,25 @@ export function OnePagerPanel({ projectId }: OnePagerPanelProps) {
           {/* Title */}
           <OnePagerBlock
             icon={Film}
-            label="Title"
+            label={t("title")}
             value={project.title}
+            notSetLabel={t("notSet")}
           />
 
           {/* Authors */}
           <OnePagerBlock
             icon={Users}
-            label="Authors"
+            label={t("authors")}
             value={authorNames.join(", ")}
+            notSetLabel={t("notSet")}
           />
 
           {/* Genre */}
           <OnePagerBlock
             icon={Film}
-            label="Genre / Type"
-            value={formatProjectType(project.type)}
+            label={t("genreType")}
+            value={formatProjectType(project.type, tTypes)}
+            notSetLabel={t("notSet")}
           />
 
           {/* Logline */}
@@ -105,7 +113,7 @@ export function OnePagerPanel({ projectId }: OnePagerPanelProps) {
             <div className="mb-2 flex items-center gap-2">
               <UserCircle className="h-4 w-4 text-muted-foreground" />
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Characters
+                {tEntities("characters")}
               </span>
             </div>
             {characters && characters.length > 0 ? (
@@ -140,7 +148,7 @@ export function OnePagerPanel({ projectId }: OnePagerPanelProps) {
               </div>
             ) : (
               <p className="text-sm text-muted-foreground italic">
-                No characters added yet. Add them in the Characters tab.
+                {t("noCharacters")}
               </p>
             )}
           </div>
@@ -154,10 +162,12 @@ function OnePagerBlock({
   icon: Icon,
   label,
   value,
+  notSetLabel,
 }: {
   icon: typeof Film;
   label: string;
   value: string | null | undefined;
+  notSetLabel: string;
 }) {
   return (
     <div>
@@ -168,13 +178,15 @@ function OnePagerBlock({
         </span>
       </div>
       <p className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-foreground">
-        {value || <span className="italic text-muted-foreground">Not set</span>}
+        {value || <span className="italic text-muted-foreground">{notSetLabel}</span>}
       </p>
     </div>
   );
 }
 
 function LoglineBlock({ projectId, savedLogline }: { projectId: string; savedLogline: string | null }) {
+  const t = useTranslations("OnePager");
+  const tCommon = useTranslations("Common");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [userRequest, setUserRequest] = useState("");
@@ -187,7 +199,7 @@ function LoglineBlock({ projectId, savedLogline }: { projectId: string; savedLog
       onSuccess: (data) => {
         setLogline(data.logline);
         queryClient.invalidateQueries({ queryKey: trpc.project.getById.queryKey({ id: projectId }) });
-        toast.success("Logline generated");
+        toast.success(t("loglineGenerated"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -198,7 +210,7 @@ function LoglineBlock({ projectId, savedLogline }: { projectId: string; savedLog
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.project.getById.queryKey({ id: projectId }) });
         setEditing(false);
-        toast.success("Logline saved");
+        toast.success(t("loglineSaved"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -215,7 +227,7 @@ function LoglineBlock({ projectId, savedLogline }: { projectId: string; savedLog
       <div className="mb-1.5 flex items-center gap-2">
         <AlignLeft className="h-4 w-4 text-muted-foreground" />
         <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Logline
+          {t("logline")}
         </span>
       </div>
 
@@ -236,13 +248,13 @@ function LoglineBlock({ projectId, savedLogline }: { projectId: string; savedLog
                   disabled={saveMutation.isPending}
                   className="rounded bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
                 >
-                  Save
+                  {tCommon("save")}
                 </button>
                 <button
                   onClick={() => { setLogline(savedLogline ?? ""); setEditing(false); }}
                   className="rounded px-2 py-0.5 text-[10px] text-muted-foreground hover:text-foreground"
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
               </div>
             </div>
@@ -251,7 +263,7 @@ function LoglineBlock({ projectId, savedLogline }: { projectId: string; savedLog
               <p
                 className="flex-1 cursor-pointer text-sm text-foreground hover:bg-muted/50 rounded px-1 -mx-1 transition-colors"
                 onClick={() => setEditing(true)}
-                title="Click to edit"
+                title={t("clickToEdit")}
               >
                 {logline}
               </p>
@@ -266,7 +278,7 @@ function LoglineBlock({ projectId, savedLogline }: { projectId: string; savedLog
         </div>
       ) : (
         <p className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground italic">
-          No logline yet
+          {t("noLogline")}
         </p>
       )}
 
@@ -275,7 +287,7 @@ function LoglineBlock({ projectId, savedLogline }: { projectId: string; savedLog
           type="text"
           value={userRequest}
           onChange={(e) => setUserRequest(e.target.value)}
-          placeholder="Optional: specific instructions..."
+          placeholder={t("instructionsPlaceholder")}
           className="w-full rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
         />
         <button
@@ -288,7 +300,7 @@ function LoglineBlock({ projectId, savedLogline }: { projectId: string; savedLog
           ) : (
             <Sparkles className="h-3.5 w-3.5" />
           )}
-          {logline ? "Regenerate" : "Generate"}
+          {logline ? tCommon("regenerate") : tCommon("generate")}
         </button>
       </div>
     </div>
@@ -296,6 +308,8 @@ function LoglineBlock({ projectId, savedLogline }: { projectId: string; savedLog
 }
 
 function SynopsisBlock({ projectId, savedSynopsis }: { projectId: string; savedSynopsis: string | null }) {
+  const t = useTranslations("OnePager");
+  const tCommon = useTranslations("Common");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [synopsis, setSynopsis] = useState(savedSynopsis ?? "");
@@ -307,7 +321,7 @@ function SynopsisBlock({ projectId, savedSynopsis }: { projectId: string; savedS
       onSuccess: (data) => {
         setSynopsis(data.synopsis);
         queryClient.invalidateQueries({ queryKey: trpc.project.getById.queryKey({ id: projectId }) });
-        toast.success("Synopsis generated");
+        toast.success(t("synopsisGenerated"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -318,7 +332,7 @@ function SynopsisBlock({ projectId, savedSynopsis }: { projectId: string; savedS
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.project.getById.queryKey({ id: projectId }) });
         setEditing(false);
-        toast.success("Synopsis saved");
+        toast.success(t("synopsisSaved"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -335,7 +349,7 @@ function SynopsisBlock({ projectId, savedSynopsis }: { projectId: string; savedS
       <div className="mb-1.5 flex items-center gap-2">
         <ScrollText className="h-4 w-4 text-muted-foreground" />
         <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          Synopsis
+          {t("synopsis")}
         </span>
       </div>
 
@@ -356,13 +370,13 @@ function SynopsisBlock({ projectId, savedSynopsis }: { projectId: string; savedS
                   disabled={saveMutation.isPending}
                   className="rounded bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
                 >
-                  Save
+                  {tCommon("save")}
                 </button>
                 <button
                   onClick={() => { setSynopsis(savedSynopsis ?? ""); setEditing(false); }}
                   className="rounded px-2 py-0.5 text-[10px] text-muted-foreground hover:text-foreground"
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
               </div>
             </div>
@@ -379,7 +393,7 @@ function SynopsisBlock({ projectId, savedSynopsis }: { projectId: string; savedS
               <p
                 className="cursor-pointer whitespace-pre-wrap text-sm text-foreground hover:bg-muted/50 rounded px-1 -mx-1 transition-colors"
                 onClick={() => setEditing(true)}
-                title="Click to edit"
+                title={t("clickToEdit")}
               >
                 {synopsis}
               </p>
@@ -388,7 +402,7 @@ function SynopsisBlock({ projectId, savedSynopsis }: { projectId: string; savedS
         </div>
       ) : (
         <p className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground italic">
-          No synopsis yet
+          {t("noSynopsis")}
         </p>
       )}
 
@@ -403,7 +417,7 @@ function SynopsisBlock({ projectId, savedSynopsis }: { projectId: string; savedS
           ) : (
             <Sparkles className="h-3.5 w-3.5" />
           )}
-          {synopsis ? "Regenerate Synopsis" : "Generate Synopsis"}
+          {synopsis ? t("regenerateSynopsis") : t("generateSynopsis")}
         </button>
       </div>
     </div>
@@ -411,6 +425,7 @@ function SynopsisBlock({ projectId, savedSynopsis }: { projectId: string; savedS
 }
 
 function ExportButton({ projectId }: { projectId: string }) {
+  const t = useTranslations("OnePager");
   const [copied, setCopied] = useState(false);
 
   const handleExport = async () => {
@@ -421,7 +436,7 @@ function ExportButton({ projectId }: { projectId: string }) {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      toast.success("One Pager copied to clipboard");
+      toast.success(t("copiedToClipboard"));
     }
   };
 
@@ -431,13 +446,14 @@ function ExportButton({ projectId }: { projectId: string }) {
       className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
     >
       {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Download className="h-3.5 w-3.5" />}
-      Copy All
+      {t("copyAll")}
     </button>
   );
 }
 
-function formatProjectType(type: string): string {
-  const types: Record<string, string> = {
+function formatProjectType(type: string, tTypes: (key: string) => string): string {
+  const knownTypes = ["Feature Film", "Short Film", "TV Series", "TV Pilot", "Documentary", "Web Series", "Animation"];
+  const typeMap: Record<string, string> = {
     FEATURE_FILM: "Feature Film",
     SHORT_FILM: "Short Film",
     TV_SERIES: "TV Series",
@@ -446,5 +462,9 @@ function formatProjectType(type: string): string {
     WEB_SERIES: "Web Series",
     ANIMATION: "Animation",
   };
-  return types[type] || type;
+  const displayKey = typeMap[type] || type;
+  if (knownTypes.includes(displayKey)) {
+    return tTypes(displayKey);
+  }
+  return displayKey;
 }

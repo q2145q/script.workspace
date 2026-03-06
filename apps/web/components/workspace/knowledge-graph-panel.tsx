@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Loader2, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { Editor } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -55,6 +56,8 @@ function getColor(type: string): string {
 }
 
 function GraphVisualization({ data }: { data: KnowledgeGraph }) {
+  const t = useTranslations("KnowledgeGraph");
+  const tc = useTranslations("Common");
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
@@ -199,7 +202,7 @@ function GraphVisualization({ data }: { data: KnowledgeGraph }) {
       const eventsGroup = g.append("g").attr("transform", `translate(20, 20)`);
       eventsGroup
         .append("text")
-        .text("Events")
+        .text(t("events"))
         .attr("font-size", "11px")
         .attr("font-weight", "600")
         .attr("fill", "#9ca3af");
@@ -231,7 +234,7 @@ function GraphVisualization({ data }: { data: KnowledgeGraph }) {
     return () => {
       simulation.stop();
     };
-  }, [data]);
+  }, [data, t]);
 
   return (
     <div className="relative h-full w-full" ref={containerRef}>
@@ -305,7 +308,7 @@ function GraphVisualization({ data }: { data: KnowledgeGraph }) {
             onClick={() => setSelectedNode(null)}
             className="mt-2 text-[10px] text-muted-foreground hover:text-foreground"
           >
-            Close
+            {tc("close")}
           </button>
         </motion.div>
       )}
@@ -314,6 +317,7 @@ function GraphVisualization({ data }: { data: KnowledgeGraph }) {
 }
 
 export function KnowledgeGraphPanel({ projectId, editor }: KnowledgeGraphPanelProps) {
+  const t = useTranslations("KnowledgeGraph");
   const trpc = useTRPC();
   const [graphData, setGraphData] = useState<KnowledgeGraph | null>(null);
 
@@ -342,7 +346,10 @@ export function KnowledgeGraphPanel({ projectId, editor }: KnowledgeGraphPanelPr
       onSuccess: (data) => {
         setGraphData(data);
         toast.success(
-          `Graph: ${data.entities.length} entities, ${data.relationships.length} relationships`
+          t("graphBuilt", {
+            entities: data.entities.length,
+            relationships: data.relationships.length,
+          })
         );
       },
       onError: (err) => toast.error(err.message),
@@ -351,7 +358,7 @@ export function KnowledgeGraphPanel({ projectId, editor }: KnowledgeGraphPanelPr
 
   const handleExtract = () => {
     if (!editor) {
-      toast.error("Editor not ready");
+      toast.error(t("editorNotReady"));
       return;
     }
     const text = editor.state.doc.textBetween(
@@ -360,7 +367,7 @@ export function KnowledgeGraphPanel({ projectId, editor }: KnowledgeGraphPanelPr
       "\n"
     );
     if (!text.trim()) {
-      toast.error("No text to analyze");
+      toast.error(t("noText"));
       return;
     }
     mutation.mutate({ projectId, text });
@@ -370,7 +377,7 @@ export function KnowledgeGraphPanel({ projectId, editor }: KnowledgeGraphPanelPr
     <div className="flex h-full flex-col bg-background">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold text-foreground">Knowledge Graph</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t("title")}</h2>
         <button
           onClick={handleExtract}
           disabled={mutation.isPending || !editor}
@@ -379,12 +386,12 @@ export function KnowledgeGraphPanel({ projectId, editor }: KnowledgeGraphPanelPr
           {mutation.isPending ? (
             <>
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Extracting...
+              {t("extracting")}
             </>
           ) : (
             <>
               <Sparkles className="h-3.5 w-3.5" />
-              {graphData ? "Regenerate Graph" : "Extract Graph"}
+              {graphData ? t("regenerateGraph") : t("extractGraph")}
             </>
           )}
         </button>
@@ -398,10 +405,10 @@ export function KnowledgeGraphPanel({ projectId, editor }: KnowledgeGraphPanelPr
           <div className="flex h-full flex-col items-center justify-center">
             <Sparkles className="h-12 w-12 text-muted-foreground/20" />
             <p className="mt-3 text-sm text-muted-foreground">
-              Extract entities, relationships, and events
+              {t("emptyState")}
             </p>
             <p className="mt-1 text-xs text-muted-foreground/60">
-              AI analyzes your screenplay to build an interactive graph
+              {t("emptyStateHint")}
             </p>
           </div>
         )}

@@ -4,10 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { signIn } from "@script/api/auth-client";
 
 export default function SignInPage() {
   const router = useRouter();
+  const t = useTranslations("Auth");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -24,7 +26,7 @@ export default function SignInPage() {
     });
 
     if (error) {
-      setError(error.message ?? "Failed to sign in");
+      setError(error.message ?? t("failedSignIn"));
       setLoading(false);
     } else {
       router.push("/dashboard");
@@ -39,9 +41,9 @@ export default function SignInPage() {
       className="glass-panel rounded-xl border border-border p-8 shadow-lg"
     >
       <div className="mb-6 text-center">
-        <h1 className="text-2xl font-semibold text-foreground">Sign In</h1>
+        <h1 className="text-2xl font-semibold text-foreground">{t("signIn")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Welcome back to Script Workspace
+          {t("welcomeBack")}
         </p>
       </div>
 
@@ -58,7 +60,7 @@ export default function SignInPage() {
 
         <div>
           <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
-            Email
+            {t("email")}
           </label>
           <input
             id="email"
@@ -67,13 +69,13 @@ export default function SignInPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
-            placeholder="you@example.com"
+            placeholder={t("emailPlaceholder")}
           />
         </div>
 
         <div>
           <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
-            Password
+            {t("password")}
           </label>
           <input
             id="password"
@@ -91,14 +93,14 @@ export default function SignInPage() {
           disabled={loading}
           className="w-full rounded-lg bg-ai-accent px-3 py-2.5 text-sm font-medium text-ai-accent-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-50"
         >
-          {loading ? "Signing in..." : "Sign In"}
+          {loading ? t("signingIn") : t("signIn")}
         </button>
       </form>
 
       <p className="mt-4 text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
+        {t("noAccount")}{" "}
         <Link href="/sign-up" className="text-ai-accent transition-colors hover:underline">
-          Sign up
+          {t("signUp")}
         </Link>
       </p>
     </motion.div>

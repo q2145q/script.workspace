@@ -20,6 +20,7 @@ import { useEditorState } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 type EntityTab = "characters" | "locations" | "terms";
 
@@ -62,10 +63,10 @@ function extractLocationNames(editor: Editor): string[] {
   return Array.from(locations).sort();
 }
 
-const TABS: { key: EntityTab; label: string; icon: typeof Users }[] = [
-  { key: "characters", label: "Characters", icon: Users },
-  { key: "locations", label: "Locations", icon: MapPin },
-  { key: "terms", label: "Glossary", icon: BookOpen },
+const TABS: { key: EntityTab; labelKey: "characters" | "locations" | "glossary"; icon: typeof Users }[] = [
+  { key: "characters", labelKey: "characters", icon: Users },
+  { key: "locations", labelKey: "locations", icon: MapPin },
+  { key: "terms", labelKey: "glossary", icon: BookOpen },
 ];
 
 // ============================================================
@@ -73,6 +74,8 @@ const TABS: { key: EntityTab; label: string; icon: typeof Users }[] = [
 // ============================================================
 
 function CharactersTab({ projectId, editor }: { projectId: string; editor?: Editor | null }) {
+  const t = useTranslations("Entities");
+  const tc = useTranslations("Common");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
@@ -94,7 +97,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
           queryKey: trpc.entity.listCharacters.queryKey({ projectId }),
         });
         resetForm();
-        toast.success("Character created");
+        toast.success(t("characterCreated"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -107,7 +110,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
           queryKey: trpc.entity.listCharacters.queryKey({ projectId }),
         });
         resetForm();
-        toast.success("Character updated");
+        toast.success(t("characterUpdated"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -119,7 +122,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
         queryClient.invalidateQueries({
           queryKey: trpc.entity.listCharacters.queryKey({ projectId }),
         });
-        toast.success("Character deleted");
+        toast.success(t("characterDeleted"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -189,9 +192,9 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
   };
 
   const addTrait = () => {
-    const t = traitInput.trim();
-    if (t && !traits.includes(t)) {
-      setTraits([...traits, t]);
+    const val = traitInput.trim();
+    if (val && !traits.includes(val)) {
+      setTraits([...traits, val]);
     }
     setTraitInput("");
   };
@@ -221,7 +224,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
           className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <Plus className="h-3 w-3" />
-          Add
+          {tc("add")}
         </button>
       </div>
 
@@ -239,27 +242,27 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Character name"
+                placeholder={t("characterName")}
                 className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent"
               />
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Description"
+                placeholder={t("description")}
                 rows={3}
                 className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent resize-none"
               />
               {/* Traits */}
               <div>
                 <div className="flex flex-wrap gap-1 mb-1">
-                  {traits.map((t) => (
+                  {traits.map((tr) => (
                     <span
-                      key={t}
+                      key={tr}
                       className="flex items-center gap-0.5 rounded-full bg-ai-accent/10 px-2 py-0.5 text-[10px] font-medium text-ai-accent"
                     >
-                      {t}
+                      {tr}
                       <button
-                        onClick={() => setTraits(traits.filter((x) => x !== t))}
+                        onClick={() => setTraits(traits.filter((x) => x !== tr))}
                         className="ml-0.5 hover:text-red-400"
                       >
                         <X className="h-2.5 w-2.5" />
@@ -272,7 +275,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
                     type="text"
                     value={traitInput}
                     onChange={(e) => setTraitInput(e.target.value)}
-                    placeholder="Add trait"
+                    placeholder={t("addTrait")}
                     className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
@@ -288,14 +291,14 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
               </div>
               <div className="flex justify-end gap-2">
                 <button onClick={resetForm} className="rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">
-                  Cancel
+                  {tc("cancel")}
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={!name.trim() || createMutation.isPending || updateMutation.isPending}
                   className="rounded-md bg-ai-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-ai-accent/80 disabled:opacity-50"
                 >
-                  {editId ? "Update" : "Create"}
+                  {editId ? tc("update") : tc("create")}
                 </button>
               </div>
             </div>
@@ -309,7 +312,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
         </div>
       ) : characters.length === 0 ? (
-        <EmptyState icon={Users} label="No characters yet" />
+        <EmptyState icon={Users} label={t("noCharacters")} />
       ) : (
         <div className="space-y-0.5 p-2">
           {characters.map((char) => (
@@ -334,7 +337,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
                     }}
                     disabled={aiDescribingId === char.id}
                     className="rounded p-0.5 text-muted-foreground hover:text-ai-accent disabled:opacity-50"
-                    title="AI describe"
+                    title={t("aiDescribe")}
                   >
                     {aiDescribingId === char.id ? (
                       <Loader2 className="h-3 w-3 animate-spin text-ai-accent" />
@@ -376,18 +379,18 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
                       )}
                       {char.traits.length > 0 && (
                         <div className="mt-1.5 flex flex-wrap gap-1">
-                          {char.traits.map((t) => (
+                          {char.traits.map((trait) => (
                             <span
-                              key={t}
+                              key={trait}
                               className="rounded-full bg-ai-accent/10 px-1.5 py-0.5 text-[9px] font-medium text-ai-accent"
                             >
-                              {t}
+                              {trait}
                             </span>
                           ))}
                         </div>
                       )}
                       {!char.description && char.traits.length === 0 && (
-                        <p className="text-[10px] text-muted-foreground/50 italic">No details</p>
+                        <p className="text-[10px] text-muted-foreground/50 italic">{t("noDetails")}</p>
                       )}
                     </div>
                   </motion.div>
@@ -402,7 +405,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
       {editor && unsavedDetected.length > 0 && (
         <div className="border-t border-border p-2">
           <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Detected in Script
+            {t("detectedInScript")}
           </p>
           <div className="space-y-0.5">
             {unsavedDetected.map((detectedName) => (
@@ -420,7 +423,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
                   }}
                   className="flex-shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium text-ai-accent hover:bg-ai-accent/10"
                 >
-                  + Add
+                  + {tc("add")}
                 </button>
               </div>
             ))}
@@ -436,6 +439,8 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
 // ============================================================
 
 function LocationsTab({ projectId, editor }: { projectId: string; editor?: Editor | null }) {
+  const t = useTranslations("Entities");
+  const tc = useTranslations("Common");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
@@ -455,7 +460,7 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
           queryKey: trpc.entity.listLocations.queryKey({ projectId }),
         });
         resetForm();
-        toast.success("Location created");
+        toast.success(t("locationCreated"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -468,7 +473,7 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
           queryKey: trpc.entity.listLocations.queryKey({ projectId }),
         });
         resetForm();
-        toast.success("Location updated");
+        toast.success(t("locationUpdated"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -480,7 +485,7 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
         queryClient.invalidateQueries({
           queryKey: trpc.entity.listLocations.queryKey({ projectId }),
         });
-        toast.success("Location deleted");
+        toast.success(t("locationDeleted"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -568,7 +573,7 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
           className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <Plus className="h-3 w-3" />
-          Add
+          {tc("add")}
         </button>
       </div>
 
@@ -585,26 +590,26 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Location name"
+                placeholder={t("locationName")}
                 className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent"
               />
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Description"
+                placeholder={t("description")}
                 rows={3}
                 className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent resize-none"
               />
               <div className="flex justify-end gap-2">
                 <button onClick={resetForm} className="rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">
-                  Cancel
+                  {tc("cancel")}
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={!name.trim() || createMutation.isPending || updateMutation.isPending}
                   className="rounded-md bg-ai-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-ai-accent/80 disabled:opacity-50"
                 >
-                  {editId ? "Update" : "Create"}
+                  {editId ? tc("update") : tc("create")}
                 </button>
               </div>
             </div>
@@ -617,7 +622,7 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
         </div>
       ) : locations.length === 0 ? (
-        <EmptyState icon={MapPin} label="No locations yet" />
+        <EmptyState icon={MapPin} label={t("noLocations")} />
       ) : (
         <div className="space-y-0.5 p-2">
           {locations.map((loc) => (
@@ -642,7 +647,7 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
                     }}
                     disabled={aiDescribingId === loc.id}
                     className="rounded p-0.5 text-muted-foreground hover:text-ai-accent disabled:opacity-50"
-                    title="AI describe"
+                    title={t("aiDescribe")}
                   >
                     {aiDescribingId === loc.id ? (
                       <Loader2 className="h-3 w-3 animate-spin text-ai-accent" />
@@ -682,7 +687,7 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
                       {loc.description ? (
                         <p className="text-xs text-muted-foreground">{loc.description}</p>
                       ) : (
-                        <p className="text-[10px] text-muted-foreground/50 italic">No description</p>
+                        <p className="text-[10px] text-muted-foreground/50 italic">{t("noDescription")}</p>
                       )}
                     </div>
                   </motion.div>
@@ -697,7 +702,7 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
       {editor && unsavedDetectedLocs.length > 0 && (
         <div className="border-t border-border p-2">
           <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Detected in Script
+            {t("detectedInScript")}
           </p>
           <div className="space-y-0.5">
             {unsavedDetectedLocs.map((detectedName) => (
@@ -715,7 +720,7 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
                   }}
                   className="flex-shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium text-ai-accent hover:bg-ai-accent/10"
                 >
-                  + Add
+                  + {tc("add")}
                 </button>
               </div>
             ))}
@@ -731,6 +736,8 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
 // ============================================================
 
 function TermsTab({ projectId }: { projectId: string }) {
+  const t = useTranslations("Entities");
+  const tc = useTranslations("Common");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
@@ -750,7 +757,7 @@ function TermsTab({ projectId }: { projectId: string }) {
           queryKey: trpc.entity.listTerms.queryKey({ projectId }),
         });
         resetForm();
-        toast.success("Term created");
+        toast.success(t("termCreated"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -763,7 +770,7 @@ function TermsTab({ projectId }: { projectId: string }) {
           queryKey: trpc.entity.listTerms.queryKey({ projectId }),
         });
         resetForm();
-        toast.success("Term updated");
+        toast.success(t("termUpdated"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -775,7 +782,7 @@ function TermsTab({ projectId }: { projectId: string }) {
         queryClient.invalidateQueries({
           queryKey: trpc.entity.listTerms.queryKey({ projectId }),
         });
-        toast.success("Term deleted");
+        toast.success(t("termDeleted"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -788,10 +795,10 @@ function TermsTab({ projectId }: { projectId: string }) {
     setDefinition("");
   };
 
-  const startEdit = (t: { id: string; term: string; definition: string | null }) => {
-    setEditId(t.id);
-    setTerm(t.term);
-    setDefinition(t.definition ?? "");
+  const startEdit = (item: { id: string; term: string; definition: string | null }) => {
+    setEditId(item.id);
+    setTerm(item.term);
+    setDefinition(item.definition ?? "");
     setShowForm(true);
   };
 
@@ -825,7 +832,7 @@ function TermsTab({ projectId }: { projectId: string }) {
           className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <Plus className="h-3 w-3" />
-          Add
+          {tc("add")}
         </button>
       </div>
 
@@ -842,26 +849,26 @@ function TermsTab({ projectId }: { projectId: string }) {
                 type="text"
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
-                placeholder="Term"
+                placeholder={t("term")}
                 className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent"
               />
               <textarea
                 value={definition}
                 onChange={(e) => setDefinition(e.target.value)}
-                placeholder="Definition"
+                placeholder={t("definition")}
                 rows={3}
                 className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent resize-none"
               />
               <div className="flex justify-end gap-2">
                 <button onClick={resetForm} className="rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">
-                  Cancel
+                  {tc("cancel")}
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={!term.trim() || createMutation.isPending || updateMutation.isPending}
                   className="rounded-md bg-ai-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-ai-accent/80 disabled:opacity-50"
                 >
-                  {editId ? "Update" : "Create"}
+                  {editId ? tc("update") : tc("create")}
                 </button>
               </div>
             </div>
@@ -874,28 +881,28 @@ function TermsTab({ projectId }: { projectId: string }) {
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
         </div>
       ) : terms.length === 0 ? (
-        <EmptyState icon={BookOpen} label="No terms yet" />
+        <EmptyState icon={BookOpen} label={t("noTerms")} />
       ) : (
         <div className="space-y-0.5 p-2">
-          {terms.map((t) => (
-            <div key={t.id} className="group rounded-md border border-transparent hover:border-border">
+          {terms.map((item) => (
+            <div key={item.id} className="group rounded-md border border-transparent hover:border-border">
               <button
-                onClick={() => setExpandedId(expandedId === t.id ? null : t.id)}
+                onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left"
               >
-                {expandedId === t.id ? (
+                {expandedId === item.id ? (
                   <ChevronDown className="h-3 w-3 text-muted-foreground" />
                 ) : (
                   <ChevronRight className="h-3 w-3 text-muted-foreground" />
                 )}
                 <span className="flex-1 truncate text-sm font-medium text-foreground">
-                  {t.term}
+                  {item.term}
                 </span>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      startEdit(t);
+                      startEdit(item);
                     }}
                     className="rounded p-0.5 text-muted-foreground hover:text-foreground"
                   >
@@ -904,7 +911,7 @@ function TermsTab({ projectId }: { projectId: string }) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      deleteMutation.mutate({ id: t.id });
+                      deleteMutation.mutate({ id: item.id });
                     }}
                     className="rounded p-0.5 text-muted-foreground hover:text-red-400"
                   >
@@ -913,7 +920,7 @@ function TermsTab({ projectId }: { projectId: string }) {
                 </div>
               </button>
               <AnimatePresence>
-                {expandedId === t.id && (
+                {expandedId === item.id && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
@@ -921,10 +928,10 @@ function TermsTab({ projectId }: { projectId: string }) {
                     className="overflow-hidden"
                   >
                     <div className="px-3 pb-2 pl-8">
-                      {t.definition ? (
-                        <p className="text-xs text-muted-foreground">{t.definition}</p>
+                      {item.definition ? (
+                        <p className="text-xs text-muted-foreground">{item.definition}</p>
                       ) : (
-                        <p className="text-[10px] text-muted-foreground/50 italic">No definition</p>
+                        <p className="text-[10px] text-muted-foreground/50 italic">{t("noDefinition")}</p>
                       )}
                     </div>
                   </motion.div>
@@ -956,6 +963,7 @@ function EmptyState({ icon: Icon, label }: { icon: typeof Users; label: string }
 // ============================================================
 
 export function EntitiesPanel({ projectId, defaultTab = "characters", editor }: EntitiesPanelProps) {
+  const t = useTranslations("Entities");
   const [activeTab, setActiveTab] = useState<EntityTab>(defaultTab);
 
   return (
@@ -973,7 +981,7 @@ export function EntitiesPanel({ projectId, defaultTab = "characters", editor }: 
             }`}
           >
             <tab.icon className="h-3.5 w-3.5" />
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>

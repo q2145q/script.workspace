@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { PanelRightClose } from "lucide-react";
 import type { Editor } from "@script/editor";
 import { CommentsPanel } from "./comments-panel";
@@ -21,13 +22,15 @@ interface RightPanelProps {
 
 export function RightPanel({ editor, documentId, projectId, onToggle }: RightPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab>("comments");
+  const t = useTranslations("RightPanel");
+  const tEditor = useTranslations("Editor");
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "comments", label: "Comments" },
-    { id: "chat", label: "Chat" },
-    { id: "context", label: "Context" },
-    { id: "analysis", label: "Analysis" },
-    { id: "activity", label: "Activity" },
+  const tabs: { id: Tab; tKey: string }[] = [
+    { id: "comments", tKey: "comments" },
+    { id: "chat", tKey: "chat" },
+    { id: "context", tKey: "context" },
+    { id: "analysis", tKey: "analysis" },
+    { id: "activity", tKey: "activity" },
   ];
 
   return (
@@ -43,7 +46,7 @@ export function RightPanel({ editor, documentId, projectId, onToggle }: RightPan
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {tab.label}
+            {t(tab.tKey)}
             {activeTab === tab.id && (
               <motion.div
                 layoutId="activeTab"
@@ -57,7 +60,7 @@ export function RightPanel({ editor, documentId, projectId, onToggle }: RightPan
           <button
             onClick={onToggle}
             className="flex items-center px-1.5 py-2.5 text-muted-foreground transition-colors hover:text-foreground"
-            title="Hide panel"
+            title={tEditor("hidePanel")}
           >
             <PanelRightClose className="h-3.5 w-3.5" />
           </button>

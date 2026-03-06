@@ -8,6 +8,7 @@ import { useEditorState } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface OutlinePanelProps {
   editor: Editor | null;
@@ -62,6 +63,7 @@ function extractSceneText(editor: Editor, scene: SceneCard): string {
 }
 
 export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProps) {
+  const t = useTranslations("Outline");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -85,7 +87,7 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
 
   const saveMutation = useMutation(
     trpc.document.save.mutationOptions({
-      onError: (err) => toast.error(`Failed to save: ${err.message}`),
+      onError: (err) => toast.error(t("failedSave", { message: err.message })),
     })
   );
 
@@ -164,7 +166,7 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
       });
 
       const count = Object.values(result.synopses).filter(Boolean).length;
-      toast.success(`Generated synopses for ${count} scenes`);
+      toast.success(t("generatedSynopses", { count }));
     } finally {
       setIsGeneratingAll(false);
     }
@@ -212,13 +214,13 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
 
       createDraftMutation.mutate({
         documentId,
-        name: "Before scene reorder (auto)",
+        name: t("autoReorderDraft"),
       });
 
       editor.commands.setContent(newContent);
       saveMutation.mutate({ id: documentId, content: newContent });
 
-      toast.success("Scenes reordered");
+      toast.success(t("scenesReordered"));
     },
     [editor, scenes, documentId, saveMutation, createDraftMutation]
   );
@@ -295,7 +297,7 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
   if (!editor) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-        Switch to Script mode first
+        {t("switchToScript")}
       </div>
     );
   }
@@ -307,9 +309,9 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
       {/* Header */}
       <div className="glass-panel flex items-center gap-2 border-b border-border px-4 py-3">
         <LayoutList className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">Outline</span>
+        <span className="text-sm font-medium">{t("title")}</span>
         <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-          {sceneList.length} scenes
+          {t("scenes", { count: sceneList.length })}
         </span>
         <div className="flex-1" />
         {sceneList.length > 0 && (
@@ -323,7 +325,7 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
             ) : (
               <Sparkles className="h-3 w-3" />
             )}
-            {Object.keys(savedSynopses).length > 0 ? "Regenerate All" : "Generate All"}
+            {Object.keys(savedSynopses).length > 0 ? t("regenerateAll") : t("generateAll")}
           </button>
         )}
       </div>
@@ -333,9 +335,9 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
         {sceneList.length === 0 ? (
           <div className="py-12 text-center">
             <LayoutList className="mx-auto h-8 w-8 text-muted-foreground/30" />
-            <p className="mt-2 text-sm text-muted-foreground">No scenes yet</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t("noScenes")}</p>
             <p className="mt-1 text-xs text-muted-foreground/60">
-              Type INT. or EXT. in the editor to create a scene.
+              {t("noScenesHint")}
             </p>
           </div>
         ) : (
@@ -374,7 +376,7 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
                         }}
                         disabled={generatingScene === scene.heading || isGeneratingAll}
                         className="flex-shrink-0 rounded p-0.5 text-muted-foreground/30 opacity-0 transition-opacity hover:text-ai-accent group-hover:opacity-100 disabled:opacity-50"
-                        title="Generate synopsis"
+                        title={t("generateSynopsis")}
                       >
                         {generatingScene === scene.heading ? (
                           <Loader2 className="h-3 w-3 animate-spin text-ai-accent" />

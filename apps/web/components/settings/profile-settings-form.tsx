@@ -8,6 +8,7 @@ import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { POSITIONS, LANGUAGES } from "@script/types";
+import { useTranslations } from "next-intl";
 
 const inputClass =
   "w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring";
@@ -18,6 +19,10 @@ const selectClass =
   "w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring";
 
 export function ProfileSettingsForm() {
+  const t = useTranslations("Profile");
+  const tPositions = useTranslations("Positions");
+  const tCommon = useTranslations("Common");
+
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -32,7 +37,7 @@ export function ProfileSettingsForm() {
     trpc.user.updateProfile.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: trpc.user.me.queryKey() });
-        toast.success("Profile updated");
+        toast.success(t("profileUpdated"));
       },
       onError: (err) => toast.error(err.message),
     })
@@ -75,9 +80,9 @@ export function ProfileSettingsForm() {
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Profile</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{t("title")}</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Manage your personal information
+            {t("subtitle")}
           </p>
         </div>
       </div>
@@ -85,7 +90,7 @@ export function ProfileSettingsForm() {
       <div className="glass-panel rounded-xl border border-border p-6">
         <div className="space-y-5">
           <div>
-            <label className={labelClass}>First Name</label>
+            <label className={labelClass}>{t("firstName")}</label>
             <input
               type="text"
               value={user.name}
@@ -93,13 +98,13 @@ export function ProfileSettingsForm() {
               className={`${inputClass} opacity-60 cursor-not-allowed`}
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              Name is set during registration
+              {t("nameSetDuringRegistration")}
             </p>
           </div>
 
           <div>
             <label htmlFor="lastName" className={labelClass}>
-              Last Name
+              {t("lastName")}
             </label>
             <input
               id="lastName"
@@ -107,12 +112,12 @@ export function ProfileSettingsForm() {
               value={currentLastName}
               onChange={(e) => setLastName(e.target.value)}
               className={inputClass}
-              placeholder="Your last name"
+              placeholder={t("lastNamePlaceholder")}
             />
           </div>
 
           <div>
-            <label className={labelClass}>Email</label>
+            <label className={labelClass}>{t("email")}</label>
             <input
               type="text"
               value={user.email}
@@ -123,7 +128,7 @@ export function ProfileSettingsForm() {
 
           <div>
             <label htmlFor="position" className={labelClass}>
-              Position
+              {t("position")}
             </label>
             <select
               id="position"
@@ -133,7 +138,7 @@ export function ProfileSettingsForm() {
             >
               {POSITIONS.map((p) => (
                 <option key={p} value={p}>
-                  {p}
+                  {tPositions(p)}
                 </option>
               ))}
             </select>
@@ -141,7 +146,7 @@ export function ProfileSettingsForm() {
 
           <div>
             <label htmlFor="company" className={labelClass}>
-              Company <span className="text-muted-foreground">(optional)</span>
+              {t("company")} <span className="text-muted-foreground">{tCommon("optional")}</span>
             </label>
             <input
               id="company"
@@ -149,13 +154,13 @@ export function ProfileSettingsForm() {
               value={currentCompany}
               onChange={(e) => setCompany(e.target.value)}
               className={inputClass}
-              placeholder="Studio or production company"
+              placeholder={t("companyPlaceholder")}
             />
           </div>
 
           <div>
             <label htmlFor="defaultLanguage" className={labelClass}>
-              Default Language
+              {t("defaultLanguage")}
             </label>
             <select
               id="defaultLanguage"
@@ -182,7 +187,7 @@ export function ProfileSettingsForm() {
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              Save
+              {tCommon("save")}
             </button>
           </div>
         </div>

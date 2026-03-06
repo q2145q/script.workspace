@@ -8,6 +8,7 @@ import { Fragment } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface SuggestionPopoverProps {
   editor: Editor | null;
@@ -46,6 +47,7 @@ export function SuggestionPopover({
   editor,
   documentId,
 }: SuggestionPopoverProps) {
+  const t = useTranslations("Suggestions");
   const [activeSuggestionId, setActiveSuggestionId] = useState<string | null>(
     null
   );
@@ -77,21 +79,21 @@ export function SuggestionPopover({
   const applyMutation = useMutation(
     trpc.suggestion.accept.mutationOptions({
       onSuccess: invalidate,
-      onError: (err) => toast.error(`Failed to apply: ${err.message}`),
+      onError: (err) => toast.error(t("failedApply", { message: err.message })),
     })
   );
 
   const rejectMutation = useMutation(
     trpc.suggestion.reject.mutationOptions({
       onSuccess: invalidate,
-      onError: (err) => toast.error(`Failed to dismiss: ${err.message}`),
+      onError: (err) => toast.error(t("failedDismiss", { message: err.message })),
     })
   );
 
   const undoMutation = useMutation(
     trpc.suggestion.undo.mutationOptions({
       onSuccess: invalidate,
-      onError: (err) => toast.error(`Failed to undo: ${err.message}`),
+      onError: (err) => toast.error(t("failedUndo", { message: err.message })),
     })
   );
 
@@ -115,7 +117,7 @@ export function SuggestionPopover({
         // We'll trigger it on the next render cycle when new data arrives
         setActiveSuggestionId(result.id);
       },
-      onError: (err) => toast.error(`Retry failed: ${err.message}`),
+      onError: (err) => toast.error(t("failedRetry", { message: err.message })),
     })
   );
 
@@ -388,7 +390,7 @@ export function SuggestionPopover({
                 <Check className="h-3 w-3 text-emerald-400" />
               </div>
               <span className="flex-1 text-[11px] text-muted-foreground">
-                Suggestion applied
+                {t("applied")}
               </span>
               <button
                 onClick={handleUndo}
@@ -396,7 +398,7 @@ export function SuggestionPopover({
                 className="flex items-center gap-1 rounded-md border border-border px-2 py-0.5 text-[10px] font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50"
               >
                 <Undo2 className="h-3 w-3" />
-                Undo
+                {t("undo")}
               </button>
               <button
                 onClick={close}
@@ -416,7 +418,7 @@ export function SuggestionPopover({
               <div className="flex items-center gap-1.5">
                 <Sparkles className="h-3 w-3 text-ai-accent" />
                 <span className="text-[10px] font-medium text-ai-accent">
-                  AI Suggestion
+                  {t("aiSuggestion")}
                 </span>
               </div>
               <button
@@ -433,7 +435,7 @@ export function SuggestionPopover({
                 <span className="font-medium text-foreground">
                   {suggestion.createdBy.name}
                 </span>{" "}
-                asked: &ldquo;{suggestion.instruction}&rdquo;
+                {t("asked", { instruction: suggestion.instruction })}
               </p>
               {suggestion.explanation && (
                 <p className="mt-1 text-[10px] italic text-muted-foreground/80">
@@ -470,7 +472,7 @@ export function SuggestionPopover({
                 className="flex items-center gap-1 rounded-md bg-emerald-600 px-2.5 py-1 text-[10px] font-medium text-white transition-all hover:bg-emerald-500 disabled:opacity-50"
               >
                 <Check className="h-3 w-3" />
-                Apply
+                {t("apply")}
               </button>
               <button
                 onClick={handleElse}
@@ -482,7 +484,7 @@ export function SuggestionPopover({
                 ) : (
                   <RefreshCw className="h-3 w-3" />
                 )}
-                Else
+                {t("else")}
               </button>
               <button
                 onClick={handleDismiss}
@@ -490,7 +492,7 @@ export function SuggestionPopover({
                 className="flex items-center gap-1 rounded-md bg-red-600/80 px-2.5 py-1 text-[10px] font-medium text-white transition-all hover:bg-red-500 disabled:opacity-50"
               >
                 <X className="h-3 w-3" />
-                Dismiss
+                {t("dismiss")}
               </button>
             </div>
           </>

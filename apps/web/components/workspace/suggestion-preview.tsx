@@ -8,6 +8,7 @@ import { Fragment } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface SuggestionPreviewProps {
   editor: Editor | null;
@@ -31,6 +32,7 @@ function isBlocksFormat(data: unknown): data is Array<{ type: string; text: stri
 }
 
 export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps) {
+  const t = useTranslations("Suggestions");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [recentlyApplied, setRecentlyApplied] = useState<Map<string, AppliedEntry>>(new Map());
@@ -62,21 +64,21 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
   const applyMutation = useMutation(
     trpc.suggestion.accept.mutationOptions({
       onSuccess: invalidate,
-      onError: (err) => toast.error(`Failed to apply: ${err.message}`),
+      onError: (err) => toast.error(t("failedApply", { message: err.message })),
     })
   );
 
   const rejectMutation = useMutation(
     trpc.suggestion.reject.mutationOptions({
       onSuccess: invalidate,
-      onError: (err) => toast.error(`Failed to dismiss: ${err.message}`),
+      onError: (err) => toast.error(t("failedDismiss", { message: err.message })),
     })
   );
 
   const undoMutation = useMutation(
     trpc.suggestion.undo.mutationOptions({
       onSuccess: invalidate,
-      onError: (err) => toast.error(`Failed to undo: ${err.message}`),
+      onError: (err) => toast.error(t("failedUndo", { message: err.message })),
     })
   );
 
@@ -99,7 +101,7 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
         });
         invalidate();
       },
-      onError: (err) => toast.error(`Retry failed: ${err.message}`),
+      onError: (err) => toast.error(t("failedRetry", { message: err.message })),
     })
   );
 
@@ -345,7 +347,7 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
             <div className="mb-2 flex items-center gap-2">
               <div className="h-1.5 w-1.5 rounded-full bg-ai-accent animate-pulse" />
               <span className="text-[10px] font-medium uppercase tracking-wider text-ai-accent">
-                {pendingSuggestions.length} pending suggestion{pendingSuggestions.length > 1 ? "s" : ""}
+                {t("pendingSuggestions", { count: pendingSuggestions.length })}
               </span>
             </div>
 
@@ -354,7 +356,7 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
                 <div key={s.id} className="rounded-lg border border-border bg-muted/30 p-2.5">
                   <p className="mb-1.5 text-[11px] text-muted-foreground">
                     <span className="font-medium text-foreground">{s.createdBy.name}</span>
-                    {" "}asked: &ldquo;{s.instruction}&rdquo;
+                    {" "}{t("asked", { instruction: s.instruction })}
                   </p>
 
                   {s.explanation && (
@@ -378,7 +380,7 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
                       className="flex items-center gap-1 rounded-md bg-suggestion-add-border px-2.5 py-1 text-[10px] font-medium text-white transition-all duration-200 hover:opacity-90 disabled:opacity-50"
                     >
                       <Check className="h-3 w-3" />
-                      Apply
+                      {t("apply")}
                     </button>
                     <button
                       onClick={() =>
@@ -399,7 +401,7 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
                       ) : (
                         <RefreshCw className="h-3 w-3" />
                       )}
-                      Else
+                      {t("else")}
                     </button>
                     <button
                       onClick={() => handleDismiss(s.id)}
@@ -407,7 +409,7 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
                       className="flex items-center gap-1 rounded-md bg-suggestion-remove-border px-2.5 py-1 text-[10px] font-medium text-white transition-all duration-200 hover:opacity-90 disabled:opacity-50"
                     >
                       <X className="h-3 w-3" />
-                      Dismiss
+                      {t("dismiss")}
                     </button>
                   </div>
                 </div>
@@ -430,7 +432,7 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
               {Array.from(recentlyApplied.entries()).map(([id]) => (
                 <div key={id} className="flex items-center gap-2 rounded-lg border border-suggestion-add-border/30 bg-suggestion-add/10 p-2.5">
                   <span className="flex-1 text-[10px] text-muted-foreground">
-                    Suggestion applied
+                    {t("applied")}
                   </span>
                   <button
                     onClick={() => handleUndo(id)}
@@ -438,7 +440,7 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
                     className="flex items-center gap-1 rounded-md border border-border px-2.5 py-1 text-[10px] font-medium text-foreground transition-all duration-200 hover:bg-muted disabled:opacity-50"
                   >
                     <Undo2 className="h-3 w-3" />
-                    Undo
+                    {t("undo")}
                   </button>
                 </div>
               ))}
