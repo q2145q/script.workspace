@@ -122,20 +122,6 @@ body {
 }
 
 /* ============================================================
-   AI COMMAND BAR
-   ============================================================ */
-
-.ai-command-bar {
-  background: var(--glass-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--glass-border);
-  box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-}
-
-/* ============================================================
    SCREENPLAY FORMAT
    US screenplay standard: 8.5" x 11" (US Letter)
    ============================================================ */

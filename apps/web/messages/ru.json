@@ -138,10 +138,14 @@
     "scenes": "Сцены",
     "noScenes": "Сцен пока нет. Напишите INT. или EXT. чтобы создать.",
     "selectTextFirst": "Сначала выделите текст",
-    "commandPlaceholder": "Инструкция для переписывания или \"/format\" для авто-форматирования...",
-    "selected": "Выделено: ",
-    "enter": "Enter",
-    "textFormatted": "Текст отформатирован в блоки сценария"
+    "formatBtn": "Форматировать",
+    "rewriteBtn": "Переписать",
+    "rewritePlaceholder": "Добавить драмы, упростить, изменить тон...",
+    "pinAdded": "Закреплено в контексте",
+    "textFormatted": "Текст отформатирован в блоки сценария",
+    "commentBtn": "Комментарий",
+    "commentPlaceholder": "Добавить комментарий...",
+    "commentAdded": "Комментарий добавлен"
   },
   "RightPanel": {
     "comments": "Комментарии",
@@ -402,7 +406,8 @@
     "failedApply": "Не удалось применить: {message}",
     "failedDismiss": "Не удалось отклонить: {message}",
     "failedUndo": "Не удалось отменить: {message}",
-    "failedRetry": "Не удалось повторить: {message}"
+    "failedRetry": "Не удалось повторить: {message}",
+    "loading": "Загрузка предложения..."
   },
   "ProjectSettings": {
     "title": "Настройки проекта",

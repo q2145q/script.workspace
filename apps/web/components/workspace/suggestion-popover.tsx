@@ -67,6 +67,47 @@ export function SuggestionPopover({
     trpc.suggestion.pending.queryOptions({ documentId })
   );
 
+  // Auto-open popover when a suggestion is created (via custom event)
+  useEffect(() => {
+    if (!editor) return;
+
+    const handler = (e: Event) => {
+      const { id, to } = (e as CustomEvent).detail as {
+        id: string;
+        from: number;
+        to: number;
+      };
+
+      // Trigger refetch so suggestion data is available for rendering
+      invalidate();
+
+      // Wait for ProseMirror decoration to render in DOM
+      setTimeout(() => {
+        const el = document.querySelector(
+          `[data-suggestion-id="${id}"]`
+        ) as HTMLElement | null;
+
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          setActiveSuggestionId(id);
+          setPosition({ top: rect.bottom + 6, left: rect.left });
+        } else {
+          // Fallback: use ProseMirror coords
+          try {
+            const coords = editor.view.coordsAtPos(to);
+            setActiveSuggestionId(id);
+            setPosition({ top: coords.bottom + 6, left: coords.left });
+          } catch {
+            // Position not available, skip auto-open
+          }
+        }
+      }, 200);
+    };
+
+    window.addEventListener("suggestion-created", handler);
+    return () => window.removeEventListener("suggestion-created", handler);
+  }, [editor]);
+
   const invalidate = () => {
     queryClient.invalidateQueries({
       queryKey: trpc.suggestion.pending.queryKey({ documentId }),
@@ -113,9 +154,16 @@ export function SuggestionPopover({
         });
         invalidate();
 
-        // Open the new suggestion popover
-        // We'll trigger it on the next render cycle when new data arrives
-        setActiveSuggestionId(result.id);
+        // Signal auto-open via custom event
+        window.dispatchEvent(
+          new CustomEvent("suggestion-created", {
+            detail: {
+              id: result.id,
+              from: result.selectionFrom,
+              to: result.selectionTo,
+            },
+          })
+        );
       },
       onError: (err) => toast.error(t("failedRetry", { message: err.message })),
     })
@@ -235,8 +283,10 @@ export function SuggestionPopover({
     ? recentlyApplied.has(activeSuggestionId)
     : false;
 
-  if (!activeSuggestionId || !position || (!suggestion && !wasJustApplied))
-    return null;
+  if (!activeSuggestionId || !position) return null;
+
+  // Loading state: event fired but query hasn't returned data yet
+  const isLoading = !suggestion && !wasJustApplied;
 
   const handleApply = () => {
     if (!editor || !suggestion) return;
@@ -407,6 +457,22 @@ export function SuggestionPopover({
                 <X className="h-3 w-3" />
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Loading state — waiting for query data */}
+        {isLoading && (
+          <div className="flex items-center gap-2 p-3">
+            <Loader2 className="h-4 w-4 animate-spin text-ai-accent" />
+            <span className="text-[11px] text-muted-foreground">
+              {t("loading")}
+            </span>
+            <button
+              onClick={close}
+              className="ml-auto rounded p-0.5 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3 w-3" />
+            </button>
           </div>
         )}
 

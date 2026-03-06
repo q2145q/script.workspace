@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useMemo, useState, useRef } from "react";
-import { ScriptEditor, EditorToolbar, useEditorState, useEditorAutosave, type JSONContent, type Editor, HocuspocusProvider } from "@script/editor";
+import { ScriptEditor, EditorToolbar, useEditorAutosave, type JSONContent, type Editor, HocuspocusProvider } from "@script/editor";
 import { useTranslations } from "next-intl";
 import { useTRPC } from "@/lib/trpc/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Pin, Save } from "lucide-react";
-import { AICommandBar } from "./ai-command-bar";
+import { Save } from "lucide-react";
+import { SelectionToolbar } from "./selection-toolbar";
 import { ExportDialog } from "./export-dialog";
 import { OnlineUsers } from "./online-users";
 import { CollabStatus } from "./collab-status";
@@ -41,53 +41,6 @@ interface EditorAreaProps {
   projectId: string;
   onEditorReady?: (editor: Editor) => void;
   currentUser: CurrentUser;
-}
-
-function PinButton({ editor, projectId }: { editor: Editor; projectId: string }) {
-  const t = useTranslations("Editor");
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-
-  const hasSelection = useEditorState({
-    editor,
-    selector: (ctx) => {
-      const { from, to } = ctx.editor.state.selection;
-      return to - from > 0;
-    },
-  });
-
-  const pinMutation = useMutation(
-    trpc.pin.create.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.pin.list.queryKey({ projectId }),
-        });
-        toast.success("Pinned to context");
-      },
-      onError: (err) => toast.error(err.message),
-    })
-  );
-
-  const handlePin = () => {
-    const { from, to } = editor.state.selection;
-    const text = editor.state.doc.textBetween(from, to, " ");
-    if (!text.trim()) return;
-    pinMutation.mutate({ projectId, content: text, type: "TEXT" });
-  };
-
-  if (!hasSelection) return null;
-
-  return (
-    <button
-      onClick={handlePin}
-      disabled={pinMutation.isPending}
-      className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-ai-accent/10 hover:text-ai-accent disabled:opacity-50"
-      title={t("pinSelection")}
-    >
-      <Pin className="h-3 w-3" />
-      {t("pin")}
-    </button>
-  );
 }
 
 function SaveDraftButton({ documentId }: { documentId: string }) {
@@ -194,7 +147,6 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
           {useCollab && <OnlineUsers provider={collabProvider} />}
         </div>
         <div className="flex items-center gap-2">
-          {editor && <PinButton editor={editor} projectId={projectId} />}
           <SaveDraftButton documentId={document.id} />
           <ExportDialog documentId={document.id} projectTitle={projectTitle} />
           {useCollab ? (
@@ -224,8 +176,8 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
         />
       </div>
 
-      {/* AI Command Bar (Cmd+K) */}
-      <AICommandBar editor={editor} documentId={document.id} />
+      {/* Floating selection toolbar (Format / Rewrite / Pin) */}
+      <SelectionToolbar editor={editor} documentId={document.id} projectId={projectId} />
 
       {/* Inline comment popover — appears when clicking on commented text */}
       <CommentPopover editor={editor} documentId={document.id} />
