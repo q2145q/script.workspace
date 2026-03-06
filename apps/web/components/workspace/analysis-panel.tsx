@@ -14,6 +14,9 @@ import {
   Lightbulb,
   Target,
   Eye,
+  ShieldCheck,
+  ListMusic,
+  Gauge,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Editor } from "@script/editor";
@@ -24,9 +27,12 @@ import type {
   SceneAnalysis,
   CharacterAnalysis,
   StructureAnalysis,
+  ConsistencyResult,
+  BeatSheetResult,
+  PacingResult,
 } from "@script/types";
 
-type AnalysisTab = "scene" | "characters" | "structure";
+type AnalysisTab = "scene" | "characters" | "structure" | "consistency" | "beatSheet" | "pacing";
 
 interface AnalysisPanelProps {
   editor: Editor | null;
@@ -57,10 +63,13 @@ function extractFullText(editor: Editor): string {
   return editor.state.doc.textBetween(0, editor.state.doc.content.size, "\n");
 }
 
-const TABS: { key: AnalysisTab; labelKey: "scene" | "characters" | "structure"; icon: typeof Film }[] = [
+const TABS: { key: AnalysisTab; labelKey: string; icon: typeof Film }[] = [
   { key: "scene", labelKey: "scene", icon: Film },
   { key: "characters", labelKey: "characters", icon: Users },
   { key: "structure", labelKey: "structure", icon: Layers },
+  { key: "consistency", labelKey: "consistency", icon: ShieldCheck },
+  { key: "beatSheet", labelKey: "beatSheet", icon: ListMusic },
+  { key: "pacing", labelKey: "pacing", icon: Gauge },
 ];
 
 // ============================================================
@@ -458,6 +467,187 @@ function StructureAnalysisView({ data }: { data: StructureAnalysis }) {
 }
 
 // ============================================================
+// Consistency Check
+// ============================================================
+
+const SEVERITY_STYLES = {
+  error: "text-red-400 bg-red-400/10 border-red-400/20",
+  warning: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+  info: "text-blue-400 bg-blue-400/10 border-blue-400/20",
+};
+
+const ISSUE_TYPE_LABELS: Record<string, string> = {
+  timeline: "⏱",
+  location: "📍",
+  character: "👤",
+  logic: "🧩",
+  continuity: "🔗",
+};
+
+function ConsistencyView({ data }: { data: ConsistencyResult }) {
+  const t = useTranslations("Analysis");
+
+  if (data.issues.length === 0) {
+    return (
+      <div className="px-4 py-8 text-center">
+        <ShieldCheck className="mx-auto h-8 w-8 text-emerald-400/40" />
+        <p className="mt-2 text-xs text-muted-foreground">{t("noIssues")}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2 p-3">
+      {data.issues.map((issue, i) => (
+        <div
+          key={i}
+          className={`rounded-lg border p-3 ${SEVERITY_STYLES[issue.severity]}`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-sm">{ISSUE_TYPE_LABELS[issue.type] ?? "❓"}</span>
+            <span className="text-[10px] font-medium uppercase tracking-wider opacity-70">
+              {issue.type}
+            </span>
+            {issue.scene_reference && (
+              <span className="ml-auto text-[10px] opacity-60">{issue.scene_reference}</span>
+            )}
+          </div>
+          <p className="mt-1 text-xs">{issue.description}</p>
+          {issue.suggestion && (
+            <p className="mt-1.5 text-xs opacity-70">
+              <Lightbulb className="mr-1 inline h-3 w-3" />
+              {issue.suggestion}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
+// Beat Sheet
+// ============================================================
+
+const BEAT_STATUS_STYLES = {
+  present: "bg-emerald-400/10 border-emerald-400/30 text-emerald-400",
+  weak: "bg-amber-400/10 border-amber-400/30 text-amber-400",
+  missing: "bg-red-400/10 border-red-400/30 text-red-400",
+};
+
+function BeatSheetView({ data }: { data: BeatSheetResult }) {
+  const t = useTranslations("Analysis");
+
+  return (
+    <div className="space-y-1.5 p-3">
+      {data.beats.map((beat, i) => (
+        <div
+          key={i}
+          className={`rounded-lg border p-2.5 ${BEAT_STATUS_STYLES[beat.status]}`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold">{beat.beat_name}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] opacity-60">{beat.page_range}</span>
+              <span className="rounded-full border px-1.5 py-0.5 text-[9px] font-medium uppercase">
+                {t(`beatStatus_${beat.status}`)}
+              </span>
+            </div>
+          </div>
+          <p className="mt-1 text-[11px] opacity-80">{beat.description}</p>
+          {beat.scene_reference && (
+            <p className="mt-1 text-[10px] opacity-50">{beat.scene_reference}</p>
+          )}
+        </div>
+      ))}
+      {data.notes && (
+        <div className="mt-3 rounded-lg bg-muted/50 p-3">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            {t("notes")}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{data.notes}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// Pacing Analysis
+// ============================================================
+
+function PacingView({ data }: { data: PacingResult }) {
+  const t = useTranslations("Analysis");
+
+  return (
+    <div className="space-y-4 p-3">
+      {/* Segments as visual bars */}
+      {data.segments.map((seg, i) => (
+        <div key={i} className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-foreground">{seg.act}</span>
+            <span className={`rounded-full px-2 py-0.5 text-[9px] font-medium ${
+              seg.tempo === "fast"
+                ? "bg-red-400/10 text-red-400"
+                : seg.tempo === "slow"
+                  ? "bg-blue-400/10 text-blue-400"
+                  : "bg-amber-400/10 text-amber-400"
+            }`}>
+              {t(`tempo_${seg.tempo}`)}
+            </span>
+          </div>
+          <p className="text-[10px] text-muted-foreground">{seg.scene_range}</p>
+
+          {/* Action vs Dialogue bar */}
+          <div className="flex h-3 w-full overflow-hidden rounded-full">
+            <div
+              className="bg-ai-accent/60 transition-all"
+              style={{ width: `${Math.round(seg.action_ratio * 100)}%` }}
+              title={`Action: ${Math.round(seg.action_ratio * 100)}%`}
+            />
+            <div
+              className="bg-emerald-400/60 transition-all"
+              style={{ width: `${Math.round(seg.dialogue_ratio * 100)}%` }}
+              title={`Dialogue: ${Math.round(seg.dialogue_ratio * 100)}%`}
+            />
+          </div>
+          <div className="flex justify-between text-[9px] text-muted-foreground">
+            <span>{t("action")} {Math.round(seg.action_ratio * 100)}%</span>
+            <span>{t("dialogue")} {Math.round(seg.dialogue_ratio * 100)}%</span>
+          </div>
+          <p className="text-[11px] text-muted-foreground">{seg.notes}</p>
+        </div>
+      ))}
+
+      {/* Overall */}
+      <div className="rounded-lg bg-muted/50 p-3">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          {t("overallAssessment")}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">{data.overall_assessment}</p>
+      </div>
+
+      {/* Recommendations */}
+      {data.recommendations.length > 0 && (
+        <div>
+          <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            {t("recommendations")}
+          </p>
+          <ul className="space-y-1">
+            {data.recommendations.map((rec, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-xs text-emerald-400">
+                <Lightbulb className="mt-0.5 h-3 w-3 flex-shrink-0" />
+                {rec}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
 // Main Panel
 // ============================================================
 
@@ -493,16 +683,42 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
     })
   );
 
+  // Consistency check
+  const [consistencyResult, setConsistencyResult] = useState<ConsistencyResult | null>(null);
+  const consistencyMutation = useMutation(
+    trpc.ai.checkConsistency.mutationOptions({
+      onSuccess: (data) => setConsistencyResult(data),
+      onError: (err) => toast.error(err.message),
+    })
+  );
+
+  // Beat sheet
+  const [beatSheetResult, setBeatSheetResult] = useState<BeatSheetResult | null>(null);
+  const beatSheetMutation = useMutation(
+    trpc.ai.generateBeatSheet.mutationOptions({
+      onSuccess: (data) => setBeatSheetResult(data),
+      onError: (err) => toast.error(err.message),
+    })
+  );
+
+  // Pacing analysis
+  const [pacingResult, setPacingResult] = useState<PacingResult | null>(null);
+  const pacingMutation = useMutation(
+    trpc.ai.analyzePacing.mutationOptions({
+      onSuccess: (data) => setPacingResult(data),
+      onError: (err) => toast.error(err.message),
+    })
+  );
+
   const handleAnalyze = () => {
     if (!editor) {
       toast.error(t("editorNotReady"));
       return;
     }
 
-    const text =
-      activeTab === "characters"
-        ? extractFullText(editor)
-        : extractCurrentSceneText(editor);
+    // Full text needed for consistency, beat sheet, pacing, characters
+    const needsFullText = ["characters", "consistency", "beatSheet", "pacing"].includes(activeTab);
+    const text = needsFullText ? extractFullText(editor) : extractCurrentSceneText(editor);
 
     if (!text.trim()) {
       toast.error(t("noText"));
@@ -519,11 +735,21 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
       case "structure":
         structMutation.mutate({ projectId, sceneText: text });
         break;
+      case "consistency":
+        consistencyMutation.mutate({ projectId, text });
+        break;
+      case "beatSheet":
+        beatSheetMutation.mutate({ projectId, text });
+        break;
+      case "pacing":
+        pacingMutation.mutate({ projectId, text });
+        break;
     }
   };
 
   const isLoading =
-    sceneMutation.isPending || charMutation.isPending || structMutation.isPending;
+    sceneMutation.isPending || charMutation.isPending || structMutation.isPending ||
+    consistencyMutation.isPending || beatSheetMutation.isPending || pacingMutation.isPending;
 
   return (
     <div className="flex h-full flex-col">
@@ -563,24 +789,15 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
               {activeTab === "scene" && t("analyzeScene")}
               {activeTab === "characters" && t("analyzeCharacters")}
               {activeTab === "structure" && t("analyzeStructure")}
+              {activeTab === "consistency" && t("checkConsistency")}
+              {activeTab === "beatSheet" && t("generateBeatSheet")}
+              {activeTab === "pacing" && t("analyzePacing")}
             </>
           )}
         </button>
-        {activeTab === "scene" && (
-          <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
-            {t("sceneDescription")}
-          </p>
-        )}
-        {activeTab === "characters" && (
-          <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
-            {t("charactersDescription")}
-          </p>
-        )}
-        {activeTab === "structure" && (
-          <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
-            {t("structureDescription")}
-          </p>
-        )}
+        <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
+          {t(`${activeTab}Description`)}
+        </p>
       </div>
 
       {/* Results */}
@@ -612,6 +829,27 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
                 <StructureAnalysisView data={structResult} />
               ) : (
                 <EmptyAnalysis label={t("runStructure")} />
+              ))}
+
+            {activeTab === "consistency" &&
+              (consistencyResult ? (
+                <ConsistencyView data={consistencyResult} />
+              ) : (
+                <EmptyAnalysis label={t("runConsistency")} />
+              ))}
+
+            {activeTab === "beatSheet" &&
+              (beatSheetResult ? (
+                <BeatSheetView data={beatSheetResult} />
+              ) : (
+                <EmptyAnalysis label={t("runBeatSheet")} />
+              ))}
+
+            {activeTab === "pacing" &&
+              (pacingResult ? (
+                <PacingView data={pacingResult} />
+              ) : (
+                <EmptyAnalysis label={t("runPacing")} />
               ))}
           </motion.div>
         </AnimatePresence>

@@ -26,7 +26,8 @@ export { buildChatContext } from "./context";
 export type { ChatContextInput, ChatContext, ContextLayer } from "./context";
 export { streamChatOpenAI, streamChatAnthropic, streamChatYandex, streamChat } from "./chat-stream";
 export type { ChatStreamInput, StreamCallbacks } from "./chat-stream";
-export { extractTextFromTipTapJson, extractScreenplayStructure } from "./utils";
+export { extractTextFromTipTapJson, extractScreenplayStructure, stripCodeFences, estimateTokens } from "./utils";
+export { AIProviderError } from "./errors";
 
 // Non-streaming completion (Phase 3)
 export { completeAI } from "./complete";
@@ -34,6 +35,21 @@ export type { CompleteResult } from "./complete";
 
 // Thinking configuration (Phase 4)
 export { getThinkingConfig } from "./thinking-config";
+
+// Pricing & cost estimation
+export { TOKEN_PRICES, estimateCost, formatCost, formatTokens } from "./pricing";
+
+// Circuit breaker & provider fallback
+export {
+  isCircuitOpen,
+  recordFailure,
+  recordSuccess,
+  resetAllCircuits,
+  getNextFallback,
+  isRetryableError,
+  withProviderFallback,
+} from "./circuit-breaker";
+export type { FallbackKeyResolver } from "./circuit-breaker";
 
 // Prompt system (Phase 1)
 export { fillTemplate, composePrompt } from "./prompts/compose";
@@ -46,4 +62,5 @@ export {
   DEEPSEEK_SYSTEM_PROMPT,
   GEMINI_SYSTEM_PROMPT,
   YANDEX_SYSTEM_PROMPT,
+  GROK_SYSTEM_PROMPT,
 } from "./prompts/system/index";

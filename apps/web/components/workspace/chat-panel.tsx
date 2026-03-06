@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Square, Trash2, Sparkles, FileDown, Loader2, Check, ChevronDown } from "lucide-react";
+import { Send, Square, Trash2, Sparkles, FileDown, Loader2, Check, ChevronDown, StickyNote, AtSign, Film, MapPin } from "lucide-react";
 import { Fragment, type Editor } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { useChatStream, type ChatMessage } from "@/hooks/use-chat-stream";
+import { estimateChatCost } from "@/lib/token-estimate";
 import { SuggestionPreview } from "./suggestion-preview";
 import { SuggestionHistory } from "./suggestion-history";
 
@@ -65,9 +66,85 @@ function extractEditorContext(editor: Editor | null) {
   };
 }
 
+/** Extract all scene headings from the editor for @-mentions */
+function extractSceneHeadings(editor: Editor | null): string[] {
+  if (!editor) return [];
+  const headings: string[] = [];
+  editor.state.doc.descendants((node) => {
+    if (node.type.name === "sceneHeading" || node.type.name === "scene-heading") {
+      const text = node.textContent.trim();
+      if (text) headings.push(text);
+    }
+  });
+  return headings;
+}
+
+/** Extract full text of a scene by heading */
+function extractSceneTextByHeading(editor: Editor, heading: string): string {
+  const { doc } = editor.state;
+  let sceneStart = -1;
+  let sceneEnd = doc.content.size;
+
+  doc.descendants((node, pos) => {
+    if (node.type.name === "sceneHeading" || node.type.name === "scene-heading") {
+      const text = node.textContent.trim();
+      if (text === heading && sceneStart === -1) {
+        sceneStart = pos;
+      } else if (sceneStart !== -1 && sceneEnd === doc.content.size) {
+        sceneEnd = pos;
+      }
+    }
+  });
+
+  if (sceneStart === -1) return "";
+  return doc.textBetween(sceneStart, sceneEnd, "\n");
+}
+
+/** Parse @[SCENE HEADING] references from text and extract scene contents */
+function parseSceneReferences(
+  text: string,
+  editor: Editor | null,
+): { cleanText: string; sceneTexts: string[] } {
+  if (!editor) return { cleanText: text, sceneTexts: [] };
+
+  const refPattern = /@\[([^\]]+)\]/g;
+  const sceneTexts: string[] = [];
+  let match;
+
+  while ((match = refPattern.exec(text)) !== null) {
+    const heading = match[1];
+    const sceneText = extractSceneTextByHeading(editor, heading);
+    if (sceneText) sceneTexts.push(sceneText);
+  }
+
+  // Clean text — keep the references as-is (they serve as visual context for the user)
+  return { cleanText: text, sceneTexts };
+}
+
 /**
  * Insert text into the editor by formatting it into screenplay blocks.
  */
+/** Get scene heading positions for the insert picker */
+function getScenePositions(editor: Editor): Array<{ heading: string; endPos: number }> {
+  const { doc } = editor.state;
+  const scenes: Array<{ heading: string; startPos: number; endPos: number }> = [];
+
+  doc.descendants((node, pos) => {
+    if (node.type.name === "sceneHeading" || node.type.name === "scene-heading") {
+      const text = node.textContent.trim();
+      if (text) {
+        // Close previous scene
+        if (scenes.length > 0) {
+          scenes[scenes.length - 1].endPos = pos;
+        }
+        scenes.push({ heading: text, startPos: pos, endPos: doc.content.size });
+      }
+    }
+  });
+
+  return scenes.map((s) => ({ heading: s.heading, endPos: s.endPos }));
+}
+
 function InsertButton({
   content,
   editor,
@@ -80,6 +157,21 @@ function InsertButton({
   const trpc = useTRPC();
   const t = useTranslations("Chat");
   const [inserted, setInserted] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+  const [targetPos, setTargetPos] = useState<number | null>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  // Close picker on outside click
+  useEffect(() => {
+    if (!showPicker) return;
+    const handler = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showPicker]);
 
   const formatMutation = useMutation(
     trpc.ai.format.mutationOptions({
@@ -98,8 +190,7 @@ function InsertButton({
         if (nodes.length > 0) {
           const fragment = Fragment.from(nodes);
           const { tr } = editor.state;
-          const $pos = editor.state.doc.resolve(editor.state.selection.to);
-          const insertPos = $pos.after($pos.depth);
+          const insertPos = targetPos ?? editor.state.doc.content.size;
           tr.insert(insertPos, fragment);
           editor.view.dispatch(tr);
           toast.success(t("sceneInserted"));
@@ -114,24 +205,27 @@ function InsertButton({
     })
   );
 
-  const handleInsert = () => {
-    const { selection, doc } = editor.state;
+  const handleInsertAt = (pos: number) => {
+    setTargetPos(pos);
+    setShowPicker(false);
+
+    const { doc } = editor.state;
     const contextBefore = doc.textBetween(
-      Math.max(0, selection.from - 500),
-      selection.from,
+      Math.max(0, pos - 500),
+      pos,
       "\n"
     );
     const contextAfter = doc.textBetween(
-      selection.to,
-      Math.min(doc.content.size, selection.to + 500),
+      pos,
+      Math.min(doc.content.size, pos + 500),
       "\n"
     );
 
     formatMutation.mutate({
       documentId,
       selectedText: content,
-      selectionFrom: selection.from,
-      selectionTo: selection.to,
+      selectionFrom: pos,
+      selectionTo: pos,
       contextBefore,
       contextAfter,
     });
@@ -146,19 +240,120 @@ function InsertButton({
     );
   }
 
+  const scenes = getScenePositions(editor);
+
+  return (
+    <div className="relative" ref={pickerRef}>
+      <button
+        onClick={() => setShowPicker(!showPicker)}
+        disabled={formatMutation.isPending}
+        className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] text-muted-foreground transition-colors hover:bg-ai-accent/10 hover:text-ai-accent disabled:opacity-50"
+        title={t("insertTitle")}
+      >
+        {formatMutation.isPending ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <FileDown className="h-3 w-3" />
+        )}
+        {t("insert")}
+      </button>
+
+      <AnimatePresence>
+        {showPicker && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            className="absolute bottom-full right-0 z-50 mb-1 max-h-48 w-64 overflow-y-auto rounded-lg border border-border bg-background shadow-xl"
+          >
+            <div className="p-1">
+              <p className="px-2 py-1 text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
+                {t("insertWhere")}
+              </p>
+              {/* Insert at beginning */}
+              <button
+                onClick={() => handleInsertAt(0)}
+                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-foreground transition-colors hover:bg-accent"
+              >
+                <MapPin className="h-3 w-3 text-muted-foreground" />
+                <span>{t("insertAtBeginning")}</span>
+              </button>
+              {/* After each scene */}
+              {scenes.map((scene, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleInsertAt(scene.endPos)}
+                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-foreground transition-colors hover:bg-accent"
+                >
+                  <Film className="h-3 w-3 text-ai-accent" />
+                  <span className="truncate">{t("insertAfter")} {scene.heading}</span>
+                </button>
+              ))}
+              {/* Insert at end */}
+              <button
+                onClick={() => handleInsertAt(editor.state.doc.content.size)}
+                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-foreground transition-colors hover:bg-accent"
+              >
+                <MapPin className="h-3 w-3 text-muted-foreground" />
+                <span>{t("insertAtEnd")}</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function SaveNoteButton({
+  content,
+  projectId,
+}: {
+  content: string;
+  projectId: string;
+}) {
+  const trpc = useTRPC();
+  const t = useTranslations("Chat");
+  const queryClient = useQueryClient();
+  const [saved, setSaved] = useState(false);
+
+  const noteMutation = useMutation(
+    trpc.note.create.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.note.list.queryKey({ projectId }),
+        });
+        toast.success(t("noteSaved"));
+        setSaved(true);
+      },
+    })
+  );
+
+  if (saved) {
+    return (
+      <span className="flex items-center gap-1 text-[9px] text-green-500">
+        <Check className="h-3 w-3" />
+        {t("noteSaved")}
+      </span>
+    );
+  }
+
   return (
     <button
-      onClick={handleInsert}
-      disabled={formatMutation.isPending}
+      onClick={() => {
+        const title = content.slice(0, 80).replace(/\n/g, " ");
+        noteMutation.mutate({ projectId, title, plainText: content });
+      }}
+      disabled={noteMutation.isPending}
       className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] text-muted-foreground transition-colors hover:bg-ai-accent/10 hover:text-ai-accent disabled:opacity-50"
-      title={t("insertTitle")}
+      title={t("saveNote")}
     >
-      {formatMutation.isPending ? (
+      {noteMutation.isPending ? (
         <Loader2 className="h-3 w-3 animate-spin" />
       ) : (
-        <FileDown className="h-3 w-3" />
+        <StickyNote className="h-3 w-3" />
       )}
-      {t("insert")}
+      {t("saveNote")}
     </button>
   );
 }
@@ -167,13 +362,16 @@ function ChatBubble({
   message,
   editor,
   documentId,
+  projectId,
 }: {
   message: ChatMessage;
   editor: Editor | null;
   documentId: string;
+  projectId: string;
 }) {
   const isUser = message.role === "USER";
   const showInsert = !isUser && !message.isStreaming && editor && message.content.length > 0;
+  const showSaveNote = !isUser && !message.isStreaming && message.content.length > 0;
 
   return (
     <motion.div
@@ -199,15 +397,18 @@ function ChatBubble({
               })}
             </span>
           )}
-          {showInsert && (
-            <div className="opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+            {showInsert && (
               <InsertButton
                 content={message.content}
                 editor={editor}
                 documentId={documentId}
               />
-            </div>
-          )}
+            )}
+            {showSaveNote && (
+              <SaveNoteButton content={message.content} projectId={projectId} />
+            )}
+          </div>
         </div>
         {message.isStreaming && !message.content && (
           <div className="flex gap-1 py-1">
@@ -305,10 +506,13 @@ function ModelSelector({ projectId }: { projectId: string }) {
 export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
   const [input, setInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showScenePicker, setShowScenePicker] = useState(false);
+  const [sceneFilter, setSceneFilter] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const t = useTranslations("Chat");
 
+  const trpcCtx = useTRPC();
   const {
     messages,
     sendMessage,
@@ -320,6 +524,12 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
     overrideModel,
     setModelOverride,
   } = useChatStream(projectId);
+
+  // Get project's preferred model for cost estimation
+  const { data: projectData } = useQuery(
+    trpcCtx.project.getById.queryOptions({ id: projectId })
+  );
+  const activeModel = overrideModel || (projectData as { preferredModel?: string | null } | undefined)?.preferredModel || null;
 
   // Listen for model override events from the selector
   useEffect(() => {
@@ -347,19 +557,83 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
     }
   }, [input]);
 
+  // Scene headings for @-mentions
+  const sceneHeadings = useMemo(() => extractSceneHeadings(editor), [editor]);
+  const filteredScenes = useMemo(() => {
+    if (!sceneFilter) return sceneHeadings.slice(0, 8);
+    const lower = sceneFilter.toLowerCase();
+    return sceneHeadings.filter(h => h.toLowerCase().includes(lower)).slice(0, 8);
+  }, [sceneHeadings, sceneFilter]);
+
+  const insertSceneRef = useCallback((heading: string) => {
+    setInput(prev => {
+      // Replace the @... text with the reference
+      const atIndex = prev.lastIndexOf("@");
+      if (atIndex >= 0) {
+        return prev.slice(0, atIndex) + `@[${heading}] `;
+      }
+      return prev + `@[${heading}] `;
+    });
+    setShowScenePicker(false);
+    setSceneFilter("");
+    textareaRef.current?.focus();
+  }, []);
+
   const handleSend = useCallback(() => {
     const trimmed = input.trim();
     if (!trimmed || isStreaming) return;
 
     const editorContext = extractEditorContext(editor);
-    sendMessage(trimmed, editorContext);
+
+    // Parse @[...] references and include scene texts
+    const { sceneTexts } = parseSceneReferences(trimmed, editor);
+    if (sceneTexts.length > 0) {
+      // Add referenced scene texts to editor context
+      const referencedText = sceneTexts.join("\n\n---\n\n");
+      sendMessage(trimmed, {
+        ...editorContext,
+        currentSceneText: referencedText,
+      });
+    } else {
+      sendMessage(trimmed, editorContext);
+    }
     setInput("");
+    setShowScenePicker(false);
   }, [input, isStreaming, editor, sendMessage]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setInput(val);
+
+    // Detect @ trigger for scene picker
+    const atIndex = val.lastIndexOf("@");
+    if (atIndex >= 0 && atIndex === val.length - 1) {
+      setShowScenePicker(true);
+      setSceneFilter("");
+    } else if (atIndex >= 0 && showScenePicker) {
+      const afterAt = val.slice(atIndex + 1);
+      // If user typed `@[` it means they're in a reference — close picker
+      if (afterAt.startsWith("[")) {
+        setShowScenePicker(false);
+      } else if (!afterAt.includes(" ") && !afterAt.includes("\n")) {
+        setSceneFilter(afterAt);
+      } else {
+        setShowScenePicker(false);
+      }
+    }
+  }, [showScenePicker]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      if (showScenePicker && filteredScenes.length > 0) {
+        insertSceneRef(filteredScenes[0]);
+      } else {
+        handleSend();
+      }
+    }
+    if (e.key === "Escape" && showScenePicker) {
+      setShowScenePicker(false);
     }
   };
 
@@ -425,6 +699,7 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
                 message={msg}
                 editor={editor}
                 documentId={documentId}
+                projectId={projectId}
               />
             ))}
           </AnimatePresence>
@@ -450,18 +725,63 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
       </AnimatePresence>
 
       {/* Input area */}
-      <div className="border-t border-border p-2">
+      <div className="relative border-t border-border p-2">
+        {/* Scene mention picker */}
+        <AnimatePresence>
+          {showScenePicker && filteredScenes.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 4 }}
+              className="absolute bottom-full left-2 right-2 z-10 mb-1 max-h-40 overflow-y-auto rounded-lg border border-border bg-background shadow-xl"
+            >
+              <div className="p-1">
+                <p className="px-2 py-1 text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
+                  {t("sceneReference")}
+                </p>
+                {filteredScenes.map((heading) => (
+                  <button
+                    key={heading}
+                    onClick={() => insertSceneRef(heading)}
+                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-foreground transition-colors hover:bg-accent"
+                  >
+                    <Film className="h-3 w-3 text-ai-accent" />
+                    <span className="truncate">{heading}</span>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="flex items-end gap-2">
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t("placeholder")}
-            rows={1}
-            disabled={isStreaming}
-            className="flex-1 resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-ai-accent focus:outline-none disabled:opacity-50"
-          />
+          <div className="relative flex-1">
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder={t("placeholder")}
+              rows={1}
+              disabled={isStreaming}
+              className="w-full resize-none rounded-md border border-border bg-background px-3 py-2 pr-8 text-sm text-foreground placeholder:text-muted-foreground focus:border-ai-accent focus:outline-none disabled:opacity-50"
+            />
+            {/* @ button for scene references */}
+            {sceneHeadings.length > 0 && !isStreaming && (
+              <button
+                onClick={() => {
+                  setInput(prev => prev + "@");
+                  setShowScenePicker(true);
+                  setSceneFilter("");
+                  textareaRef.current?.focus();
+                }}
+                className="absolute bottom-2 right-2 rounded p-0.5 text-muted-foreground/40 transition-colors hover:text-ai-accent"
+                title={t("mentionScene")}
+              >
+                <AtSign className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
           {isStreaming ? (
             <button
               onClick={stopStreaming}
@@ -481,9 +801,16 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
             </button>
           )}
         </div>
-        <p className="mt-1 text-center text-[9px] text-muted-foreground/50">
-          {t("shiftEnter")}
-        </p>
+        <div className="mt-1 flex items-center justify-between px-1">
+          <span className="text-[9px] text-muted-foreground/40">
+            {input.trim()
+              ? estimateChatCost(input, activeModel)
+              : ""}
+          </span>
+          <span className="text-[9px] text-muted-foreground/50">
+            {t("shiftEnter")}
+          </span>
+        </div>
       </div>
     </div>
   );

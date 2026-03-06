@@ -7,6 +7,11 @@ import {
   extractTextFromTipTapJson,
   extractScreenplayStructure,
   composePrompt,
+  isCircuitOpen,
+  recordFailure,
+  recordSuccess,
+  getNextFallback,
+  isRetryableError,
 } from "@script/ai";
 import type { ProviderId, StreamUsageResult } from "@script/ai";
 import { resolveApiKey } from "@script/api/global-key-resolver";
@@ -110,11 +115,12 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // 7. Load conversation history (per-user — each user has their own thread)
+  // 7. Load full conversation history (per-user — each user has their own thread)
+  // Load up to 100 messages for comprehensive context
   const history = await prisma.chatMessage.findMany({
     where: { projectId, userId: session.user.id },
     orderBy: { createdAt: "asc" },
-    take: 40,
+    take: 100,
   });
 
   // 8. Load screenplay structure from project documents
@@ -144,7 +150,26 @@ export async function POST(req: NextRequest) {
   // 9. Stream response using SSE
   const encoder = new TextEncoder();
   const userId = session.user.id;
-  const providerId = resolvedKey.provider as ProviderId;
+  let activeProviderId = resolvedKey.provider as ProviderId;
+  let activeConfig = { apiKey: resolvedKey.apiKey, model: resolvedKey.model };
+
+  // If primary provider circuit is open, try fallback before streaming
+  if (isCircuitOpen(activeProviderId)) {
+    const fallbackId = getNextFallback(activeProviderId, new Set([activeProviderId]));
+    if (fallbackId) {
+      try {
+        const fallbackKey = await resolveApiKey(secret, fallbackId);
+        activeProviderId = fallbackKey.provider as ProviderId;
+        activeConfig = { apiKey: fallbackKey.apiKey, model: fallbackKey.model };
+      } catch {
+        // No fallback available — proceed with primary and hope for the best
+      }
+    }
+  }
+
+  // AbortController to propagate client disconnection to AI providers
+  const abortController = new AbortController();
+  req.signal.addEventListener("abort", () => abortController.abort(), { once: true });
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -155,6 +180,8 @@ export async function POST(req: NextRequest) {
           );
         },
         onDone: async (fullText: string, usage?: StreamUsageResult) => {
+          recordSuccess(activeProviderId);
+
           // Save assistant message to DB
           await prisma.chatMessage.create({
             data: {
@@ -170,8 +197,8 @@ export async function POST(req: NextRequest) {
             await logApiUsage({
               userId,
               projectId,
-              provider: resolvedKey.provider,
-              model: resolvedKey.model,
+              provider: activeProviderId,
+              model: activeConfig.model,
               feature: "chat",
               tokensIn: usage.tokensIn,
               tokensOut: usage.tokensOut,
@@ -186,6 +213,15 @@ export async function POST(req: NextRequest) {
           controller.close();
         },
         onError: (error: Error) => {
+          // Abort is expected when client disconnects — close silently
+          if (error.name === "AbortError" || abortController.signal.aborted) {
+            controller.close();
+            return;
+          }
+          // Record failure for circuit breaker
+          if (isRetryableError(error)) {
+            recordFailure(activeProviderId);
+          }
           // Sanitize — never expose API keys or internal details to client
           const safeMessage = error.message.replace(/(?:sk-|Api-Key\s|Bearer\s)\S+/gi, "[REDACTED]");
           controller.enqueue(
@@ -203,7 +239,7 @@ export async function POST(req: NextRequest) {
       }));
 
       try {
-        const systemPrompt = composePrompt(providerId, "chat", {
+        const systemPrompt = composePrompt(activeProviderId, "chat", {
           PROJECT_CONTEXT: chatContext.contextBlocks,
           USER_LANGUAGE: project.language || "en",
           SCREENPLAY_STRUCTURE: screenplayStructure,
@@ -213,11 +249,39 @@ export async function POST(req: NextRequest) {
           messages,
           systemPrompt,
           contextBlocks: "",
+          signal: abortController.signal,
         };
-        const config = { apiKey: resolvedKey.apiKey, model: resolvedKey.model };
 
-        await streamChat(providerId, streamInput, config, callbacks);
+        await streamChat(activeProviderId, streamInput, activeConfig, callbacks);
       } catch (err) {
+        // Connection-level error — record failure, try fallback
+        if (isRetryableError(err)) {
+          recordFailure(activeProviderId);
+          const tried = new Set([activeProviderId]);
+          const fallbackId = getNextFallback(activeProviderId, tried);
+          if (fallbackId) {
+            try {
+              const fallbackKey = await resolveApiKey(secret, fallbackId);
+              const fbConfig = { apiKey: fallbackKey.apiKey, model: fallbackKey.model };
+              const fbSystemPrompt = composePrompt(fallbackId as ProviderId, "chat", {
+                PROJECT_CONTEXT: chatContext.contextBlocks,
+                USER_LANGUAGE: project.language || "en",
+                SCREENPLAY_STRUCTURE: screenplayStructure,
+              });
+              activeProviderId = fallbackId as ProviderId;
+              activeConfig = fbConfig;
+              await streamChat(
+                fallbackId as ProviderId,
+                { messages, systemPrompt: fbSystemPrompt, contextBlocks: "", signal: abortController.signal },
+                fbConfig,
+                callbacks,
+              );
+              return;
+            } catch {
+              // Fallback also failed
+            }
+          }
+        }
         callbacks.onError(
           err instanceof Error ? err : new Error("Unknown error")
         );

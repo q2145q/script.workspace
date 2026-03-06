@@ -55,19 +55,38 @@ export const noteRouter = createTRPCRouter({
       return note;
     }),
 
-  /** Create a new note */
+  /** Create a new note (optionally with plain text content) */
   create: protectedProcedure
     .input(z.object({
       projectId: z.string(),
       title: z.string().max(200).optional(),
+      /** Plain text content — auto-converted to TipTap JSON */
+      plainText: z.string().max(50000).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       await assertProjectAccess(input.projectId, ctx.user.id);
+
+      // Convert plain text to TipTap JSON if provided
+      let content: Prisma.InputJsonValue | undefined;
+      if (input.plainText) {
+        const paragraphs = input.plainText.split("\n").map((line) => {
+          if (!line.trim()) return { type: "paragraph" as const };
+          return {
+            type: "paragraph" as const,
+            content: [{ type: "text" as const, text: line }],
+          };
+        });
+        content = {
+          type: "doc",
+          content: paragraphs.length > 0 ? paragraphs : [{ type: "paragraph" }],
+        };
+      }
 
       return prisma.projectNote.create({
         data: {
           projectId: input.projectId,
           title: input.title || "Untitled Note",
+          ...(content ? { content } : {}),
         },
       });
     }),

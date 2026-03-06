@@ -6,6 +6,7 @@ import {
   DEEPSEEK_SYSTEM_PROMPT,
   GEMINI_SYSTEM_PROMPT,
   YANDEX_SYSTEM_PROMPT,
+  GROK_SYSTEM_PROMPT,
 } from "../../prompts/system/index";
 import type { ProviderId } from "../../types";
 
@@ -73,7 +74,8 @@ describe("provider-specific prompts", () => {
     expect(YANDEX_SYSTEM_PROMPT).toContain("YandexGPT");
   });
 
-  it("grok uses openai prompt", () => {
-    expect(getSystemPrompt("grok")).toBe(OPENAI_SYSTEM_PROMPT);
+  it("grok uses dedicated grok prompt", () => {
+    expect(getSystemPrompt("grok")).toBe(GROK_SYSTEM_PROMPT);
+    expect(GROK_SYSTEM_PROMPT).toContain("Grok");
   });
 });

@@ -3,14 +3,7 @@ import type { AIProvider, RewriteInput, FormatInput, ProviderConfig, AIRewriteRe
 import { aiRewriteResponseSchema, aiFormatResponseSchema } from "../types";
 import { buildRewritePrompt, buildFormatPrompt } from "./base";
 import { composePrompt } from "../prompts/compose";
-
-function stripCodeFences(text: string): string {
-  let raw = text.trim();
-  if (raw.startsWith("```")) {
-    raw = raw.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-  }
-  return raw;
-}
+import { stripCodeFences } from "../utils";
 
 export class AnthropicProvider implements AIProvider {
   readonly id = "anthropic" as const;

@@ -1,4 +1,26 @@
 /**
+ * Strip markdown code fences from AI response text.
+ * Handles ```json ... ``` and plain ``` ... ``` blocks.
+ */
+export function stripCodeFences(text: string): string {
+  let raw = text.trim();
+  if (raw.startsWith("```")) {
+    raw = raw.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+  }
+  return raw;
+}
+
+/**
+ * Estimate token count from text length.
+ * Russian/Cyrillic text uses ~2 chars/token, English ~4 chars/token.
+ */
+export function estimateTokens(text: string, language?: string): number {
+  const hasCyrillic = /[\u0400-\u04FF]/.test(text);
+  const divisor = language === "ru" || hasCyrillic ? 2 : 4;
+  return Math.ceil(text.length / divisor);
+}
+
+/**
  * Extract plain text from a TipTap JSON document.
  * Walks the node tree recursively, joining text content with newlines.
  */

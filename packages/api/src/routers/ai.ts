@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { prisma } from "@script/db";
-import { getProvider, composePrompt, completeAI, extractTextFromTipTapJson } from "@script/ai";
-import type { ProviderId } from "@script/ai";
+import { getProvider, composePrompt, completeAI, extractTextFromTipTapJson, stripCodeFences, withProviderFallback } from "@script/ai";
+import type { ProviderId, FallbackKeyResolver } from "@script/ai";
 import {
   rewriteSchema,
   formatSchema,
@@ -20,7 +20,15 @@ import {
   characterAnalysisSchema,
   structureAnalysisSchema,
   knowledgeGraphSchema,
+  dialoguePassSchema,
+  checkConsistencySchema,
+  consistencyResultSchema,
+  generateBeatSheetSchema,
+  beatSheetResultSchema,
+  analyzePacingSchema,
+  pacingResultSchema,
 } from "@script/types";
+import { aiRewriteResponseSchema } from "@script/ai";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { resolveApiKey } from "../global-key-resolver";
 import { logApiUsage } from "../usage-logger";
@@ -34,6 +42,17 @@ function getSecret(): string {
     });
   }
   return secret;
+}
+
+/** Create a fallback key resolver that tries to find active global keys for other providers */
+function createFallbackResolver(): FallbackKeyResolver {
+  return async (providerId: ProviderId) => {
+    try {
+      return await resolveApiKey(getSecret(), providerId);
+    } catch {
+      return null;
+    }
+  };
 }
 
 /** Verify user has access to project and resolve AI provider */
@@ -72,16 +91,8 @@ async function resolveProjectAI(projectId: string, userId: string) {
   return { project, resolved };
 }
 
-/** Strip markdown code fences from AI response */
-function stripCodeFences(text: string): string {
-  let raw = text.trim();
-  if (raw.startsWith("```")) {
-    raw = raw.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-  }
-  return raw;
-}
-
-/** Call AI with composed prompt, parse JSON response with Zod schema */
+/** Call AI with composed prompt, parse JSON response with Zod schema.
+ *  Automatically falls back to another provider on retryable errors. */
 async function callAIWithSchema<T>(
   providerId: ProviderId,
   taskName: string,
@@ -90,21 +101,22 @@ async function callAIWithSchema<T>(
   schema: z.ZodType<T>,
   variables: Record<string, string> = {},
 ): Promise<{ result: T; tokensIn: number; tokensOut: number; durationMs: number }> {
-  const systemPrompt = composePrompt(providerId, taskName, variables);
-  const completion = await completeAI(
+  return withProviderFallback(
     providerId,
-    systemPrompt,
-    userPrompt,
+    async (pid, cfg) => {
+      const systemPrompt = composePrompt(pid, taskName, variables);
+      const completion = await completeAI(pid, systemPrompt, userPrompt, cfg);
+      const parsed = schema.parse(JSON.parse(stripCodeFences(completion.text)));
+      return {
+        result: parsed,
+        tokensIn: completion.usage.tokensIn,
+        tokensOut: completion.usage.tokensOut,
+        durationMs: completion.usage.durationMs,
+      };
+    },
     config,
+    createFallbackResolver(),
   );
-
-  const parsed = schema.parse(JSON.parse(stripCodeFences(completion.text)));
-  return {
-    result: parsed,
-    tokensIn: completion.usage.tokensIn,
-    tokensOut: completion.usage.tokensOut,
-    durationMs: completion.usage.durationMs,
-  };
 }
 
 export const aiRouter = createTRPCRouter({
@@ -752,5 +764,212 @@ export const aiRouter = createTRPCRouter({
       }
 
       return { synopses: results };
+    }),
+
+  // ============================================================
+  // Phase 6 — New AI features
+  // ============================================================
+
+  /** Dialogue Pass — improve dialogue subtext, voice, rhythm */
+  dialoguePass: protectedProcedure
+    .input(dialoguePassSchema)
+    .mutation(async ({ ctx, input }) => {
+      const document = await prisma.document.findFirst({
+        where: {
+          id: input.documentId,
+          project: {
+            OR: [
+              { ownerId: ctx.user.id },
+              { members: { some: { userId: ctx.user.id, role: { in: ["OWNER", "EDITOR"] } } } },
+            ],
+          },
+        },
+        include: {
+          project: { select: { id: true, language: true, preferredProvider: true, preferredModel: true } },
+        },
+      });
+
+      if (!document) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Document not found or no editor access" });
+      }
+
+      let resolved;
+      try {
+        resolved = await resolveApiKey(getSecret(), document.project.preferredProvider, document.project.preferredModel);
+      } catch {
+        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No AI provider configured." });
+      }
+
+      const providerId = resolved.provider as ProviderId;
+      const blocksText = input.blocks.map(b => `[${b.type}] ${b.text}`).join("\n");
+      const userPrompt = [
+        `Selected dialogue blocks:\n${blocksText}`,
+        input.contextBefore ? `\nContext before:\n${input.contextBefore}` : "",
+        input.contextAfter ? `\nContext after:\n${input.contextAfter}` : "",
+        input.characterContext ? `\nCharacter info:\n${input.characterContext}` : "",
+      ].filter(Boolean).join("\n");
+
+      try {
+        const { result, tokensIn, tokensOut, durationMs } = await callAIWithSchema(
+          providerId,
+          "dialogue-pass",
+          userPrompt,
+          { apiKey: resolved.apiKey, model: resolved.model },
+          aiRewriteResponseSchema,
+          { USER_LANGUAGE: document.project.language },
+        );
+
+        await logApiUsage({
+          userId: ctx.user.id,
+          projectId: document.project.id,
+          provider: resolved.provider,
+          model: resolved.model,
+          feature: "dialogue-pass",
+          tokensIn,
+          tokensOut,
+          durationMs,
+          keySource: resolved.source,
+        }).catch(() => {});
+
+        // Create a suggestion for review
+        const newText = result.blocks.map(b => b.text).join("\n");
+        const suggestion = await prisma.suggestion.create({
+          data: {
+            documentId: input.documentId,
+            createdById: ctx.user.id,
+            instruction: "Dialogue Pass: improve subtext, voice, rhythm",
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            operations: result.blocks as any,
+            selectedText: input.selectedText,
+            selectionFrom: input.selectionFrom,
+            selectionTo: input.selectionTo,
+            explanation: result.explanation,
+          },
+        });
+
+        return {
+          id: suggestion.id,
+          blocks: result.blocks,
+          explanation: result.explanation,
+          selectionFrom: suggestion.selectionFrom,
+          selectionTo: suggestion.selectionTo,
+          nodeType: input.blocks[0]?.type ?? "dialogue",
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        const message = error instanceof Error ? error.message : "Unknown AI error";
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
+      }
+    }),
+
+  /** Consistency Check — find logic, timeline, character errors across the screenplay */
+  checkConsistency: protectedProcedure
+    .input(checkConsistencySchema)
+    .mutation(async ({ ctx, input }) => {
+      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const providerId = resolved.provider as ProviderId;
+
+      try {
+        const { result, tokensIn, tokensOut, durationMs } = await callAIWithSchema(
+          providerId,
+          "consistency-check",
+          input.text,
+          { apiKey: resolved.apiKey, model: resolved.model },
+          consistencyResultSchema,
+          { USER_LANGUAGE: project.language },
+        );
+
+        await logApiUsage({
+          userId: ctx.user.id,
+          projectId: project.id,
+          provider: resolved.provider,
+          model: resolved.model,
+          feature: "consistency-check",
+          tokensIn,
+          tokensOut,
+          durationMs,
+          keySource: resolved.source,
+        }).catch(() => {});
+
+        return result;
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        const message = error instanceof Error ? error.message : "Unknown AI error";
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
+      }
+    }),
+
+  /** Beat Sheet — Save the Cat structure analysis */
+  generateBeatSheet: protectedProcedure
+    .input(generateBeatSheetSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const providerId = resolved.provider as ProviderId;
+
+      try {
+        const { result, tokensIn, tokensOut, durationMs } = await callAIWithSchema(
+          providerId,
+          "beat-sheet",
+          input.text,
+          { apiKey: resolved.apiKey, model: resolved.model },
+          beatSheetResultSchema,
+          { USER_LANGUAGE: project.language },
+        );
+
+        await logApiUsage({
+          userId: ctx.user.id,
+          projectId: project.id,
+          provider: resolved.provider,
+          model: resolved.model,
+          feature: "beat-sheet",
+          tokensIn,
+          tokensOut,
+          durationMs,
+          keySource: resolved.source,
+        }).catch(() => {});
+
+        return result;
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        const message = error instanceof Error ? error.message : "Unknown AI error";
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
+      }
+    }),
+
+  /** Pacing Analysis — tempo, action/dialogue ratio per act, recommendations */
+  analyzePacing: protectedProcedure
+    .input(analyzePacingSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const providerId = resolved.provider as ProviderId;
+
+      try {
+        const { result, tokensIn, tokensOut, durationMs } = await callAIWithSchema(
+          providerId,
+          "pacing-analysis",
+          input.text,
+          { apiKey: resolved.apiKey, model: resolved.model },
+          pacingResultSchema,
+          { USER_LANGUAGE: project.language },
+        );
+
+        await logApiUsage({
+          userId: ctx.user.id,
+          projectId: project.id,
+          provider: resolved.provider,
+          model: resolved.model,
+          feature: "pacing-analysis",
+          tokensIn,
+          tokensOut,
+          durationMs,
+          keySource: resolved.source,
+        }).catch(() => {});
+
+        return result;
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        const message = error instanceof Error ? error.message : "Unknown AI error";
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
+      }
     }),
 });

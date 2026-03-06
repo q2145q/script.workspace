@@ -250,3 +250,79 @@ export const saveDocumentMetadataSchema = z.object({
   documentId: z.string(),
   metadata: z.record(z.string(), z.unknown()),
 });
+
+// ============================================================
+// Phase 6 — New AI feature schemas
+// ============================================================
+
+/** Dialogue Pass — improve dialogue subtext, voice, rhythm */
+export const dialoguePassSchema = z.object({
+  documentId: z.string(),
+  selectionFrom: z.number().int().min(0),
+  selectionTo: z.number().int().min(0),
+  selectedText: z.string().min(1),
+  blocks: z.array(rewriteBlockSchema),
+  contextBefore: z.string().max(2000).default(""),
+  contextAfter: z.string().max(2000).default(""),
+  characterContext: z.string().max(5000).default(""),
+});
+export type DialoguePassInput = z.infer<typeof dialoguePassSchema>;
+
+/** Consistency Check — find logic, timeline, character errors */
+export const consistencyIssueSchema = z.object({
+  type: z.enum(["timeline", "location", "character", "logic", "continuity"]),
+  severity: z.enum(["error", "warning", "info"]),
+  description: z.string(),
+  scene_reference: z.string().nullish(),
+  suggestion: z.string().nullish(),
+});
+export const consistencyResultSchema = z.object({
+  issues: z.array(consistencyIssueSchema),
+});
+export type ConsistencyResult = z.infer<typeof consistencyResultSchema>;
+
+export const checkConsistencySchema = z.object({
+  projectId: z.string(),
+  text: z.string().min(1).max(100000),
+});
+
+/** Beat Sheet — Save the Cat structure analysis */
+export const beatSchema = z.object({
+  beat_name: z.string(),
+  page_range: z.string(),
+  description: z.string(),
+  scene_reference: z.string().nullish(),
+  status: z.enum(["present", "weak", "missing"]),
+});
+export const beatSheetResultSchema = z.object({
+  beats: z.array(beatSchema),
+  notes: z.string().optional(),
+});
+export type BeatSheetResult = z.infer<typeof beatSheetResultSchema>;
+
+export const generateBeatSheetSchema = z.object({
+  projectId: z.string(),
+  text: z.string().min(1).max(100000),
+});
+
+/** Pacing Analysis — tempo, action/dialogue ratio, recommendations */
+export const pacingSegmentSchema = z.object({
+  act: z.string(),
+  scene_range: z.string(),
+  action_ratio: z.number(),
+  dialogue_ratio: z.number(),
+  avg_scene_length: z.number(),
+  tempo: z.enum(["slow", "medium", "fast"]),
+  notes: z.string(),
+});
+export const pacingResultSchema = z.object({
+  segments: z.array(pacingSegmentSchema),
+  overall_assessment: z.string(),
+  recommendations: z.array(z.string()),
+});
+export type PacingResult = z.infer<typeof pacingResultSchema>;
+
+export const analyzePacingSchema = z.object({
+  projectId: z.string(),
+  text: z.string().min(1).max(100000),
+});

@@ -1,16 +1,12 @@
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import type { ProviderConfig, ProviderId, StreamUsageResult } from "./types";
+import { estimateTokens } from "./utils";
 
 /** Result from a non-streaming AI completion */
 export interface CompleteResult {
   text: string;
   usage: StreamUsageResult;
-}
-
-/** Estimate tokens from text length (~4 chars per token) */
-function estimateTokens(text: string): number {
-  return Math.ceil(text.length / 4);
 }
 
 /** Base URL mapping for OpenAI-compatible providers */

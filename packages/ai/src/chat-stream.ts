@@ -1,11 +1,13 @@
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import type { ProviderConfig, ProviderId, StreamUsageResult } from "./types";
+import { estimateTokens } from "./utils";
 
 export interface ChatStreamInput {
   messages: Array<{ role: "user" | "assistant"; content: string }>;
   systemPrompt: string;
   contextBlocks: string;
+  signal?: AbortSignal;
 }
 
 export interface StreamCallbacks {
@@ -37,11 +39,6 @@ function buildMessagesWithContext(
   }
 
   return messages;
-}
-
-/** Estimate tokens from text length (~4 chars per token) */
-function estimateTokens(text: string): number {
-  return Math.ceil(text.length / 4);
 }
 
 /** Base URL mapping for OpenAI-compatible providers */
@@ -76,20 +73,23 @@ export async function streamChatOpenAI(
   const modelId = config.model || defaultModel || "gpt-4.1";
   const isReasoner = modelId.includes("reasoner");
 
-  const stream = await client.chat.completions.create({
-    model: modelId,
-    messages: [
-      ...systemMessages,
-      ...messages.map((m) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
-      })),
-    ],
-    stream: true,
-    stream_options: { include_usage: true },
-    ...(isReasoner ? {} : { temperature: 0.7 }),
-    max_tokens: 4096,
-  });
+  const stream = await client.chat.completions.create(
+    {
+      model: modelId,
+      messages: [
+        ...systemMessages,
+        ...messages.map((m) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        })),
+      ],
+      stream: true,
+      stream_options: { include_usage: true },
+      ...(isReasoner ? {} : { temperature: 0.7 }),
+      max_tokens: 4096,
+    },
+    { signal: input.signal },
+  );
 
   let fullText = "";
   let usage: StreamUsageResult | undefined;
@@ -137,21 +137,24 @@ export async function streamChatAnthropic(
   const client = new Anthropic({ apiKey: config.apiKey });
   const messages = buildMessagesWithContext(input);
 
-  const stream = client.messages.stream({
-    model: config.model || "claude-sonnet-4-6",
-    max_tokens: 4096,
-    system: [
-      {
-        type: "text" as const,
-        text: input.systemPrompt,
-        cache_control: { type: "ephemeral" },
-      } as Anthropic.TextBlockParam,
-    ],
-    messages: messages.map((m) => ({
-      role: m.role as "user" | "assistant",
-      content: m.content,
-    })),
-  });
+  const stream = client.messages.stream(
+    {
+      model: config.model || "claude-sonnet-4-6",
+      max_tokens: 4096,
+      system: [
+        {
+          type: "text" as const,
+          text: input.systemPrompt,
+          cache_control: { type: "ephemeral" },
+        } as Anthropic.TextBlockParam,
+      ],
+      messages: messages.map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      })),
+    },
+    { signal: input.signal },
+  );
 
   let fullText = "";
   stream.on("text", (text) => {
@@ -210,6 +213,7 @@ export async function streamChatYandex(
         completionOptions: { stream: false, temperature: 0.7, maxTokens: 4096 },
         messages: apiMessages,
       }),
+      signal: input.signal,
     },
   );
 

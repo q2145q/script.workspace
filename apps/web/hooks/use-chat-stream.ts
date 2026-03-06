@@ -22,9 +22,9 @@ export function useChatStream(projectId: string) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  // Load history
+  // Load history — increased limit for full context
   const { data: historyData } = useQuery(
-    trpc.chat.list.queryOptions({ projectId, limit: 50 })
+    trpc.chat.list.queryOptions({ projectId, limit: 100 })
   );
 
   // Chat status (has provider)
@@ -37,7 +37,7 @@ export function useChatStream(projectId: string) {
     trpc.chat.clear.mutationOptions({
       onSuccess: () => {
         queryClient.invalidateQueries({
-          queryKey: trpc.chat.list.queryKey({ projectId, limit: 50 }),
+          queryKey: trpc.chat.list.queryKey({ projectId, limit: 100 }),
         });
       },
     })
@@ -123,7 +123,7 @@ export function useChatStream(projectId: string) {
                 if (data.done) {
                   setOptimisticUserMsg(null);
                   queryClient.invalidateQueries({
-                    queryKey: trpc.chat.list.queryKey({ projectId, limit: 50 }),
+                    queryKey: trpc.chat.list.queryKey({ projectId, limit: 100 }),
                   });
                 }
                 if (data.error) {

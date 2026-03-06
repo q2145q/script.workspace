@@ -2,13 +2,14 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Type, Pin, Loader2, X, MessageSquare } from "lucide-react";
+import { Sparkles, Type, Pin, Loader2, X, MessageSquare, Drama } from "lucide-react";
 import type { Editor, SuggestionData } from "@script/editor";
 import { Fragment } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { formatTokenEstimate } from "@/lib/token-estimate";
 
 interface SelectionToolbarProps {
   editor: Editor | null;
@@ -192,7 +193,37 @@ export function SelectionToolbar({ editor, documentId, projectId }: SelectionToo
     })
   );
 
-  const isPending = formatMutation.isPending || rewriteMutation.isPending || commentMutation.isPending;
+  const dialoguePassMutation = useMutation(
+    trpc.ai.dialoguePass.mutationOptions({
+      onSuccess: (result) => {
+        if (!editor || !selectionRef.current) return;
+        const sel = selectionRef.current;
+
+        const newText = result.blocks.map((b) => b.text).join("\n");
+
+        const suggestionData: SuggestionData = {
+          id: result.id,
+          from: sel.from,
+          to: sel.to,
+          newText: newText || sel.text,
+          nodeType: result.nodeType ?? sel.nodeType,
+        };
+
+        editor.commands.setSuggestion(suggestionData);
+
+        window.dispatchEvent(
+          new CustomEvent("suggestion-created", {
+            detail: { id: result.id, from: sel.from, to: sel.to },
+          })
+        );
+
+        hideToolbar();
+      },
+      onError: (err) => toast.error(err.message),
+    })
+  );
+
+  const isPending = formatMutation.isPending || rewriteMutation.isPending || commentMutation.isPending || dialoguePassMutation.isPending;
 
   // --- actions ---
 
@@ -254,6 +285,26 @@ export function SelectionToolbar({ editor, documentId, projectId }: SelectionToo
       blocks: sel.blocks,
     });
   }, [documentId, instruction, rewriteMutation, isPending]);
+
+  const handleDialoguePass = useCallback(() => {
+    const sel = selectionRef.current;
+    if (!sel || isPending) return;
+
+    dialoguePassMutation.mutate({
+      documentId,
+      selectionFrom: sel.from,
+      selectionTo: sel.to,
+      selectedText: sel.text,
+      blocks: sel.blocks,
+      contextBefore: sel.contextBefore,
+      contextAfter: sel.contextAfter,
+    });
+  }, [documentId, dialoguePassMutation, isPending]);
+
+  // Check if selection contains dialogue-type blocks
+  const isDialogueSelection = selectionRef.current?.blocks.some(
+    (b) => b.type === "dialogue" || b.type === "character" || b.type === "parenthetical"
+  ) ?? false;
 
   const handlePin = useCallback(() => {
     const sel = selectionRef.current;
@@ -420,7 +471,7 @@ export function SelectionToolbar({ editor, documentId, projectId }: SelectionToo
               onClick={handleFormat}
               disabled={isPending}
               className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-              title="⌘K"
+              title={`⌘K${selectionRef.current ? ` · ${formatTokenEstimate(selectionRef.current.text)}` : ""}`}
             >
               {formatMutation.isPending ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-ai-accent" />
@@ -477,11 +528,31 @@ export function SelectionToolbar({ editor, documentId, projectId }: SelectionToo
                 onClick={enterRewriteMode}
                 disabled={isPending}
                 className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-                title="⌘⇧K"
+                title={`⌘⇧K${selectionRef.current ? ` · ${formatTokenEstimate(selectionRef.current.text)}` : ""}`}
               >
                 <Sparkles className="h-3.5 w-3.5" />
                 {t("rewriteBtn")}
               </button>
+            )}
+
+            {/* Dialogue Pass button — only for dialogue blocks */}
+            {isDialogueSelection && !rewriteMode && (
+              <>
+                <div className="h-4 w-px bg-border" />
+                <button
+                  onClick={handleDialoguePass}
+                  disabled={isPending}
+                  className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-ai-accent/80 transition-colors hover:bg-ai-accent/10 hover:text-ai-accent disabled:opacity-50"
+                  title={t("dialoguePassTitle")}
+                >
+                  {dialoguePassMutation.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Drama className="h-3.5 w-3.5" />
+                  )}
+                  {t("dialoguePassBtn")}
+                </button>
+              </>
             )}
 
             <div className="h-4 w-px bg-border" />
