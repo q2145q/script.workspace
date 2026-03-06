@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NotificationBell } from "@/components/dashboard/notification-bell";
 
 export default async function DashboardLayout({
   children,
@@ -69,12 +70,13 @@ export default async function DashboardLayout({
             >
               {session.user.name}
             </Link>
+            <NotificationBell />
             <ThemeToggle />
             <SignOutButton />
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <main id="main-content" className="mx-auto max-w-5xl px-4 py-8">{children}</main>
     </div>
   );
 }

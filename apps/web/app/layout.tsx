@@ -7,10 +7,44 @@ import { TRPCReactProvider } from "@/lib/trpc/client";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Script Workspace",
-  description: "Профессиональная платформа для написания сценариев с AI",
+  title: {
+    default: "Script Workspace — AI-редактор сценариев",
+    template: "%s — Script Workspace",
+  },
+  description:
+    "Профессиональная платформа для написания сценариев с AI. Совместное редактирование, форматирование, версии, экспорт в PDF/FDX.",
+  keywords: [
+    "сценарий",
+    "редактор сценариев",
+    "screenplay editor",
+    "screenwriting",
+    "AI writing",
+    "Script Workspace",
+  ],
+  authors: [{ name: "Script Workspace" }],
+  creator: "Script Workspace",
+  metadataBase: new URL("https://script.yomimovie.art"),
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    url: "https://script.yomimovie.art",
+    siteName: "Script Workspace",
+    title: "Script Workspace — AI-редактор сценариев",
+    description:
+      "Профессиональная платформа для написания сценариев с AI. Совместное редактирование, форматирование, версии, экспорт.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Script Workspace — AI-редактор сценариев",
+    description:
+      "Профессиональная платформа для написания сценариев с AI.",
+  },
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -25,6 +59,12 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className="antialiased">
+        <a
+          href="#main-content"
+          className="fixed left-2 top-2 z-[100] -translate-y-16 rounded-md bg-ai-accent px-4 py-2 text-sm font-medium text-white transition-transform focus:translate-y-0"
+        >
+          Перейти к содержимому
+        </a>
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <TRPCReactProvider>

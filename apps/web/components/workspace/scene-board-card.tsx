@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Users } from "lucide-react";
@@ -23,7 +24,7 @@ interface SceneBoardCardProps {
   onClick: () => void;
 }
 
-export function SceneBoardCard({ scene, onClick }: SceneBoardCardProps) {
+export const SceneBoardCard = memo(function SceneBoardCard({ scene, onClick }: SceneBoardCardProps) {
   const {
     attributes,
     listeners,
@@ -100,4 +101,4 @@ export function SceneBoardCard({ scene, onClick }: SceneBoardCardProps) {
       )}
     </div>
   );
-}
+});

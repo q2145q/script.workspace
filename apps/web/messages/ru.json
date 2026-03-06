@@ -65,6 +65,14 @@
     "descriptionPlaceholder": "Краткое описание проекта",
     "projectType": "Тип",
     "creating": "Создание...",
+    "blankProject": "Пустой проект",
+    "fromTemplate": "Из шаблона",
+    "templateFeature": "Полнометражный фильм",
+    "templateFeatureDesc": "Стандартный формат для полнометражного сценария (90-120 страниц)",
+    "templateSeries": "Сериал",
+    "templateSeriesDesc": "Структура для пилотного эпизода или серии (45-60 страниц)",
+    "templateShort": "Короткометражка",
+    "templateShortDesc": "Компактный формат для короткого метра (5-30 страниц)",
     "projectCreated": "Проект создан",
     "projectDeleted": "Проект удалён",
     "deleteProject": "Удалить этот проект?",
@@ -510,6 +518,17 @@
     "hint": "Введите запрос для поиска по документам",
     "contentMatch": "в тексте",
     "shortcut": "⌘+Shift+F — глобальный поиск"
+  },
+  "Notifications": {
+    "title": "Уведомления",
+    "empty": "Нет уведомлений",
+    "markRead": "Отметить как прочитанное",
+    "markAllRead": "Отметить все как прочитанные",
+    "deleteNotification": "Удалить",
+    "justNow": "только что",
+    "minutesAgo": "{count, plural, one {# минуту назад} few {# минуты назад} other {# минут назад}}",
+    "hoursAgo": "{count, plural, one {# час назад} few {# часа назад} other {# часов назад}}",
+    "daysAgo": "{count, plural, one {# день назад} few {# дня назад} other {# дней назад}}"
   },
   "Bible": {
     "title": "Библия проекта",
