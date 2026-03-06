@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { prisma } from "@script/db";
+import { prisma, type Prisma } from "@script/db";
 import { getBibleSchema, saveBibleSchema } from "@script/types";
 
 export const bibleRouter = createTRPCRouter({
@@ -62,10 +62,10 @@ export const bibleRouter = createTRPCRouter({
 
       const bible = await prisma.projectBible.upsert({
         where: { projectId: input.projectId },
-        update: { content: input.content },
+        update: { content: input.content as unknown as Prisma.InputJsonValue },
         create: {
           projectId: input.projectId,
-          content: input.content,
+          content: input.content as unknown as Prisma.InputJsonValue,
         },
       });
 

@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const createCommentThreadSchema = z.object({
   documentId: z.string(),
-  anchorFrom: z.number().int().min(0),
-  anchorTo: z.number().int().min(0),
+  anchorFrom: z.number().int().min(0).max(10_000_000),
+  anchorTo: z.number().int().min(0).max(10_000_000),
   content: z.string().min(1).max(10000),
 });
 

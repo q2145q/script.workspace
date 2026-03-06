@@ -168,9 +168,11 @@ export async function POST(req: NextRequest) {
           controller.close();
         },
         onError: (error: Error) => {
+          // Sanitize — never expose API keys or internal details to client
+          const safeMessage = error.message.replace(/(?:sk-|Api-Key\s|Bearer\s)\S+/gi, "[REDACTED]");
           controller.enqueue(
             encoder.encode(
-              `data: ${JSON.stringify({ error: error.message })}\n\n`
+              `data: ${JSON.stringify({ error: safeMessage })}\n\n`
             )
           );
           controller.close();

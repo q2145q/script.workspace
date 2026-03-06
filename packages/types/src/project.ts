@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { knowledgeGraphSchema } from "./ai";
 
 export const ProjectTypeEnum = z.enum([
   "FEATURE_FILM",
@@ -72,7 +73,7 @@ export const updateProjectSchema = z.object({
   preferredModel: z.string().nullish(),
   logline: z.string().max(1000).nullish(),
   synopsis: z.string().max(10000).nullish(),
-  knowledgeGraph: z.any().nullish(),
+  knowledgeGraph: knowledgeGraphSchema.nullish(),
 });
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 

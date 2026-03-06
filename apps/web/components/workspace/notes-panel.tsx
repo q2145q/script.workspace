@@ -226,6 +226,7 @@ function NoteEditor({
   currentUser: CurrentUser;
 }) {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const [collabProvider, setCollabProvider] = useState<HocuspocusProvider | null>(null);
   const noteIdRef = useRef(noteId);
   noteIdRef.current = noteId;
@@ -257,7 +258,13 @@ function NoteEditor({
   // Direct-save for notes
   const saveMutation = useMutation(
     trpc.note.updateContent.mutationOptions({
-      onError: (err) => console.error("Note autosave failed:", err.message),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: trpc.note.list.queryKey({ projectId }) });
+      },
+      onError: (err) => {
+        toast.error("Failed to save note");
+        console.error("Note autosave failed:", err.message);
+      },
     })
   );
 

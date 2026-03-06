@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { createHash, randomBytes } from "crypto";
 
-const ADMIN_LOGIN = "q2145q";
-const ADMIN_PASSWORD = "Chopchop1997";
+const ADMIN_LOGIN = process.env.ADMIN_LOGIN || "";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 const COOKIE_NAME = "admin_session";
 const SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || process.env.AI_ENCRYPTION_SECRET || "admin-fallback-secret";
 

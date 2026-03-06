@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { prisma } from "@script/db";
+import { prisma, type Prisma } from "@script/db";
+import { tipTapContentSchema } from "@script/types";
 
 export const documentRouter = createTRPCRouter({
   getById: protectedProcedure
@@ -28,7 +29,7 @@ export const documentRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string(),
-        content: z.any(),
+        content: tipTapContentSchema,
         title: z.string().optional(),
       })
     )
@@ -58,7 +59,7 @@ export const documentRouter = createTRPCRouter({
       return prisma.document.update({
         where: { id: input.id },
         data: {
-          content: input.content,
+          content: input.content as unknown as Prisma.InputJsonValue,
           ...(input.title && { title: input.title }),
         },
       });
@@ -68,7 +69,7 @@ export const documentRouter = createTRPCRouter({
   saveMetadata: protectedProcedure
     .input(z.object({
       id: z.string(),
-      metadata: z.any(),
+      metadata: z.record(z.string(), z.unknown()),
     }))
     .mutation(async ({ ctx, input }) => {
       const doc = await prisma.document.findFirst({
@@ -88,7 +89,7 @@ export const documentRouter = createTRPCRouter({
 
       return prisma.document.update({
         where: { id: input.id },
-        data: { metadata: input.metadata },
+        data: { metadata: input.metadata as unknown as Prisma.InputJsonValue },
       });
     }),
 });

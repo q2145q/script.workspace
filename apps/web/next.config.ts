@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     "@script/ai",
   ],
   serverExternalPackages: ["pdfkit"],
+  allowedDevOrigins: ["164.90.224.171"],
 };
 
 export default nextConfig;

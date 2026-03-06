@@ -67,7 +67,12 @@ export class YandexProvider implements AIProvider {
     if (clean.startsWith("```")) {
       clean = clean.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
     }
-    const parsed = JSON.parse(clean);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(clean);
+    } catch {
+      throw new Error("Yandex returned invalid JSON for rewrite");
+    }
     return aiRewriteResponseSchema.parse(parsed);
   }
 
@@ -78,7 +83,12 @@ export class YandexProvider implements AIProvider {
     if (clean.startsWith("```")) {
       clean = clean.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
     }
-    const parsed = JSON.parse(clean);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(clean);
+    } catch {
+      throw new Error("Yandex returned invalid JSON for format");
+    }
     return aiFormatResponseSchema.parse(parsed);
   }
 }

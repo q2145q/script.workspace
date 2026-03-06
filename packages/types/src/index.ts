@@ -9,3 +9,4 @@ export * from "./context-pin";
 export * from "./draft";
 export * from "./episode";
 export * from "./entity";
+export * from "./editor";

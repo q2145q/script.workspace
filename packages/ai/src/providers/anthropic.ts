@@ -37,7 +37,8 @@ export class AnthropicProvider implements AIProvider {
     const textBlock = response.content.find((b) => b.type === "text");
     if (!textBlock || textBlock.type !== "text") throw new Error("Empty response from Anthropic");
 
-    const parsed = JSON.parse(stripCodeFences(textBlock.text));
+    let parsed: unknown;
+    try { parsed = JSON.parse(stripCodeFences(textBlock.text)); } catch { throw new Error("Anthropic returned invalid JSON for rewrite"); }
     return aiRewriteResponseSchema.parse(parsed);
   }
 
@@ -63,7 +64,8 @@ export class AnthropicProvider implements AIProvider {
     const textBlock = response.content.find((b) => b.type === "text");
     if (!textBlock || textBlock.type !== "text") throw new Error("Empty response from Anthropic");
 
-    const parsed = JSON.parse(stripCodeFences(textBlock.text));
+    let parsed: unknown;
+    try { parsed = JSON.parse(stripCodeFences(textBlock.text)); } catch { throw new Error("Anthropic returned invalid JSON for format"); }
     return aiFormatResponseSchema.parse(parsed);
   }
 }

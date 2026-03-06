@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { serverApi } from "@/lib/trpc/server";
+import { auth } from "@script/api/auth";
 import { ProjectSettingsForm } from "@/components/workspace/project-settings-form";
 
 export default async function ProjectSettingsPage({
@@ -10,6 +12,11 @@ export default async function ProjectSettingsPage({
   const { projectId } = await params;
   const api = await serverApi();
 
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) {
+    redirect("/sign-in");
+  }
+
   let project;
   try {
     project = await api.project.getById({ id: projectId });
@@ -17,10 +24,11 @@ export default async function ProjectSettingsPage({
     redirect("/dashboard");
   }
 
-  // Only owners can access settings
   if (!project) {
     redirect("/dashboard");
   }
+
+  const isOwner = project.ownerId === session.user.id;
 
   return (
     <div className="h-screen overflow-y-auto bg-background">
@@ -39,7 +47,7 @@ export default async function ProjectSettingsPage({
             synopsis: (project as Record<string, unknown>).synopsis as string | null ?? null,
           }}
           projectId={projectId}
-          isOwner={true}
+          isOwner={isOwner}
         />
       </div>
     </div>

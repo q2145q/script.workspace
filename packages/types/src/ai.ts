@@ -64,6 +64,11 @@ export const updateProviderModelSchema = z.object({
   model: z.string().min(1),
 });
 
+export const ScreenplayBlockTypeEnum = z.enum([
+  "sceneHeading", "action", "character", "dialogue",
+  "parenthetical", "transition", "shot", "text",
+]);
+
 export const rewriteBlockSchema = z.object({
   type: z.string(),
   text: z.string(),
@@ -243,5 +248,5 @@ export const generateAllSceneSynopsesSchema = z.object({
 
 export const saveDocumentMetadataSchema = z.object({
   documentId: z.string(),
-  metadata: z.any(),
+  metadata: z.record(z.string(), z.unknown()),
 });

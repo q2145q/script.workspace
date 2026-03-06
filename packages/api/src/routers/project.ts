@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { prisma } from "@script/db";
+import { prisma, type Prisma } from "@script/db";
 import { createProjectSchema, updateProjectSchema } from "@script/types";
 
 export const projectRouter = createTRPCRouter({
@@ -77,7 +77,11 @@ export const projectRouter = createTRPCRouter({
       if (!project) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
-      return prisma.project.update({ where: { id }, data });
+      const prismaData = { ...data } as Record<string, unknown>;
+      if (data.knowledgeGraph !== undefined) {
+        prismaData.knowledgeGraph = (data.knowledgeGraph ?? undefined) as unknown as Prisma.InputJsonValue;
+      }
+      return prisma.project.update({ where: { id }, data: prismaData });
     }),
 
   delete: protectedProcedure

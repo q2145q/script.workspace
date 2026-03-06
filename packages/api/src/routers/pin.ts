@@ -71,11 +71,21 @@ export const pinRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const pin = await prisma.contextPin.findUnique({
         where: { id: input.id },
-        select: { projectId: true },
+        select: { projectId: true, userId: true },
       });
       if (!pin) throw new TRPCError({ code: "NOT_FOUND" });
 
       await assertProjectAccess(pin.projectId, ctx.user.id);
+
+      // Only the pin creator or project owner can delete
+      if (pin.userId !== ctx.user.id) {
+        const project = await prisma.project.findFirst({
+          where: { id: pin.projectId, ownerId: ctx.user.id },
+        });
+        if (!project) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "You can only delete your own pins" });
+        }
+      }
 
       await prisma.contextPin.delete({ where: { id: input.id } });
       return { id: input.id };

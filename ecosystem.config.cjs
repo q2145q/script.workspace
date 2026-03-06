@@ -23,6 +23,8 @@ module.exports = {
       interpreter: "node",
       env: {
         NODE_ENV: "production",
+        ADMIN_LOGIN: process.env.ADMIN_LOGIN || "",
+        ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || "",
       },
       instances: 1,
       exec_mode: "fork",

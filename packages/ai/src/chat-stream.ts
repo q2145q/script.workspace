@@ -94,20 +94,25 @@ export async function streamChatOpenAI(
   let fullText = "";
   let usage: StreamUsageResult | undefined;
 
-  for await (const chunk of stream) {
-    const delta = chunk.choices[0]?.delta?.content;
-    if (delta) {
-      fullText += delta;
-      callbacks.onToken(delta);
+  try {
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content;
+      if (delta) {
+        fullText += delta;
+        callbacks.onToken(delta);
+      }
+      // Last chunk contains usage
+      if (chunk.usage) {
+        usage = {
+          tokensIn: chunk.usage.prompt_tokens,
+          tokensOut: chunk.usage.completion_tokens,
+          durationMs: Date.now() - startTime,
+        };
+      }
     }
-    // Last chunk contains usage
-    if (chunk.usage) {
-      usage = {
-        tokensIn: chunk.usage.prompt_tokens,
-        tokensOut: chunk.usage.completion_tokens,
-        durationMs: Date.now() - startTime,
-      };
-    }
+  } catch (err) {
+    callbacks.onError(err instanceof Error ? err : new Error("Stream error"));
+    return;
   }
 
   // Fallback to estimation if usage wasn't reported
@@ -154,14 +159,17 @@ export async function streamChatAnthropic(
     callbacks.onToken(text);
   });
 
-  const finalMessage = await stream.finalMessage();
-  const usage: StreamUsageResult = {
-    tokensIn: finalMessage.usage.input_tokens,
-    tokensOut: finalMessage.usage.output_tokens,
-    durationMs: Date.now() - startTime,
-  };
-
-  callbacks.onDone(fullText, usage);
+  try {
+    const finalMessage = await stream.finalMessage();
+    const usage: StreamUsageResult = {
+      tokensIn: finalMessage.usage.input_tokens,
+      tokensOut: finalMessage.usage.output_tokens,
+      durationMs: Date.now() - startTime,
+    };
+    callbacks.onDone(fullText, usage);
+  } catch (err) {
+    callbacks.onError(err instanceof Error ? err : new Error("Anthropic stream error"));
+  }
 }
 
 /**

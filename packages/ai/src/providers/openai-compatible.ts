@@ -31,7 +31,8 @@ export class OpenAICompatibleProvider implements AIProvider {
     const text = response.choices[0]?.message?.content;
     if (!text) throw new Error(`Empty response from ${this.id}`);
 
-    const parsed = JSON.parse(text);
+    let parsed: unknown;
+    try { parsed = JSON.parse(text); } catch { throw new Error(`${this.id} returned invalid JSON for rewrite`); }
     return aiRewriteResponseSchema.parse(parsed);
   }
 
@@ -55,7 +56,8 @@ export class OpenAICompatibleProvider implements AIProvider {
     const text = response.choices[0]?.message?.content;
     if (!text) throw new Error(`Empty response from ${this.id}`);
 
-    const parsed = JSON.parse(text);
+    let parsed: unknown;
+    try { parsed = JSON.parse(text); } catch { throw new Error(`${this.id} returned invalid JSON for format`); }
     return aiFormatResponseSchema.parse(parsed);
   }
 }

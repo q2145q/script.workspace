@@ -16,8 +16,13 @@ export function useEditorAutosave(
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(async () => {
         if (latestContent.current) {
-          await saveFnRef.current(latestContent.current);
-          latestContent.current = null;
+          const contentToSave = latestContent.current;
+          try {
+            await saveFnRef.current(contentToSave);
+            latestContent.current = null;
+          } catch {
+            // Keep content — next edit will retry
+          }
         }
       }, delay);
     },

@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { prisma } from "@script/db";
+import { prisma, type Prisma } from "@script/db";
+import { tipTapContentSchema } from "@script/types";
 
 /** Verify user has access to the project */
 async function assertProjectAccess(projectId: string, userId: string) {
@@ -98,7 +99,7 @@ export const noteRouter = createTRPCRouter({
   updateContent: protectedProcedure
     .input(z.object({
       id: z.string(),
-      content: z.any(),
+      content: tipTapContentSchema,
     }))
     .mutation(async ({ ctx, input }) => {
       const note = await prisma.projectNote.findUnique({
@@ -113,7 +114,7 @@ export const noteRouter = createTRPCRouter({
 
       return prisma.projectNote.update({
         where: { id: input.id },
-        data: { content: input.content },
+        data: { content: input.content as unknown as Prisma.InputJsonValue },
       });
     }),
 

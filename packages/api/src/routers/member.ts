@@ -144,6 +144,11 @@ export const memberRouter = createTRPCRouter({
       const isOwner = project.ownerId === ctx.user.id;
       const isSelf = input.userId === ctx.user.id;
 
+      // Cannot remove the project owner
+      if (input.userId === project.ownerId) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot remove the project owner" });
+      }
+
       if (!isOwner && !isSelf) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only the owner can remove members" });
       }
