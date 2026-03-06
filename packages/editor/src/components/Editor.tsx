@@ -10,6 +10,7 @@ import { HocuspocusProvider } from "@hocuspocus/provider";
 import * as Y from "yjs";
 import { type JSONContent, type Editor } from "@tiptap/core";
 import { ScreenplayKit } from "../extensions/screenplay-kit";
+import { CollabUndo } from "../extensions/collab-undo";
 import { EditorToolbar } from "./EditorToolbar";
 import { AutocompleteDropdown } from "./AutocompleteDropdown";
 
@@ -55,6 +56,8 @@ export function ScriptEditor({
       name: collaboration.documentName,
       document: ydoc,
       token: "cookie-auth", // actual auth is via cookies
+      // Disable cross-tab broadcast (each tab has its own connection)
+      broadcast: false,
     });
 
     return { ydoc, provider };
@@ -124,6 +127,10 @@ export function ScriptEditor({
             name: collaboration.user.name,
             color: collaboration.user.color,
           },
+        }) as typeof ScreenplayKit,
+        CollabUndo.configure({
+          yDoc: collabState.ydoc,
+          field: "default",
         }) as typeof ScreenplayKit,
       );
     }

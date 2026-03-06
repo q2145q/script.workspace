@@ -12,7 +12,7 @@ import {
   Parenthetical,
   Transition,
   Shot,
-} from "./extensions/nodes";
+} from "./extensions/nodes/index";
 import { CommentMark } from "./extensions/comment-mark";
 
 export function getScreenplaySchema() {

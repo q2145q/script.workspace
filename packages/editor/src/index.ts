@@ -17,3 +17,4 @@ export { parseFountain, decodeFountainFile } from "./import/fountain-parser";
 export { getScreenplaySchema } from "./schema";
 export type { CollaborationConfig } from "./components/Editor";
 export { HocuspocusProvider } from "@hocuspocus/provider";
+export { CollabUndo } from "./extensions/collab-undo";

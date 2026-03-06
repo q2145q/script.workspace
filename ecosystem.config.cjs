@@ -9,6 +9,7 @@ module.exports = {
       env: {
         NODE_ENV: "production",
         BETTER_AUTH_URL: "https://script.yomimovie.art",
+        NEXT_PUBLIC_COLLAB_WS_URL: "wss://script.yomimovie.art/ws",
       },
       instances: 1,
       exec_mode: "fork",
@@ -40,8 +41,8 @@ module.exports = {
     {
       name: "script-collab",
       cwd: "/root/projects/site/script.workspace/apps/collab",
-      script: "dist/index.js",
-      interpreter: "node",
+      script: "src/index.ts",
+      interpreter: "/root/projects/site/script.workspace/apps/collab/node_modules/.bin/tsx",
       env: {
         NODE_ENV: "production",
         COLLAB_PORT: "3004",
