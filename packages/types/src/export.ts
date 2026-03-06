@@ -5,7 +5,7 @@ export type PaperSize = z.infer<typeof PaperSizeEnum>;
 
 export const exportOptionsSchema = z.object({
   documentId: z.string(),
-  format: z.enum(["pdf", "docx"]),
+  format: z.enum(["pdf", "docx", "fdx"]),
   titlePage: z.boolean().default(true),
   sceneNumbering: z.boolean().default(false),
   pageNumbering: z.boolean().default(true),

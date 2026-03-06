@@ -106,6 +106,7 @@ export function ScriptEditor({
             dialogue: "Dialogue...",
             parenthetical: "(pause)",
             transition: "CUT TO:",
+            shot: "SHOT: CLOSE UP",
           };
           return placeholders[node.type.name] || "Start writing...";
         },

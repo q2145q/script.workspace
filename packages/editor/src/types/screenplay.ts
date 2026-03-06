@@ -5,6 +5,7 @@ export const SCREENPLAY_NODES = [
   "dialogue",
   "parenthetical",
   "transition",
+  "shot",
 ] as const;
 
 export type ScreenplayNodeType = (typeof SCREENPLAY_NODES)[number];
@@ -17,6 +18,7 @@ export const TAB_CYCLE: ScreenplayNodeType[] = [
   "dialogue",
   "parenthetical",
   "transition",
+  "shot",
 ];
 
 /** What Enter creates after each node type */
@@ -28,4 +30,5 @@ export const ENTER_TRANSITIONS: Record<ScreenplayNodeType, ScreenplayNodeType> =
     dialogue: "character",
     parenthetical: "dialogue",
     transition: "action",
+    shot: "action",
   };

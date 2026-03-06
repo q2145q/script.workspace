@@ -4,3 +4,4 @@ export { Character } from "./character";
 export { Dialogue } from "./dialogue";
 export { Parenthetical } from "./parenthetical";
 export { Transition } from "./transition";
+export { Shot } from "./shot";

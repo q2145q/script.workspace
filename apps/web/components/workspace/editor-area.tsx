@@ -1,18 +1,23 @@
 "use client";
 
-import { useCallback, useMemo, useState, useRef } from "react";
-import { ScriptEditor, EditorToolbar, useEditorAutosave, type JSONContent, type Editor, HocuspocusProvider } from "@script/editor";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { ScriptEditor, EditorToolbar, useEditorAutosave, useScriptStats, type JSONContent, type Editor, HocuspocusProvider } from "@script/editor";
 import { useTranslations } from "next-intl";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Save } from "lucide-react";
+import { Save, Loader2, Check, AlertCircle, HelpCircle, Printer } from "lucide-react";
 import { SelectionToolbar } from "./selection-toolbar";
 import { ExportDialog } from "./export-dialog";
 import { OnlineUsers } from "./online-users";
 import { CollabStatus } from "./collab-status";
 import { CommentPopover } from "./comment-popover";
 import { SuggestionPopover } from "./suggestion-popover";
+import { ShortcutsModal } from "./shortcuts-modal";
+import { ScriptStatsFooter } from "./script-stats-footer";
+import { SearchPanel } from "./search-panel";
+import { ImportDialog } from "./import-dialog";
+import { PrintPreviewModal } from "./print-preview-modal";
 import type { CurrentUser } from "./workspace-shell";
 import type { CollaborationConfig } from "@script/editor";
 
@@ -67,10 +72,38 @@ function SaveDraftButton({ documentId }: { documentId: string }) {
   );
 }
 
-function AutoSaveLabel() {
+function AutosaveIndicator({ saveState }: { saveState: import("@script/editor").SaveState }) {
   const t = useTranslations("Editor");
+
+  if (saveState === "saving") {
+    return (
+      <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        {t("saving")}
+      </span>
+    );
+  }
+
+  if (saveState === "saved") {
+    return (
+      <span className="flex items-center gap-1 text-[10px] text-emerald-500">
+        <Check className="h-3 w-3" />
+        {t("saved")}
+      </span>
+    );
+  }
+
+  if (saveState === "error") {
+    return (
+      <span className="flex items-center gap-1 text-[10px] text-red-500">
+        <AlertCircle className="h-3 w-3" />
+        {t("saveError")}
+      </span>
+    );
+  }
+
   return (
-    <span className="flex items-center gap-1 text-[10px] text-emerald-500" title={t("autoSaveTitle")}>
+    <span className="flex items-center gap-1 text-[10px] text-muted-foreground/50">
       <Save className="h-3 w-3" />
       {t("autoSave")}
     </span>
@@ -78,9 +111,14 @@ function AutoSaveLabel() {
 }
 
 export function EditorArea({ document, projectTitle, projectId, onEditorReady, currentUser }: EditorAreaProps) {
+  const t = useTranslations("Editor");
   const trpc = useTRPC();
   const [editor, setEditor] = useState<Editor | null>(null);
   const [collabProvider, setCollabProvider] = useState<HocuspocusProvider | null>(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [printPreviewOpen, setPrintPreviewOpen] = useState(false);
+  const stats = useScriptStats(editor);
   const documentIdRef = useRef(document.id);
   documentIdRef.current = document.id;
 
@@ -113,7 +151,7 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
   const saveFnRef = useRef(saveMutation.mutateAsync);
   saveFnRef.current = saveMutation.mutateAsync;
 
-  const handleAutosave = useEditorAutosave(
+  const { handleUpdate: handleAutosave, saveState } = useEditorAutosave(
     useCallback(async (content: JSONContent) => {
       await saveFnRef.current({ id: documentIdRef.current, content });
     }, []),
@@ -138,6 +176,22 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
     [useCollab, handleAutosave]
   );
 
+  // Cmd+/ to toggle shortcuts modal
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "/") {
+        e.preventDefault();
+        setShortcutsOpen((v) => !v);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "f") {
+        e.preventDefault();
+        setSearchOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   return (
     <div className="flex h-full flex-col bg-background">
       {/* Header bar with glass effect */}
@@ -147,12 +201,27 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
           {useCollab && <OnlineUsers provider={collabProvider} />}
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShortcutsOpen(true)}
+            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            title="Cmd+/"
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={() => setPrintPreviewOpen(true)}
+            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            title={t("printPreview")}
+          >
+            <Printer className="h-3.5 w-3.5" />
+          </button>
+          <ImportDialog editor={editor} />
           <SaveDraftButton documentId={document.id} />
           <ExportDialog documentId={document.id} projectTitle={projectTitle} />
           {useCollab ? (
             <CollabStatus provider={collabProvider} />
           ) : (
-            <AutoSaveLabel />
+            <AutosaveIndicator saveState={saveState} />
           )}
         </div>
       </div>
@@ -162,6 +231,11 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
         <div className="glass-panel border-b border-border">
           <EditorToolbar editor={editor} />
         </div>
+      )}
+
+      {/* Find & Replace panel */}
+      {editor && searchOpen && (
+        <SearchPanel editor={editor} onClose={() => setSearchOpen(false)} />
       )}
 
       {/* Editor content — focused writing area */}
@@ -176,6 +250,9 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
         />
       </div>
 
+      {/* Script statistics footer */}
+      <ScriptStatsFooter stats={stats} />
+
       {/* Floating selection toolbar (Format / Rewrite / Pin) */}
       <SelectionToolbar editor={editor} documentId={document.id} projectId={projectId} />
 
@@ -184,6 +261,9 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
 
       {/* Inline suggestion popover — appears when clicking on AI rewrite decorations */}
       <SuggestionPopover editor={editor} documentId={document.id} />
+
+      <ShortcutsModal open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <PrintPreviewModal open={printPreviewOpen} onOpenChange={setPrintPreviewOpen} editor={editor} />
     </div>
   );
 }

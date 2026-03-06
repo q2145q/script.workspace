@@ -182,6 +182,15 @@ body {
   margin-bottom: 0.5em;
 }
 
+.screenplay-shot {
+  text-transform: uppercase;
+  font-weight: 700;
+  padding-left: 1.5in;
+  padding-right: 1in;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
 /* Placeholder per-node */
 .screenplay-editor .is-empty::before {
   color: var(--color-muted-foreground);
@@ -190,6 +199,21 @@ body {
   height: 0;
   pointer-events: none;
   opacity: 0.5;
+}
+
+/* ============================================================
+   SEARCH HIGHLIGHTS
+   ============================================================ */
+
+.search-match {
+  background-color: rgba(255, 213, 79, 0.4);
+  border-radius: 2px;
+}
+
+.search-match-active {
+  background-color: rgba(255, 152, 0, 0.6);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(255, 152, 0, 0.8);
 }
 
 /* ============================================================
@@ -377,5 +401,16 @@ body {
     padding: 1in;
     font-size: 12pt;
     line-height: 1;
+  }
+
+  /* Hide everything except print preview content */
+  body > *:not(.print-preview-page) {
+    /* Allow the PrintPreviewModal to handle visibility via its own print: classes */
+  }
+
+  .print-preview-page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    page-break-after: always;
   }
 }

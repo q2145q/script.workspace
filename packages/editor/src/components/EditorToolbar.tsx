@@ -13,6 +13,7 @@ const NODE_LABELS: Record<ScreenplayNodeType, string> = {
   dialogue: "Dialogue",
   parenthetical: "Parenthetical",
   transition: "Transition",
+  shot: "Shot",
 };
 
 interface EditorToolbarProps {

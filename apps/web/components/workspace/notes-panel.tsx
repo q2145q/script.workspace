@@ -275,7 +275,7 @@ function NoteEditor({
   const saveFnRef = useRef(saveMutation.mutateAsync);
   saveFnRef.current = saveMutation.mutateAsync;
 
-  const handleAutosave = useEditorAutosave(
+  const { handleUpdate: handleAutosave } = useEditorAutosave(
     useCallback(async (content: JSONContent) => {
       await saveFnRef.current({ id: noteIdRef.current, content });
     }, []),

@@ -4,6 +4,7 @@ import { prisma } from "@script/db";
 import { exportOptionsSchema } from "@script/types";
 import { generatePDF } from "../export/pdf-generator";
 import { generateDOCX } from "../export/docx-generator";
+import { generateFDX } from "../export/fdx-generator";
 
 export const exportRouter = createTRPCRouter({
   generate: protectedProcedure
@@ -57,6 +58,13 @@ export const exportRouter = createTRPCRouter({
           data: buffer.toString("base64"),
           filename: `${document.project.title}.pdf`,
           mimeType: "application/pdf",
+        };
+      } else if (input.format === "fdx") {
+        const buffer = await generateFDX(content, input, metadata);
+        return {
+          data: buffer.toString("base64"),
+          filename: `${document.project.title}.fdx`,
+          mimeType: "application/xml",
         };
       } else {
         const buffer = await generateDOCX(content, input, metadata);

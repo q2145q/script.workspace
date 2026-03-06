@@ -59,6 +59,7 @@ const LEFT_MARGINS: Record<string, number> = {
   dialogue: 180, // 2.5"
   parenthetical: 223, // 3.1"
   transition: 108,
+  shot: 108,
   paragraph: 108,
 };
 
@@ -69,6 +70,7 @@ const RIGHT_MARGINS: Record<string, number> = {
   dialogue: 180,
   parenthetical: 209, // 2.9"
   transition: 72,
+  shot: 72,
   paragraph: 72,
 };
 
@@ -79,6 +81,7 @@ const SPACE_BEFORE: Record<string, number> = {
   dialogue: 0,
   parenthetical: 0,
   transition: 12,
+  shot: 12,
   paragraph: 12,
 };
 
@@ -137,7 +140,8 @@ export async function generatePDF(
     if (
       block.type === "sceneHeading" ||
       block.type === "character" ||
-      block.type === "transition"
+      block.type === "transition" ||
+      block.type === "shot"
     ) {
       text = text.toUpperCase();
     }
@@ -218,7 +222,7 @@ export async function generatePDF(
 }
 
 function getFontForBlock(block: ScreenplayBlock): string {
-  if (block.type === "sceneHeading") return "Cousine Bold";
+  if (block.type === "sceneHeading" || block.type === "shot") return "Cousine Bold";
   if (block.type === "parenthetical") return "Cousine Italic";
 
   const hasBold = block.segments.some((s) => s.bold);

@@ -84,6 +84,12 @@ const STYLES: Record<string, BlockStyle> = {
     allCaps: true,
     alignment: AlignmentType.RIGHT,
   },
+  shot: {
+    indent: { left: convertInchesToTwip(1.5), right: convertInchesToTwip(1) },
+    spacing: { before: 120, after: 0 },
+    bold: true,
+    allCaps: true,
+  },
   paragraph: {
     indent: { left: convertInchesToTwip(1.5), right: convertInchesToTwip(1) },
     spacing: { before: 120, after: 0 },

@@ -11,6 +11,7 @@ import {
   Dialogue,
   Parenthetical,
   Transition,
+  Shot,
 } from "./extensions/nodes";
 import { CommentMark } from "./extensions/comment-mark";
 
@@ -33,6 +34,7 @@ export function getScreenplaySchema() {
     Dialogue,
     Parenthetical,
     Transition,
+    Shot,
     CommentMark,
   ]);
 }

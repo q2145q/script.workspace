@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Download, FileText, FileIcon, Loader2, X } from "lucide-react";
+import { Download, FileText, FileIcon, FileCode2, Loader2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 interface ExportDialogProps {
@@ -17,7 +17,7 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
   const t = useTranslations("Export");
 
   const [open, setOpen] = useState(false);
-  const [format, setFormat] = useState<"pdf" | "docx">("pdf");
+  const [format, setFormat] = useState<"pdf" | "docx" | "fdx">("pdf");
   const [titlePage, setTitlePage] = useState(true);
   const [sceneNumbering, setSceneNumbering] = useState(false);
   const [pageNumbering, setPageNumbering] = useState(true);
@@ -121,7 +121,7 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
                   <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                     {t("format")}
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <button
                       onClick={() => setFormat("pdf")}
                       className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-all ${
@@ -143,6 +143,17 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
                     >
                       <FileIcon className="h-4 w-4" />
                       DOCX
+                    </button>
+                    <button
+                      onClick={() => setFormat("fdx")}
+                      className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-all ${
+                        format === "fdx"
+                          ? "border-ai-accent bg-ai-accent/10 text-ai-accent"
+                          : "border-border text-muted-foreground hover:border-ai-accent/30"
+                      }`}
+                    >
+                      <FileCode2 className="h-4 w-4" />
+                      FDX
                     </button>
                   </div>
                 </div>
@@ -191,13 +202,13 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
                   <ToggleOption
                     label={t("watermark")}
                     description={
-                      format === "docx"
+                      format !== "pdf"
                         ? t("watermarkPdfOnly")
                         : t("watermarkDesc")
                     }
                     checked={watermarkEnabled}
                     onChange={setWatermarkEnabled}
-                    disabled={format === "docx"}
+                    disabled={format !== "pdf"}
                   />
                   {watermarkEnabled && format === "pdf" && (
                     <motion.div

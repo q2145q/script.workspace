@@ -135,6 +135,10 @@
     "draft": "Черновик",
     "autoSaveTitle": "Автосохранение в базу данных",
     "autoSave": "Автосохранение",
+    "saving": "Сохранение...",
+    "saved": "Сохранено",
+    "saveError": "Ошибка сохранения",
+    "printPreview": "Предпросмотр печати",
     "scenes": "Сцены",
     "noScenes": "Сцен пока нет. Напишите INT. или EXT. чтобы создать.",
     "selectTextFirst": "Сначала выделите текст",
@@ -409,6 +413,48 @@
     "failedRetry": "Не удалось повторить: {message}",
     "loading": "Загрузка предложения..."
   },
+  "Stats": {
+    "title": "Статистика сценария",
+    "pages": "Страницы",
+    "words": "Слова",
+    "scenes": "Сцены",
+    "characters": "Персонажи",
+    "estimatedTime": "Примерное время",
+    "minutes": "мин.",
+    "distribution": "Распределение диалогов",
+    "pagesShort": "стр.",
+    "wordsShort": "слов",
+    "scenesShort": "сцен"
+  },
+  "Search": {
+    "find": "Найти...",
+    "replace": "Заменить...",
+    "replaceAll": "Заменить все",
+    "caseSensitive": "С учётом регистра",
+    "regex": "Регулярное выражение",
+    "matchCount": "{current} из {total}",
+    "noResults": "Не найдено"
+  },
+  "Shortcuts": {
+    "title": "Горячие клавиши",
+    "navigation": "Навигация",
+    "formatting": "Форматирование",
+    "ai": "AI",
+    "editing": "Редактирование",
+    "general": "Общие",
+    "nextBlockType": "Следующий тип блока",
+    "prevBlockType": "Предыдущий тип блока",
+    "formatSelection": "Форматировать выделение",
+    "rewriteSelection": "Переписать выделение",
+    "addComment": "Добавить комментарий",
+    "newBlock": "Новый блок",
+    "undo": "Отменить",
+    "redo": "Повторить",
+    "bold": "Жирный",
+    "italic": "Курсив",
+    "findReplace": "Найти и заменить",
+    "showShortcuts": "Показать горячие клавиши"
+  },
   "ProjectSettings": {
     "title": "Настройки проекта",
     "general": "Основные",
@@ -460,5 +506,22 @@
   },
   "Theme": {
     "toggle": "Переключить тему"
+  },
+  "Import": {
+    "import": "Импорт",
+    "importFountain": "Импорт файла Fountain",
+    "title": "Импорт сценария",
+    "dropHere": "Перетащите файл сюда",
+    "supportedFormats": ".fountain, .txt",
+    "chooseFile": "Выбрать файл",
+    "blocksFound": "Найдено блоков: {count}",
+    "replaceWarning": "Импорт заменит текущее содержимое документа.",
+    "chooseAnother": "Другой файл",
+    "importButton": "Импортировать"
+  },
+  "PrintPreview": {
+    "title": "Предпросмотр печати",
+    "pageCount": "{count} стр.",
+    "print": "Печать"
   }
 }

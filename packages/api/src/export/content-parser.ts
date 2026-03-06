@@ -12,6 +12,7 @@ export interface ScreenplayBlock {
     | "dialogue"
     | "parenthetical"
     | "transition"
+    | "shot"
     | "paragraph";
   text: string;
   segments: TextSegment[];
@@ -32,6 +33,7 @@ const BLOCK_TYPES = new Set([
   "dialogue",
   "parenthetical",
   "transition",
+  "shot",
 ]);
 
 export function parseContent(
