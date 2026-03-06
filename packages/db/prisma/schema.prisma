@@ -30,6 +30,9 @@ model User {
   commentThreads CommentThread[] @relation("ThreadCreator")
   commentMessages CommentMessage[] @relation("MessageAuthor")
   suggestions    Suggestion[]    @relation("SuggestionCreator")
+  chatMessages   ChatMessage[]   @relation("ChatMessageUser")
+  contextPins    ContextPin[]    @relation("ContextPinUser")
+  notifications  Notification[]
   profile        UserProfile?
   apiUsageLogs   ApiUsageLog[]
 
@@ -137,6 +140,7 @@ model Project {
   logline         String?   @db.Text
   synopsis        String?   @db.Text
   knowledgeGraph  Json?
+  deletedAt   DateTime?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -156,6 +160,7 @@ model Project {
   notes        ProjectNote[]
 
   @@index([ownerId])
+  @@index([ownerId, deletedAt])
   @@map("project")
 }
 
@@ -171,6 +176,7 @@ model ProjectMember {
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, userId])
+  @@index([userId])
   @@map("project_member")
 }
 
@@ -186,17 +192,20 @@ model Document {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  project        Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  commentThreads CommentThread[]
-  suggestions    Suggestion[]
-  drafts         Draft[]
-  episode        Episode?
-  activityLogs   ActivityLog[]
-  revisions      DocumentRevision[]
-  sceneMetadata  SceneMetadata[]
+  project         Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  commentThreads  CommentThread[]
+  suggestions     Suggestion[]
+  drafts          Draft[]
+  episode         Episode?
+  activityLogs    ActivityLog[]
+  revisions       DocumentRevision[]
+  sceneMetadata   SceneMetadata[]
+  characterScenes CharacterScene[]
 
   @@index([projectId])
   @@index([projectId, deletedAt])
+  @@index([projectId, updatedAt])
+  @@index([projectId, createdAt])
   @@map("document")
 }
 
@@ -224,6 +233,7 @@ model CommentMessage {
   authorId  String
   content   String
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   thread CommentThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
   author User          @relation("MessageAuthor", fields: [authorId], references: [id])
@@ -279,6 +289,8 @@ model Suggestion {
 
   @@index([documentId])
   @@index([documentId, status])
+  @@index([createdById, status])
+  @@index([status, createdAt])
   @@map("suggestion")
 }
 
@@ -304,10 +316,13 @@ model ChatMessage {
   role      ChatMessageRole
   content   String          @db.Text
   createdAt DateTime        @default(now())
+  updatedAt DateTime        @default(now()) @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation("ChatMessageUser", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([projectId, createdAt])
+  @@index([projectId, userId, createdAt])
   @@map("chat_message")
 }
 
@@ -334,10 +349,13 @@ model ContextPin {
   label     String?
   sortOrder Int            @default(0)
   createdAt DateTime       @default(now())
+  updatedAt DateTime       @default(now()) @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation("ContextPinUser", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([projectId, sortOrder])
+  @@index([projectId, userId])
   @@map("context_pin")
 }
 
@@ -355,6 +373,7 @@ model RAGChunk {
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@index([projectId])
+  @@index([projectId, sourceId])
   @@map("rag_chunk")
 }
 
@@ -401,7 +420,8 @@ model Character {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project        Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  characterScenes CharacterScene[]
 
   @@index([projectId])
   @@map("character")
@@ -533,6 +553,46 @@ model ActivityLog {
 
   @@index([projectId, createdAt])
   @@map("activity_log")
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // COMMENT_REPLY, SUGGESTION_APPLIED, MEMBER_INVITED, etc.
+  title     String
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
+  @@map("notification")
+}
+
+// ============================================================
+// CHARACTER-SCENE TRACKING
+// ============================================================
+
+model CharacterScene {
+  id          String @id @default(cuid())
+  characterId String
+  documentId  String
+  appearances Int    @default(1)
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  document  Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([characterId, documentId])
+  @@index([characterId])
+  @@index([documentId])
+  @@map("character_scene")
 }
 
 // ============================================================

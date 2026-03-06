@@ -18,9 +18,10 @@ export default function DashboardPage() {
   const t = useTranslations("Dashboard");
   const filters = useDashboardFilters();
 
-  const { data: projects, isLoading } = useQuery(
+  const { data: projectsData, isLoading } = useQuery(
     trpc.project.list.queryOptions(filters.queryInput)
   );
+  const projects = projectsData?.items;
 
   // Selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -111,6 +112,7 @@ export default function DashboardPage() {
           ))}
         </div>
       ) : projects && projects.length > 0 ? (
+        /* TODO: load more via nextCursor when needed */
         filters.viewMode === "grid" ? (
           <ProjectList
             projects={projects}

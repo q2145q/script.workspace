@@ -13,13 +13,16 @@ export const projectRouter = createTRPCRouter({
           status: z.string().optional(),
           sortBy: z.enum(["updatedAt", "createdAt", "title"]).default("updatedAt"),
           sortDir: z.enum(["asc", "desc"]).default("desc"),
+          cursor: z.string().optional(),
+          limit: z.number().int().min(1).max(50).default(20),
         })
         .optional()
     )
     .query(async ({ ctx, input }) => {
-      const { search, status, sortBy = "updatedAt", sortDir = "desc" } = input ?? {};
+      const { search, status, sortBy = "updatedAt", sortDir = "desc", cursor, limit = 20 } = input ?? {};
 
       const accessFilter: Prisma.ProjectWhereInput = {
+        deletedAt: null,
         OR: [
           { ownerId: ctx.user.id },
           { members: { some: { userId: ctx.user.id } } },
@@ -39,17 +42,27 @@ export const projectRouter = createTRPCRouter({
         ? { status: status as Prisma.EnumProjectStatusFilter }
         : {};
 
-      return prisma.project.findMany({
+      const items = await prisma.project.findMany({
         where: {
           ...accessFilter,
           ...searchFilter,
           ...statusFilter,
         },
         orderBy: { [sortBy]: sortDir },
+        take: limit + 1,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
         include: {
           _count: { select: { documents: { where: { deletedAt: null } } } },
         },
       });
+
+      let nextCursor: string | undefined;
+      if (items.length > limit) {
+        const nextItem = items.pop();
+        nextCursor = nextItem?.id;
+      }
+
+      return { items, nextCursor };
     }),
 
   getById: protectedProcedure
@@ -58,6 +71,7 @@ export const projectRouter = createTRPCRouter({
       const project = await prisma.project.findFirst({
         where: {
           id: input.id,
+          deletedAt: null,
           OR: [
             { ownerId: ctx.user.id },
             { members: { some: { userId: ctx.user.id } } },
@@ -119,7 +133,40 @@ export const projectRouter = createTRPCRouter({
       return prisma.project.update({ where: { id }, data: prismaData });
     }),
 
+  /** Soft delete (move to trash) */
   delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const project = await prisma.project.findFirst({
+        where: { id: input.id, ownerId: ctx.user.id, deletedAt: null },
+      });
+      if (!project) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      return prisma.project.update({
+        where: { id: input.id },
+        data: { deletedAt: new Date() },
+      });
+    }),
+
+  /** Restore from trash */
+  restore: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const project = await prisma.project.findFirst({
+        where: { id: input.id, ownerId: ctx.user.id, deletedAt: { not: null } },
+      });
+      if (!project) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      return prisma.project.update({
+        where: { id: input.id },
+        data: { deletedAt: null },
+      });
+    }),
+
+  /** Permanent delete */
+  permanentDelete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const project = await prisma.project.findFirst({
@@ -131,15 +178,32 @@ export const projectRouter = createTRPCRouter({
       return prisma.project.delete({ where: { id: input.id } });
     }),
 
-  /** Bulk delete projects owned by the current user */
+  /** List trashed projects */
+  listTrashed: protectedProcedure
+    .query(async ({ ctx }) => {
+      return prisma.project.findMany({
+        where: {
+          ownerId: ctx.user.id,
+          deletedAt: { not: null },
+        },
+        orderBy: { deletedAt: "desc" },
+        include: {
+          _count: { select: { documents: true } },
+        },
+      });
+    }),
+
+  /** Bulk soft delete projects owned by the current user */
   bulkDelete: protectedProcedure
     .input(z.object({ ids: z.array(z.string()).min(1).max(50) }))
     .mutation(async ({ ctx, input }) => {
-      const result = await prisma.project.deleteMany({
+      const result = await prisma.project.updateMany({
         where: {
           id: { in: input.ids },
           ownerId: ctx.user.id,
+          deletedAt: null,
         },
+        data: { deletedAt: new Date() },
       });
       return { count: result.count };
     }),
