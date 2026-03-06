@@ -5,4 +5,5 @@ export {
   createCallerFactory,
   publicProcedure,
   protectedProcedure,
+  aiProcedure,
 } from "./trpc";

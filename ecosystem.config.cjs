@@ -14,6 +14,9 @@ module.exports = {
       exec_mode: "fork",
       autorestart: true,
       max_memory_restart: "512M",
+      error_file: "/root/.pm2/logs/script-workspace-error.log",
+      out_file: "/root/.pm2/logs/script-workspace-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
     },
     {
       name: "script-admin",
@@ -30,6 +33,9 @@ module.exports = {
       exec_mode: "fork",
       autorestart: true,
       max_memory_restart: "256M",
+      error_file: "/root/.pm2/logs/script-admin-error.log",
+      out_file: "/root/.pm2/logs/script-admin-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
     },
     {
       name: "script-collab",
@@ -44,6 +50,9 @@ module.exports = {
       exec_mode: "fork",
       autorestart: true,
       max_memory_restart: "256M",
+      error_file: "/root/.pm2/logs/script-collab-error.log",
+      out_file: "/root/.pm2/logs/script-collab-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
     },
   ],
 };

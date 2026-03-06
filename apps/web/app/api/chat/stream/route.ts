@@ -12,11 +12,29 @@ import type { ProviderId, StreamUsageResult } from "@script/ai";
 import { resolveApiKey } from "@script/api/global-key-resolver";
 import { logApiUsage } from "@script/api/usage-logger";
 
+// Simple in-memory rate limiter for streaming endpoint
+const chatRateStore = new Map<string, { count: number; resetAt: number }>();
+function checkChatRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const entry = chatRateStore.get(userId);
+  if (!entry || entry.resetAt < now) {
+    chatRateStore.set(userId, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  entry.count++;
+  return entry.count <= 10;
+}
+
 export async function POST(req: NextRequest) {
   // 1. Authenticate
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session?.user) {
     return new Response("Unauthorized", { status: 401 });
+  }
+
+  // 1.5 Rate limit: 10 chat requests/min
+  if (!checkChatRateLimit(session.user.id)) {
+    return new Response("Rate limit exceeded", { status: 429 });
   }
 
   // 2. Beta gate
