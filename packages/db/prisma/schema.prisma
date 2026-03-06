@@ -175,23 +175,28 @@ model ProjectMember {
 }
 
 model Document {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   projectId String
-  title     String   @default("Untitled")
-  content   Json     @default("{}")
+  title     String    @default("Untitled")
+  content   Json      @default("{}")
   yjsState  Bytes?
   metadata  Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  sortOrder Int       @default(0)
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-  project        Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project        Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
   commentThreads CommentThread[]
   suggestions    Suggestion[]
   drafts         Draft[]
   episode        Episode?
   activityLogs   ActivityLog[]
+  revisions      DocumentRevision[]
+  sceneMetadata  SceneMetadata[]
 
   @@index([projectId])
+  @@index([projectId, deletedAt])
   @@map("document")
 }
 
@@ -314,7 +319,8 @@ model ProjectBible {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project  Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sections BibleSection[]
 
   @@map("project_bible")
 }
@@ -446,6 +452,67 @@ model ProjectNote {
 
   @@index([projectId])
   @@map("project_note")
+}
+
+// ============================================================
+// DOCUMENT REVISIONS + SCENE METADATA + BIBLE SECTIONS
+// ============================================================
+
+model DocumentRevision {
+  id          String   @id @default(cuid())
+  documentId  String
+  content     Json
+  number      Int
+  createdBy   String
+  summary     String?
+  wordCount   Int?
+  contentHash String?
+  createdAt   DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, number])
+  @@index([documentId, createdAt])
+  @@map("document_revision")
+}
+
+model SceneMetadata {
+  id         String   @id @default(cuid())
+  documentId String
+  sceneIndex Int
+  heading    String
+  intExt     String?
+  timeOfDay  String?
+  location   String?
+  synopsis   String?  @db.Text
+  duration   Float?
+  characters String[]
+  colorTag   String?
+  act        Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, sceneIndex])
+  @@index([documentId])
+  @@map("scene_metadata")
+}
+
+model BibleSection {
+  id        String   @id @default(cuid())
+  bibleId   String
+  type      String
+  title     String
+  content   Json     @default("{}")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bible ProjectBible @relation(fields: [bibleId], references: [id], onDelete: Cascade)
+
+  @@index([bibleId, sortOrder])
+  @@map("bible_section")
 }
 
 // ============================================================

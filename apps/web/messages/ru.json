@@ -68,7 +68,21 @@
     "projectCreated": "Проект создан",
     "projectDeleted": "Проект удалён",
     "deleteProject": "Удалить этот проект?",
-    "document": "{count, plural, one {# документ} few {# документа} other {# документов}}"
+    "document": "{count, plural, one {# документ} few {# документа} other {# документов}}",
+    "searchPlaceholder": "Поиск проектов...",
+    "allStatuses": "Все статусы",
+    "sortUpdated": "По обновлению",
+    "sortCreated": "По созданию",
+    "sortTitle": "По названию",
+    "statusColumn": "Статус",
+    "docsColumn": "Документы",
+    "updatedColumn": "Обновлён",
+    "selected": "{count} выбрано",
+    "archive": "Архивировать",
+    "bulkDelete": "Удалить",
+    "bulkDeleted": "Удалено проектов: {count}",
+    "bulkArchived": "Архивировано проектов: {count}",
+    "confirmBulkDelete": "Удалить {count} проектов?"
   },
   "ProjectTypes": {
     "FEATURE_FILM": "Полнометражный фильм",
@@ -112,12 +126,27 @@
     "defaultLanguage": "Язык по умолчанию",
     "profileUpdated": "Профиль обновлён"
   },
+  "Document": {
+    "newDocument": "Новый документ",
+    "noDocuments": "Документов нет",
+    "rename": "Переименовать",
+    "duplicate": "Дублировать",
+    "delete": "Удалить",
+    "restore": "Восстановить",
+    "created": "Документ создан",
+    "renamed": "Документ переименован",
+    "deleted": "Документ удалён",
+    "duplicated": "Документ дублирован",
+    "restored": "Документ восстановлен",
+    "confirmDelete": "Удалить этот документ?"
+  },
   "Sidebar": {
     "script": "Сценарий",
     "bible": "Библия проекта",
     "outline": "Структура",
     "characters": "Персонажи",
     "locations": "Локации",
+    "sceneBoard": "Доска сцен",
     "onePager": "Одностраничник",
     "notes": "Заметки",
     "versions": "Версии",
@@ -125,6 +154,15 @@
     "documents": "Документы",
     "settings": "Настройки",
     "theme": "Тема"
+  },
+  "SceneBoard": {
+    "title": "Доска сцен",
+    "noScenes": "Сцен нет. Добавьте сцены в редакторе.",
+    "switchToScript": "Переключитесь в режим сценария",
+    "noAct": "Без акта",
+    "act1": "Акт 1",
+    "act2": "Акт 2",
+    "act3": "Акт 3"
   },
   "Editor": {
     "showPanel": "Показать панель",
@@ -305,7 +343,14 @@
     "restoreTitle": "Восстановить черновик",
     "restoreConfirm": "Восстановить черновик? Будет создана резервная копия.",
     "draftRestored": "Черновик восстановлен. Перезагрузите страницу.",
-    "draftSaved": "Черновик сохранён"
+    "draftSaved": "Черновик сохранён",
+    "draftsTab": "Черновики",
+    "revisionsTab": "Ревизии",
+    "noRevisions": "Ревизий пока нет",
+    "noRevisionsHint": "Ревизии создаются автоматически каждые 30 минут.",
+    "revisionFallback": "Ревизия {number}",
+    "revisionCreated": "Ревизия создана",
+    "words": "слов"
   },
   "Activity": {
     "edited": "отредактировал",
@@ -458,6 +503,36 @@
     "pagesShort": "стр.",
     "wordsShort": "слов",
     "scenesShort": "сцен"
+  },
+  "GlobalSearch": {
+    "placeholder": "Поиск документов...",
+    "noResults": "Ничего не найдено",
+    "hint": "Введите запрос для поиска по документам",
+    "contentMatch": "в тексте",
+    "shortcut": "⌘+Shift+F — глобальный поиск"
+  },
+  "Bible": {
+    "title": "Библия проекта",
+    "addSection": "Добавить раздел",
+    "searchSections": "Поиск разделов...",
+    "sectionTitlePlaceholder": "Название раздела",
+    "typeCharacters": "Персонажи",
+    "typeLocations": "Локации",
+    "typeObjects": "Объекты",
+    "typeArcs": "Арки",
+    "typeCustom": "Произвольный",
+    "create": "Создать",
+    "noSections": "Нет разделов. Создайте первый!",
+    "noSearchResults": "Нет результатов",
+    "sectionCount": "{count, plural, one {# раздел} few {# раздела} other {# разделов}}",
+    "selectSection": "Выберите раздел для редактирования",
+    "createFirstSection": "Создать первый раздел",
+    "confirmDeleteSection": "Удалить этот раздел? Это действие необратимо.",
+    "migrationBanner": "Ваш контент хранится в старом формате. Конвертируйте в структурированные разделы для удобной работы.",
+    "convertToSections": "Конвертировать в разделы",
+    "emptyBibleTitle": "Библия проекта пуста",
+    "emptyBibleDescription": "Создайте разделы для организации персонажей, локаций и арок вашей истории.",
+    "createDefaultSections": "Создать разделы по умолчанию"
   },
   "Search": {
     "find": "Найти...",

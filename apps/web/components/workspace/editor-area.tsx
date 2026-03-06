@@ -20,6 +20,8 @@ import { ImportDialog } from "./import-dialog";
 import { PrintPreviewModal } from "./print-preview-modal";
 import type { CurrentUser } from "./workspace-shell";
 import type { CollaborationConfig } from "@script/editor";
+import { useSceneSync } from "@/hooks/use-scene-sync";
+import { useAutoRevision } from "@/hooks/use-auto-revision";
 
 // Deterministic color from user ID
 function hashToColor(str: string): string {
@@ -121,6 +123,10 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
   const stats = useScriptStats(editor);
   const documentIdRef = useRef(document.id);
   documentIdRef.current = document.id;
+
+  // Sync scene metadata to DB (debounced)
+  useSceneSync(editor, document.id);
+  useAutoRevision(editor, document.id);
 
   // Only use collab if NEXT_PUBLIC_COLLAB_WS_URL is explicitly set
   const collabWsUrl = process.env.NEXT_PUBLIC_COLLAB_WS_URL || "";

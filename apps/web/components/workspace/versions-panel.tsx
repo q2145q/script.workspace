@@ -104,9 +104,45 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
   const [diffMode, setDiffMode] = useState(false);
   const [diffFromId, setDiffFromId] = useState<string | null>(null);
   const [diffToId, setDiffToId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"drafts" | "revisions">("drafts");
 
   const draftsQuery = useQuery(
     trpc.draft.list.queryOptions({ documentId })
+  );
+
+  const revisionsQuery = useQuery(
+    trpc.revision.list.queryOptions({ documentId })
+  );
+
+  const revisionPreviewQuery = useQuery(
+    trpc.revision.getById.queryOptions(
+      { id: previewId! },
+      { enabled: !!previewId && activeTab === "revisions" && !diffMode }
+    )
+  );
+
+  const restoreRevisionMutation = useMutation(
+    trpc.revision.restore.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.revision.list.queryKey({ documentId }),
+        });
+        toast.success(t("draftRestored"));
+      },
+      onError: (err) => toast.error(err.message),
+    })
+  );
+
+  const createRevisionMutation = useMutation(
+    trpc.revision.create.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.revision.list.queryKey({ documentId }),
+        });
+        toast.success(t("revisionCreated"));
+      },
+      onError: (err) => toast.error(err.message),
+    })
   );
 
   const previewQuery = useQuery(
@@ -204,9 +240,6 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
         <div className="flex items-center gap-2">
           <History className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium">{t("title")}</span>
-          <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-            {drafts.length}
-          </span>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -226,13 +259,44 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
             {t("diff")}
           </button>
           <button
-            onClick={() => setShowCreate(!showCreate)}
+            onClick={() => {
+              if (activeTab === "drafts") {
+                setShowCreate(!showCreate);
+              } else {
+                createRevisionMutation.mutate({ documentId });
+              }
+            }}
+            disabled={activeTab === "revisions" && createRevisionMutation.isPending}
             className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <Plus className="h-3 w-3" />
             {tc("save")}
           </button>
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-border">
+        <button
+          onClick={() => { setActiveTab("drafts"); setPreviewId(null); }}
+          className={`flex-1 py-1.5 text-center text-xs font-medium transition-colors ${
+            activeTab === "drafts"
+              ? "border-b-2 border-ai-accent text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {t("draftsTab")} ({drafts.length})
+        </button>
+        <button
+          onClick={() => { setActiveTab("revisions"); setPreviewId(null); }}
+          className={`flex-1 py-1.5 text-center text-xs font-medium transition-colors ${
+            activeTab === "revisions"
+              ? "border-b-2 border-ai-accent text-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {t("revisionsTab")} ({revisionsQuery.data?.items.length ?? 0})
+        </button>
       </div>
 
       {/* Diff mode instruction */}
@@ -279,7 +343,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
       </AnimatePresence>
 
       {/* Drafts list */}
-      <div className={`overflow-y-auto ${diffResult || previewId ? "h-[40%] shrink-0" : "flex-1"}`}>
+      <div className={`overflow-y-auto ${diffResult || previewId ? "h-[40%] shrink-0" : "flex-1"}`} style={{ display: activeTab === "drafts" ? undefined : "none" }}>
         {draftsQuery.isLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
@@ -351,6 +415,117 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
           </div>
         )}
       </div>
+
+      {/* Revisions list */}
+      <div className={`overflow-y-auto ${previewId ? "h-[40%] shrink-0" : "flex-1"}`} style={{ display: activeTab === "revisions" ? undefined : "none" }}>
+        {revisionsQuery.isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+          </div>
+        ) : !revisionsQuery.data?.items.length ? (
+          <div className="px-4 py-8 text-center">
+            <History className="mx-auto h-8 w-8 text-muted-foreground/30" />
+            <p className="mt-2 text-sm text-muted-foreground">{t("noRevisions")}</p>
+            <p className="mt-1 text-xs text-muted-foreground/60">
+              {t("noRevisionsHint")}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-0.5 p-2">
+            {revisionsQuery.data.items.map((rev, i) => (
+              <motion.div
+                key={rev.id}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+                className={`group cursor-pointer rounded-md border px-3 py-2.5 transition-colors ${
+                  previewId === rev.id
+                    ? "border-ai-accent/50 bg-ai-accent/5"
+                    : "border-transparent hover:bg-accent"
+                }`}
+                onClick={() => setPreviewId(previewId === rev.id ? null : rev.id)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {rev.summary || t("revisionFallback", { number: rev.number })}
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">
+                      #{rev.number}
+                      {rev.wordCount ? ` · ${rev.wordCount} ${t("words")}` : ""}
+                      {" · "}
+                      {new Date(rev.createdAt).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(t("restoreConfirm"))) {
+                          restoreRevisionMutation.mutate({ id: rev.id });
+                        }
+                      }}
+                      disabled={restoreRevisionMutation.isPending}
+                      className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                      title={t("restoreTitle")}
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Revision preview pane */}
+      <AnimatePresence>
+        {activeTab === "revisions" && previewId && revisionPreviewQuery.data && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "60%", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="flex flex-col overflow-hidden border-t border-border"
+          >
+            <div className="flex items-center justify-between border-b border-border px-3 py-2">
+              <span className="text-xs font-medium text-muted-foreground">
+                {revisionPreviewQuery.data.summary || t("revisionFallback", { number: revisionPreviewQuery.data.number })}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (confirm(t("restoreConfirm"))) {
+                      restoreRevisionMutation.mutate({ id: previewId! });
+                    }
+                  }}
+                  disabled={restoreRevisionMutation.isPending}
+                  className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-ai-accent hover:bg-ai-accent/10"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  {tc("restore")}
+                </button>
+                <button
+                  onClick={() => setPreviewId(null)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3">
+              <pre className="whitespace-pre-wrap font-mono text-xs text-muted-foreground leading-relaxed">
+                {extractText(revisionPreviewQuery.data.content)}
+              </pre>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Diff view */}
       {diffMode && diffResult && (

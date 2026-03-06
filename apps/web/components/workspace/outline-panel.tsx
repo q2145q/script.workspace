@@ -2,13 +2,14 @@
 
 import { useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
-import { LayoutList, GripVertical, Sparkles, Loader2 } from "lucide-react";
+import { LayoutList, GripVertical, Sparkles, Loader2, Users } from "lucide-react";
 import type { Editor, JSONContent } from "@script/editor";
 import { useEditorState } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { parseSceneHeading } from "@/lib/scene-parser";
 
 interface OutlinePanelProps {
   editor: Editor | null;
@@ -84,6 +85,11 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
 
   const savedSynopses: Record<string, string> =
     (docData?.metadata as Record<string, unknown> | null)?.sceneSynopses as Record<string, string> ?? {};
+
+  // Load scene metadata (characters, etc.)
+  const { data: sceneMetadata } = useQuery(
+    trpc.sceneMetadata.list.queryOptions({ documentId })
+  );
 
   const saveMutation = useMutation(
     trpc.document.save.mutationOptions({
@@ -385,6 +391,47 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
                         )}
                       </button>
                     </div>
+                    {/* INT/EXT and time-of-day badges */}
+                    {(() => {
+                      const parsed = parseSceneHeading(scene.heading);
+                      const sceneChars = sceneMetadata?.find(
+                        (m) => m.sceneIndex === i
+                      )?.characters ?? [];
+
+                      if (!parsed.intExt && !parsed.timeOfDay && sceneChars.length === 0) return null;
+
+                      return (
+                        <div className="mt-1 flex flex-wrap items-center gap-1">
+                          {parsed.intExt && (
+                            <span className={`rounded px-1 py-0.5 text-[8px] font-bold uppercase ${
+                              parsed.intExt === "INT"
+                                ? "bg-blue-500/15 text-blue-500"
+                                : parsed.intExt === "EXT"
+                                ? "bg-green-500/15 text-green-500"
+                                : "bg-amber-500/15 text-amber-500"
+                            }`}>
+                              {parsed.intExt}
+                            </span>
+                          )}
+                          {parsed.timeOfDay && (
+                            <span className={`rounded px-1 py-0.5 text-[8px] font-medium ${
+                              parsed.timeOfDay.toUpperCase().includes("NIGHT") ||
+                              parsed.timeOfDay.toUpperCase().includes("НОЧЬ")
+                                ? "bg-indigo-500/15 text-indigo-400"
+                                : "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400"
+                            }`}>
+                              {parsed.timeOfDay}
+                            </span>
+                          )}
+                          {sceneChars.length > 0 && (
+                            <span className="flex items-center gap-0.5 rounded px-1 py-0.5 text-[8px] text-muted-foreground bg-muted">
+                              <Users className="h-2 w-2" />
+                              {sceneChars.length}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {scene.preview && (
                       <p className="mt-1.5 line-clamp-2 text-[10px] leading-relaxed text-muted-foreground">
                         {scene.preview}

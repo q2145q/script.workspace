@@ -31,7 +31,13 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
-export function ProjectList({ projects }: { projects: Project[] }) {
+interface ProjectListProps {
+  projects: Project[];
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
+}
+
+export function ProjectList({ projects, selectedIds, onToggleSelect }: ProjectListProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const t = useTranslations("Dashboard");
@@ -62,12 +68,30 @@ export function ProjectList({ projects }: { projects: Project[] }) {
         <motion.div
           key={project.id}
           variants={item}
-          className="group relative rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:border-ai-accent/30 hover:shadow-md hover:shadow-ai-glow"
+          className={`group relative rounded-xl border bg-card p-5 transition-all duration-200 hover:border-ai-accent/30 hover:shadow-md hover:shadow-ai-glow ${
+            selectedIds.has(project.id)
+              ? "border-ai-accent ring-1 ring-ai-accent/30"
+              : "border-border"
+          }`}
         >
           <Link
             href={`/project/${project.id}`}
             className="absolute inset-0 z-10"
           />
+
+          {/* Checkbox */}
+          <div className="absolute left-3 top-3 z-20">
+            <input
+              type="checkbox"
+              checked={selectedIds.has(project.id)}
+              onChange={(e) => {
+                e.stopPropagation();
+                onToggleSelect(project.id);
+              }}
+              className="h-3.5 w-3.5 rounded border-border opacity-0 transition-opacity group-hover:opacity-100 data-[state=checked]:opacity-100"
+              style={{ opacity: selectedIds.has(project.id) ? 1 : undefined }}
+            />
+          </div>
 
           <div className="mb-3 flex items-start justify-between">
             <h3 className="font-medium text-foreground">{project.title}</h3>

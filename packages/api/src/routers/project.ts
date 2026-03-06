@@ -5,20 +5,52 @@ import { prisma, type Prisma } from "@script/db";
 import { createProjectSchema, updateProjectSchema } from "@script/types";
 
 export const projectRouter = createTRPCRouter({
-  list: protectedProcedure.query(async ({ ctx }) => {
-    return prisma.project.findMany({
-      where: {
+  list: protectedProcedure
+    .input(
+      z
+        .object({
+          search: z.string().max(200).optional(),
+          status: z.string().optional(),
+          sortBy: z.enum(["updatedAt", "createdAt", "title"]).default("updatedAt"),
+          sortDir: z.enum(["asc", "desc"]).default("desc"),
+        })
+        .optional()
+    )
+    .query(async ({ ctx, input }) => {
+      const { search, status, sortBy = "updatedAt", sortDir = "desc" } = input ?? {};
+
+      const accessFilter: Prisma.ProjectWhereInput = {
         OR: [
           { ownerId: ctx.user.id },
           { members: { some: { userId: ctx.user.id } } },
         ],
-      },
-      orderBy: { updatedAt: "desc" },
-      include: {
-        _count: { select: { documents: true } },
-      },
-    });
-  }),
+      };
+
+      const searchFilter: Prisma.ProjectWhereInput = search
+        ? {
+            OR: [
+              { title: { contains: search, mode: "insensitive" } },
+              { description: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {};
+
+      const statusFilter: Prisma.ProjectWhereInput = status
+        ? { status: status as Prisma.EnumProjectStatusFilter }
+        : {};
+
+      return prisma.project.findMany({
+        where: {
+          ...accessFilter,
+          ...searchFilter,
+          ...statusFilter,
+        },
+        orderBy: { [sortBy]: sortDir },
+        include: {
+          _count: { select: { documents: { where: { deletedAt: null } } } },
+        },
+      });
+    }),
 
   getById: protectedProcedure
     .input(z.object({ id: z.string() }))
@@ -32,7 +64,10 @@ export const projectRouter = createTRPCRouter({
           ],
         },
         include: {
-          documents: { orderBy: { updatedAt: "desc" } },
+          documents: {
+            where: { deletedAt: null },
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          },
           members: { include: { user: true } },
           episodes: {
             orderBy: { number: "asc" },
@@ -94,5 +129,32 @@ export const projectRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
       return prisma.project.delete({ where: { id: input.id } });
+    }),
+
+  /** Bulk delete projects owned by the current user */
+  bulkDelete: protectedProcedure
+    .input(z.object({ ids: z.array(z.string()).min(1).max(50) }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await prisma.project.deleteMany({
+        where: {
+          id: { in: input.ids },
+          ownerId: ctx.user.id,
+        },
+      });
+      return { count: result.count };
+    }),
+
+  /** Bulk archive projects owned by the current user */
+  bulkArchive: protectedProcedure
+    .input(z.object({ ids: z.array(z.string()).min(1).max(50) }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await prisma.project.updateMany({
+        where: {
+          id: { in: input.ids },
+          ownerId: ctx.user.id,
+        },
+        data: { status: "ARCHIVED" },
+      });
+      return { count: result.count };
     }),
 });

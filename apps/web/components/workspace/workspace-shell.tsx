@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, lazy, Suspense } from "react";
+import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
@@ -15,6 +15,7 @@ import { WorkspaceSidebar } from "./workspace-sidebar";
 import { RightPanel } from "./right-panel";
 import { EditorArea } from "./editor-area";
 import { BibleEditor } from "./bible-editor";
+import { GlobalSearchDialog } from "./global-search-dialog";
 
 const VersionsPanel = lazy(() =>
   import("./versions-panel").then((m) => ({ default: m.VersionsPanel }))
@@ -34,6 +35,9 @@ const OnePagerPanel = lazy(() =>
 const NotesPanel = lazy(() =>
   import("./notes-panel").then((m) => ({ default: m.NotesPanel }))
 );
+const SceneBoard = lazy(() =>
+  import("./scene-board").then((m) => ({ default: m.SceneBoard }))
+);
 
 export type WorkspaceMode =
   | "script"
@@ -44,7 +48,8 @@ export type WorkspaceMode =
   | "versions"
   | "graph"
   | "one-pager"
-  | "notes";
+  | "notes"
+  | "scene-board";
 
 export interface CurrentUser {
   id: string;
@@ -87,6 +92,19 @@ export function WorkspaceShell({ project, document, currentUser }: WorkspaceShel
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("script");
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const rightPanelRef = useRef<ImperativePanelHandle>(null);
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
+
+  // Cmd+Shift+F to open global search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "f") {
+        e.preventDefault();
+        setGlobalSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const renderCenterPanel = () => {
     switch (workspaceMode) {
@@ -142,6 +160,12 @@ export function WorkspaceShell({ project, document, currentUser }: WorkspaceShel
         return (
           <Suspense fallback={<PanelFallback />}>
             <NotesPanel projectId={project.id} currentUser={currentUser} />
+          </Suspense>
+        );
+      case "scene-board":
+        return (
+          <Suspense fallback={<PanelFallback />}>
+            <SceneBoard editor={editor} documentId={document.id} projectId={project.id} />
           </Suspense>
         );
       default:
@@ -217,6 +241,12 @@ export function WorkspaceShell({ project, document, currentUser }: WorkspaceShel
           />
         </ResizablePanel>
       </ResizablePanelGroup>
+
+      <GlobalSearchDialog
+        open={globalSearchOpen}
+        onClose={() => setGlobalSearchOpen(false)}
+        projectId={project.id}
+      />
     </motion.div>
   );
 }

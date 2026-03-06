@@ -1,13 +1,22 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { FileText, LayoutList, Users, MapPin, BookOpen, History, Settings, Network, Presentation, StickyNote } from "lucide-react";
+import {
+  FileText, LayoutList, Users, MapPin, BookOpen, History,
+  Settings, Network, Presentation, StickyNote, Plus, Check, X, Kanban,
+} from "lucide-react";
 import type { Editor } from "@script/editor";
+import { useTRPC } from "@/lib/trpc/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { SceneNavigator } from "./scene-navigator";
 import { EpisodeNavigator } from "./episode-navigator";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { DocumentContextMenu } from "./document-context-menu";
 import type { WorkspaceMode } from "./workspace-shell";
 
 interface WorkspaceSidebarProps {
@@ -40,6 +49,7 @@ const navItemsConfig: Array<{
   { tKey: "outline", key: "outline", icon: LayoutList, mode: "outline" },
   { tKey: "characters", key: "chars", icon: Users, mode: "characters" },
   { tKey: "locations", key: "locs", icon: MapPin, mode: "locations" },
+  { tKey: "sceneBoard", key: "board", icon: Kanban, mode: "scene-board" },
   { tKey: "onePager", key: "pager", icon: Presentation, mode: "one-pager" },
   { tKey: "notes", key: "notes", icon: StickyNote, mode: "notes" },
   { tKey: "versions", key: "vers", icon: History, mode: "versions" },
@@ -67,8 +77,107 @@ export function WorkspaceSidebar({
   onModeChange,
 }: WorkspaceSidebarProps) {
   const t = useTranslations("Sidebar");
+  const tDoc = useTranslations("Document");
   const tCommon = useTranslations("Common");
+  const router = useRouter();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const isSeries = project.type === "TV_SERIES";
+
+  // Client-side document list (overrides server-loaded data for live updates)
+  const { data: documents } = useQuery({
+    ...trpc.document.list.queryOptions({ projectId: project.id }),
+    initialData: project.documents.map((d, i) => ({
+      id: d.id,
+      title: d.title,
+      sortOrder: i,
+      deletedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })),
+  });
+
+  // Mutations
+  const createMutation = useMutation(
+    trpc.document.create.mutationOptions({
+      onSuccess: (doc) => {
+        queryClient.invalidateQueries({ queryKey: trpc.document.list.queryKey({ projectId: project.id }) });
+        toast.success(tDoc("created"));
+        router.push(`/project/${project.id}/script/${doc.id}`);
+      },
+      onError: (err) => toast.error(err.message),
+    })
+  );
+
+  const renameMutation = useMutation(
+    trpc.document.rename.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: trpc.document.list.queryKey({ projectId: project.id }) });
+        queryClient.invalidateQueries({ queryKey: trpc.project.getById.queryKey({ id: project.id }) });
+        toast.success(tDoc("renamed"));
+      },
+      onError: (err) => toast.error(err.message),
+    })
+  );
+
+  const deleteMutation = useMutation(
+    trpc.document.delete.mutationOptions({
+      onSuccess: (_data, vars) => {
+        queryClient.invalidateQueries({ queryKey: trpc.document.list.queryKey({ projectId: project.id }) });
+        queryClient.invalidateQueries({ queryKey: trpc.project.getById.queryKey({ id: project.id }) });
+        toast.success(tDoc("deleted"));
+        // If deleted the active document, navigate to first remaining
+        if (vars.id === activeDocumentId && documents) {
+          const remaining = documents.filter((d) => d.id !== vars.id);
+          if (remaining.length > 0) {
+            router.push(`/project/${project.id}/script/${remaining[0].id}`);
+          }
+        }
+      },
+      onError: (err) => toast.error(err.message),
+    })
+  );
+
+  const duplicateMutation = useMutation(
+    trpc.document.duplicate.mutationOptions({
+      onSuccess: (doc) => {
+        queryClient.invalidateQueries({ queryKey: trpc.document.list.queryKey({ projectId: project.id }) });
+        toast.success(tDoc("duplicated"));
+        router.push(`/project/${project.id}/script/${doc.id}`);
+      },
+      onError: (err) => toast.error(err.message),
+    })
+  );
+
+  // Inline rename state
+  const [renamingDocId, setRenamingDocId] = useState<string | null>(null);
+  const [renameTitle, setRenameTitle] = useState("");
+
+  const startRename = (docId: string, currentTitle: string) => {
+    setRenamingDocId(docId);
+    setRenameTitle(currentTitle);
+  };
+
+  const confirmRename = () => {
+    if (renamingDocId && renameTitle.trim()) {
+      renameMutation.mutate({ id: renamingDocId, title: renameTitle.trim() });
+    }
+    setRenamingDocId(null);
+  };
+
+  const cancelRename = () => {
+    setRenamingDocId(null);
+  };
+
+  // Filter documents for display
+  const episodeDocIds = new Set(
+    (project.episodes ?? []).map((ep) => ep.document.id)
+  );
+  const docsToShow = documents
+    ? (isSeries
+        ? documents.filter((d) => !episodeDocIds.has(d.id))
+        : documents)
+    : [];
 
   return (
     <div className="flex h-full flex-col">
@@ -122,39 +231,49 @@ export function WorkspaceSidebar({
           />
         )}
 
-        {(() => {
-          // For series: show docs not linked to any episode
-          // For non-series: show all docs
-          const episodeDocIds = new Set(
-            (project.episodes ?? []).map((ep) => ep.document.id)
-          );
-          const docsToShow = isSeries
-            ? project.documents.filter((d) => !episodeDocIds.has(d.id))
-            : project.documents;
+        {/* Documents section */}
+        <div className="border-t border-sidebar-border p-2">
+          <div className="flex items-center justify-between px-3 py-1">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {t("documents")}
+            </p>
+            <button
+              onClick={() => createMutation.mutate({ projectId: project.id })}
+              disabled={createMutation.isPending}
+              className="flex items-center justify-center rounded p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              title={tDoc("newDocument")}
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          </div>
 
-          if (docsToShow.length === 0) return null;
-
-          return (
-            <div className="border-t border-sidebar-border p-2">
-              <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                {t("documents")}
-              </p>
-              {docsToShow.map((doc) => (
-                <Link
-                  key={doc.id}
-                  href={`/project/${project.id}/script/${doc.id}`}
-                  className={`flex items-center rounded-md px-3 py-1.5 text-sm transition-all duration-200 ${
-                    doc.id === activeDocumentId
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                  }`}
-                >
-                  {doc.title}
-                </Link>
-              ))}
-            </div>
-          );
-        })()}
+          {docsToShow.length === 0 ? (
+            <p className="px-3 py-2 text-xs text-muted-foreground">
+              {tDoc("noDocuments")}
+            </p>
+          ) : (
+            docsToShow.map((doc) => (
+              <DocumentItem
+                key={doc.id}
+                doc={doc}
+                projectId={project.id}
+                isActive={doc.id === activeDocumentId}
+                isRenaming={doc.id === renamingDocId}
+                renameTitle={renameTitle}
+                onRenameChange={setRenameTitle}
+                onRenameConfirm={confirmRename}
+                onRenameCancel={cancelRename}
+                onStartRename={() => startRename(doc.id, doc.title)}
+                onDuplicate={() => duplicateMutation.mutate({ id: doc.id })}
+                onDelete={() => {
+                  if (confirm(tDoc("confirmDelete"))) {
+                    deleteMutation.mutate({ id: doc.id });
+                  }
+                }}
+              />
+            ))
+          )}
+        </div>
       </div>
 
       {/* Fixed bottom section — always visible */}
@@ -173,5 +292,92 @@ export function WorkspaceSidebar({
         <ThemeToggle />
       </div>
     </div>
+  );
+}
+
+/** Single document item with context menu and inline rename */
+function DocumentItem({
+  doc,
+  projectId,
+  isActive,
+  isRenaming,
+  renameTitle,
+  onRenameChange,
+  onRenameConfirm,
+  onRenameCancel,
+  onStartRename,
+  onDuplicate,
+  onDelete,
+}: {
+  doc: { id: string; title: string };
+  projectId: string;
+  isActive: boolean;
+  isRenaming: boolean;
+  renameTitle: string;
+  onRenameChange: (title: string) => void;
+  onRenameConfirm: () => void;
+  onRenameCancel: () => void;
+  onStartRename: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isRenaming && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isRenaming]);
+
+  if (isRenaming) {
+    return (
+      <div className="flex items-center gap-1 rounded-md bg-accent px-2 py-1">
+        <input
+          ref={inputRef}
+          value={renameTitle}
+          onChange={(e) => onRenameChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onRenameConfirm();
+            if (e.key === "Escape") onRenameCancel();
+          }}
+          onBlur={onRenameConfirm}
+          className="min-w-0 flex-1 rounded bg-background px-1.5 py-0.5 text-xs focus:outline-none"
+        />
+        <button
+          onClick={onRenameConfirm}
+          className="shrink-0 text-muted-foreground hover:text-foreground"
+        >
+          <Check className="h-3 w-3" />
+        </button>
+        <button
+          onClick={onRenameCancel}
+          className="shrink-0 text-muted-foreground hover:text-foreground"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <DocumentContextMenu
+      actions={{
+        onRename: onStartRename,
+        onDuplicate,
+        onDelete,
+      }}
+    >
+      <Link
+        href={`/project/${projectId}/script/${doc.id}`}
+        className={`flex w-full items-center rounded-md px-3 py-1.5 pr-7 text-sm transition-all duration-200 ${
+          isActive
+            ? "bg-accent text-accent-foreground"
+            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+        }`}
+      >
+        <span className="truncate">{doc.title}</span>
+      </Link>
+    </DocumentContextMenu>
   );
 }
