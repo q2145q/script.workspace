@@ -1082,4 +1082,80 @@ export const aiRouter = createTRPCRouter({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
       }
     }),
+
+  // ============================================================
+  // AI Act Assignment — assign scenes to 3-act structure
+  // ============================================================
+  assignActs: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        documentId: z.string(),
+        scenes: z.array(z.object({
+          sceneIndex: z.number().int().min(0),
+          heading: z.string(),
+          synopsis: z.string().default(""),
+        })).min(1).max(500),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const resolved = await resolveApiKey(input.projectId, ctx.user.id);
+      const providerId = resolved.provider as ProviderId;
+
+      // Build scene list for the prompt
+      const sceneList = input.scenes
+        .map((s) => `Scene ${s.sceneIndex}: ${s.heading}${s.synopsis ? ` — ${s.synopsis}` : ""}`)
+        .join("\n");
+
+      const systemPrompt = composePrompt(providerId, "act-assignment", {
+        SCENE_LIST: sceneList,
+      });
+
+      try {
+        const completion = await completeAI(
+          providerId,
+          systemPrompt,
+          `Assign these ${input.scenes.length} scenes to acts 1, 2, or 3.`,
+          { apiKey: resolved.apiKey, model: resolved.model },
+        );
+
+        const parsed = z.array(z.object({
+          sceneIndex: z.number(),
+          act: z.number().int().min(1).max(3),
+        })).parse(JSON.parse(stripCodeFences(completion.text)));
+
+        // Update all scenes in a transaction
+        await prisma.$transaction(
+          parsed.map((item) =>
+            prisma.sceneMetadata.update({
+              where: {
+                documentId_sceneIndex: {
+                  documentId: input.documentId,
+                  sceneIndex: item.sceneIndex,
+                },
+              },
+              data: { act: item.act },
+            })
+          )
+        );
+
+        await logApiUsage({
+          userId: ctx.user.id,
+          provider: providerId,
+          model: resolved.model,
+          feature: "act-assignment",
+          tokensIn: completion.usage.tokensIn,
+          tokensOut: completion.usage.tokensOut,
+          durationMs: completion.usage.durationMs,
+          keySource: resolved.source,
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
+
+        return { assignments: parsed };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        console.error("[ai] Act assignment failed:", error);
+        const message = error instanceof Error ? error.message : "Unknown AI error";
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
+      }
+    }),
 });

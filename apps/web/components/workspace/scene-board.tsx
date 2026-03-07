@@ -259,35 +259,43 @@ export function SceneBoard({ editor, documentId, projectId }: SceneBoardProps) {
     [editor, editorScenes]
   );
 
+  const assignActsMutation = useMutation(
+    trpc.ai.assignActs.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.sceneMetadata.list.queryKey({ documentId }),
+        });
+        toast.success(t("autoAssignDone"));
+      },
+      onError: (err) => toast.error(err.message),
+    })
+  );
+
   const handleAutoAssignActs = useCallback(async () => {
     if (!editorScenes || editorScenes.length === 0) return;
     setIsAutoAssigning(true);
 
     try {
-      const totalScenes = editorScenes.length;
-      // Simple heuristic: first ~25% → Act 1, next ~50% → Act 2, last ~25% → Act 3
-      const act1End = Math.max(1, Math.round(totalScenes * 0.25));
-      const act2End = Math.max(act1End + 1, Math.round(totalScenes * 0.75));
+      const scenes = editorScenes.map((es) => {
+        const meta = sceneMetadata?.find((m) => m.sceneIndex === es.index);
+        return {
+          sceneIndex: es.index,
+          heading: es.heading,
+          synopsis: meta?.synopsis || "",
+        };
+      });
 
-      for (let i = 0; i < totalScenes; i++) {
-        const act = i < act1End ? 1 : i < act2End ? 2 : 3;
-        const existing = boardItems.find((b) => b.sceneIndex === i);
-        if (existing && existing.act !== act) {
-          updateMutation.mutate({
-            documentId,
-            sceneIndex: i,
-            act,
-          });
-        }
-      }
-
-      toast.success(t("autoAssignDone"));
+      await assignActsMutation.mutateAsync({
+        projectId,
+        documentId,
+        scenes,
+      });
     } catch {
-      toast.error(t("autoAssignError"));
+      // Error already handled by onError
     } finally {
       setIsAutoAssigning(false);
     }
-  }, [editorScenes, boardItems, documentId, updateMutation, t]);
+  }, [editorScenes, sceneMetadata, documentId, projectId, assignActsMutation, t]);
 
   const activeScene = activeId ? boardItems.find((s) => s.id === activeId) : null;
 
