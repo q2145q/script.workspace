@@ -2,6 +2,8 @@ import "dotenv/config";
 import { Server } from "@hocuspocus/server";
 import { Database } from "@hocuspocus/extension-database";
 import { Logger } from "@hocuspocus/extension-logger";
+import { Redis as HocuspocusRedis } from "@hocuspocus/extension-redis";
+import Redis from "ioredis";
 import { authenticateConnection } from "./auth.js";
 import { loadDocument, storeDocument } from "./persistence.js";
 import { checkPermissions } from "./permissions.js";
@@ -9,16 +11,39 @@ import { logActivity, logJoinLeave } from "./activity.js";
 
 const port = parseInt(process.env.COLLAB_PORT || "3004");
 
-// --- Rate limiting: max changes per connection per minute ---
+// --- Redis-backed rate limiting ---
 const RATE_LIMIT_PER_MINUTE = 120;
-const rateCounts = new Map<string, { count: number; resetAt: number }>();
+let redis: Redis | null = null;
+const fallbackStore = new Map<string, { count: number; resetAt: number }>();
 
-function checkRateLimit(userId: string, documentName: string): boolean {
-  const key = `${userId}:${documentName}`;
+try {
+  redis = new Redis(process.env.REDIS_URL || "redis://127.0.0.1:6379", {
+    maxRetriesPerRequest: 1,
+    lazyConnect: false,
+  });
+  redis.on("error", () => { /* handled silently, fallback used */ });
+  console.log("[collab] Redis rate limiter connected");
+} catch {
+  console.warn("[collab] Redis unavailable, using in-memory rate limiter");
+}
+
+async function checkRateLimit(userId: string, documentName: string): Promise<boolean> {
+  const key = `ws:${userId}:${documentName}`;
+
+  if (redis) {
+    try {
+      const count = await redis.incr(key);
+      if (count === 1) await redis.expire(key, 60);
+      return count <= RATE_LIMIT_PER_MINUTE;
+    } catch {
+      // Fallback to in-memory
+    }
+  }
+
   const now = Date.now();
-  const entry = rateCounts.get(key);
+  const entry = fallbackStore.get(key);
   if (!entry || entry.resetAt < now) {
-    rateCounts.set(key, { count: 1, resetAt: now + 60_000 });
+    fallbackStore.set(key, { count: 1, resetAt: now + 60_000 });
     return true;
   }
   entry.count++;
@@ -70,7 +95,7 @@ const server = Server.configure({
     const context = data.context as { user: { id: string; name: string; email: string } };
 
     // Rate limiting: reject excessive changes
-    if (context?.user && !checkRateLimit(context.user.id, data.documentName)) {
+    if (context?.user && !(await checkRateLimit(context.user.id, data.documentName))) {
       console.warn(`[collab] Rate limit exceeded for ${context.user.email} on ${data.documentName}`);
       return;
     }
@@ -90,6 +115,10 @@ const server = Server.configure({
 
   extensions: [
     new Logger(),
+    new HocuspocusRedis({
+      host: process.env.REDIS_HOST || "127.0.0.1",
+      port: parseInt(process.env.REDIS_PORT || "6379"),
+    }),
     new Database({
       fetch: async ({ documentName }) => {
         return loadDocument({ documentName });

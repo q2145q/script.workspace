@@ -10,25 +10,27 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@hocuspocus/server": "^2.15.0",
+    "@better-auth/prisma-adapter": "^1.2.0",
     "@hocuspocus/extension-database": "^2.15.0",
     "@hocuspocus/extension-logger": "^2.15.0",
+    "@hocuspocus/extension-redis": "^2",
+    "@hocuspocus/server": "^2.15.0",
     "@script/db": "workspace:*",
     "@script/editor": "workspace:*",
     "@tiptap/core": "^2.11.0",
-    "@tiptap/starter-kit": "^2.11.0",
     "@tiptap/pm": "^2.11.0",
+    "@tiptap/starter-kit": "^2.11.0",
     "better-auth": "^1.4.0",
-    "@better-auth/prisma-adapter": "^1.2.0",
-    "yjs": "^13.6.0",
-    "y-prosemirror": "^1.3.0",
     "cookie": "^1.0.0",
-    "dotenv": "^16.4.0"
+    "dotenv": "^16.4.0",
+    "ioredis": "^5.10.0",
+    "y-prosemirror": "^1.3.0",
+    "yjs": "^13.6.0"
   },
   "devDependencies": {
-    "tsx": "^4.7.0",
-    "typescript": "^5.7.0",
+    "@types/cookie": "^0.6.0",
     "@types/node": "^22.0.0",
-    "@types/cookie": "^0.6.0"
+    "tsx": "^4.7.0",
+    "typescript": "^5.7.0"
   }
 }

@@ -20,14 +20,36 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 
 export const createTRPCRouter = t.router;
 export const createCallerFactory = t.createCallerFactory;
-export const publicProcedure = t.procedure;
 
-export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
+const SLOW_REQUEST_MS = 2000;
+
+/** Timing middleware: logs slow requests and errors */
+const timingMiddleware = t.middleware(async ({ path, type, next }) => {
+  const start = performance.now();
+  const result = await next();
+  const durationMs = Math.round(performance.now() - start);
+
+  if (!result.ok) {
+    console.error(
+      JSON.stringify({ level: "error", type, path, durationMs, error: (result.error as { code?: string })?.code }),
+    );
+  } else if (durationMs > SLOW_REQUEST_MS) {
+    console.warn(
+      JSON.stringify({ level: "warn", msg: "slow_request", type, path, durationMs }),
+    );
+  }
+
+  return result;
+});
+
+export const publicProcedure = t.procedure.use(timingMiddleware);
+
+export const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
   if (!ctx.session || !ctx.user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
   // General rate limit: 100 req/min per user
-  checkRateLimit(`user:${ctx.user.id}`, 100, 60_000);
+  await checkRateLimit(`user:${ctx.user.id}`, 100, 60_000);
   return next({
     ctx: {
       session: ctx.session,
@@ -37,7 +59,7 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 });
 
 /** Rate-limited procedure for AI endpoints: 10 req/min per user */
-export const aiProcedure = protectedProcedure.use(({ ctx, next }) => {
-  checkRateLimit(`ai:${ctx.user.id}`, 10, 60_000);
+export const aiProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  await checkRateLimit(`ai:${ctx.user.id}`, 10, 60_000);
   return next({ ctx });
 });
