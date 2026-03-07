@@ -215,6 +215,7 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
             onClick={() => setShortcutsOpen(true)}
             className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             title="Cmd+/"
+            aria-label={t("shortcuts")}
           >
             <HelpCircle className="h-3.5 w-3.5" />
           </button>
@@ -222,6 +223,7 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
             onClick={() => setPrintPreviewOpen(true)}
             className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             title={t("printPreview")}
+            aria-label={t("printPreview")}
           >
             <Printer className="h-3.5 w-3.5" />
           </button>

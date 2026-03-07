@@ -8,40 +8,7 @@ import {
   listEpisodesSchema,
   reorderEpisodesSchema,
 } from "@script/types";
-
-function assertProjectAccess(projectId: string, userId: string) {
-  return prisma.project.findFirst({
-    where: {
-      id: projectId,
-      OR: [
-        { ownerId: userId },
-        { members: { some: { userId } } },
-      ],
-    },
-  }).then((p) => {
-    if (!p) throw new TRPCError({ code: "NOT_FOUND" });
-    return p;
-  });
-}
-
-function assertProjectEditAccess(projectId: string, userId: string) {
-  return prisma.project.findFirst({
-    where: {
-      id: projectId,
-      OR: [
-        { ownerId: userId },
-        {
-          members: {
-            some: { userId, role: { in: ["OWNER", "EDITOR"] } },
-          },
-        },
-      ],
-    },
-  }).then((p) => {
-    if (!p) throw new TRPCError({ code: "FORBIDDEN" });
-    return p;
-  });
-}
+import { assertProjectAccess, assertEditorAccess } from "../access";
 
 export const episodeRouter = createTRPCRouter({
   list: protectedProcedure
@@ -60,7 +27,7 @@ export const episodeRouter = createTRPCRouter({
   create: protectedProcedure
     .input(createEpisodeSchema)
     .mutation(async ({ ctx, input }) => {
-      await assertProjectEditAccess(input.projectId, ctx.user.id);
+      await assertEditorAccess(input.projectId, ctx.user.id);
 
       // Auto-number if not provided
       let number = input.number;
@@ -109,7 +76,7 @@ export const episodeRouter = createTRPCRouter({
       });
       if (!episode) throw new TRPCError({ code: "NOT_FOUND" });
 
-      await assertProjectEditAccess(episode.projectId, ctx.user.id);
+      await assertEditorAccess(episode.projectId, ctx.user.id);
 
       const { id, ...data } = input;
       return prisma.episode.update({ where: { id }, data });
@@ -124,7 +91,7 @@ export const episodeRouter = createTRPCRouter({
       });
       if (!episode) throw new TRPCError({ code: "NOT_FOUND" });
 
-      await assertProjectEditAccess(episode.projectId, ctx.user.id);
+      await assertEditorAccess(episode.projectId, ctx.user.id);
 
       // Soft delete episode and its document
       const now = new Date();
@@ -139,7 +106,7 @@ export const episodeRouter = createTRPCRouter({
   reorder: protectedProcedure
     .input(reorderEpisodesSchema)
     .mutation(async ({ ctx, input }) => {
-      await assertProjectEditAccess(input.projectId, ctx.user.id);
+      await assertEditorAccess(input.projectId, ctx.user.id);
 
       const updates = input.episodeIds.map((id, index) =>
         prisma.episode.update({

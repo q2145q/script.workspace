@@ -12,20 +12,23 @@ export class AnthropicProvider implements AIProvider {
     const client = new Anthropic({ apiKey: config.apiKey });
     const systemPrompt = composePrompt(this.id, "rewrite", { USER_LANGUAGE: input.language || "en" });
 
-    const response = await client.messages.create({
-      model: config.model || "claude-sonnet-4-6",
-      max_tokens: 16384,
-      system: [
-        {
-          type: "text" as const,
-          text: systemPrompt,
-          cache_control: { type: "ephemeral" },
-        } as Anthropic.TextBlockParam,
-      ],
-      messages: [
-        { role: "user", content: buildRewritePrompt(input) },
-      ],
-    });
+    const response = await client.messages.create(
+      {
+        model: config.model || "claude-sonnet-4-6",
+        max_tokens: 16384,
+        system: [
+          {
+            type: "text" as const,
+            text: systemPrompt,
+            cache_control: { type: "ephemeral" },
+          } as Anthropic.TextBlockParam,
+        ],
+        messages: [
+          { role: "user", content: buildRewritePrompt(input) },
+        ],
+      },
+      { signal: AbortSignal.timeout(120_000) },
+    );
 
     const textBlock = response.content.find((b) => b.type === "text");
     if (!textBlock || textBlock.type !== "text") throw new Error("Empty response from Anthropic");
@@ -39,20 +42,23 @@ export class AnthropicProvider implements AIProvider {
     const client = new Anthropic({ apiKey: config.apiKey });
     const systemPrompt = composePrompt(this.id, "format", { USER_LANGUAGE: input.language || "en" });
 
-    const response = await client.messages.create({
-      model: config.model || "claude-sonnet-4-6",
-      max_tokens: 16384,
-      system: [
-        {
-          type: "text" as const,
-          text: systemPrompt,
-          cache_control: { type: "ephemeral" },
-        } as Anthropic.TextBlockParam,
-      ],
-      messages: [
-        { role: "user", content: buildFormatPrompt(input) },
-      ],
-    });
+    const response = await client.messages.create(
+      {
+        model: config.model || "claude-sonnet-4-6",
+        max_tokens: 16384,
+        system: [
+          {
+            type: "text" as const,
+            text: systemPrompt,
+            cache_control: { type: "ephemeral" },
+          } as Anthropic.TextBlockParam,
+        ],
+        messages: [
+          { role: "user", content: buildFormatPrompt(input) },
+        ],
+      },
+      { signal: AbortSignal.timeout(120_000) },
+    );
 
     const textBlock = response.content.find((b) => b.type === "text");
     if (!textBlock || textBlock.type !== "text") throw new Error("Empty response from Anthropic");

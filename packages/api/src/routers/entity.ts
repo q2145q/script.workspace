@@ -15,40 +15,7 @@ import {
   deleteTermSchema,
   listTermsSchema,
 } from "@script/types";
-
-function assertProjectAccess(projectId: string, userId: string) {
-  return prisma.project.findFirst({
-    where: {
-      id: projectId,
-      OR: [
-        { ownerId: userId },
-        { members: { some: { userId } } },
-      ],
-    },
-  }).then((p) => {
-    if (!p) throw new TRPCError({ code: "NOT_FOUND" });
-    return p;
-  });
-}
-
-function assertProjectEditAccess(projectId: string, userId: string) {
-  return prisma.project.findFirst({
-    where: {
-      id: projectId,
-      OR: [
-        { ownerId: userId },
-        {
-          members: {
-            some: { userId, role: { in: ["OWNER", "EDITOR"] } },
-          },
-        },
-      ],
-    },
-  }).then((p) => {
-    if (!p) throw new TRPCError({ code: "FORBIDDEN" });
-    return p;
-  });
-}
+import { assertProjectAccess, assertEditorAccess } from "../access";
 
 export const entityRouter = createTRPCRouter({
   // ============================================================
@@ -67,7 +34,7 @@ export const entityRouter = createTRPCRouter({
   createCharacter: protectedProcedure
     .input(createCharacterSchema)
     .mutation(async ({ ctx, input }) => {
-      await assertProjectEditAccess(input.projectId, ctx.user.id);
+      await assertEditorAccess(input.projectId, ctx.user.id);
       return prisma.character.create({ data: input });
     }),
 
@@ -79,7 +46,7 @@ export const entityRouter = createTRPCRouter({
         select: { projectId: true },
       });
       if (!char) throw new TRPCError({ code: "NOT_FOUND" });
-      await assertProjectEditAccess(char.projectId, ctx.user.id);
+      await assertEditorAccess(char.projectId, ctx.user.id);
 
       const { id, ...data } = input;
       return prisma.character.update({ where: { id }, data });
@@ -93,7 +60,7 @@ export const entityRouter = createTRPCRouter({
         select: { projectId: true },
       });
       if (!char) throw new TRPCError({ code: "NOT_FOUND" });
-      await assertProjectEditAccess(char.projectId, ctx.user.id);
+      await assertEditorAccess(char.projectId, ctx.user.id);
 
       return prisma.character.delete({ where: { id: input.id } });
     }),
@@ -114,7 +81,7 @@ export const entityRouter = createTRPCRouter({
   createLocation: protectedProcedure
     .input(createLocationSchema)
     .mutation(async ({ ctx, input }) => {
-      await assertProjectEditAccess(input.projectId, ctx.user.id);
+      await assertEditorAccess(input.projectId, ctx.user.id);
       return prisma.location.create({ data: input });
     }),
 
@@ -126,7 +93,7 @@ export const entityRouter = createTRPCRouter({
         select: { projectId: true },
       });
       if (!loc) throw new TRPCError({ code: "NOT_FOUND" });
-      await assertProjectEditAccess(loc.projectId, ctx.user.id);
+      await assertEditorAccess(loc.projectId, ctx.user.id);
 
       const { id, ...data } = input;
       return prisma.location.update({ where: { id }, data });
@@ -140,7 +107,7 @@ export const entityRouter = createTRPCRouter({
         select: { projectId: true },
       });
       if (!loc) throw new TRPCError({ code: "NOT_FOUND" });
-      await assertProjectEditAccess(loc.projectId, ctx.user.id);
+      await assertEditorAccess(loc.projectId, ctx.user.id);
 
       return prisma.location.delete({ where: { id: input.id } });
     }),
@@ -161,7 +128,7 @@ export const entityRouter = createTRPCRouter({
   createTerm: protectedProcedure
     .input(createTermSchema)
     .mutation(async ({ ctx, input }) => {
-      await assertProjectEditAccess(input.projectId, ctx.user.id);
+      await assertEditorAccess(input.projectId, ctx.user.id);
       return prisma.term.create({ data: input });
     }),
 
@@ -173,7 +140,7 @@ export const entityRouter = createTRPCRouter({
         select: { projectId: true },
       });
       if (!t) throw new TRPCError({ code: "NOT_FOUND" });
-      await assertProjectEditAccess(t.projectId, ctx.user.id);
+      await assertEditorAccess(t.projectId, ctx.user.id);
 
       const { id, ...data } = input;
       return prisma.term.update({ where: { id }, data });
@@ -187,7 +154,7 @@ export const entityRouter = createTRPCRouter({
         select: { projectId: true },
       });
       if (!t) throw new TRPCError({ code: "NOT_FOUND" });
-      await assertProjectEditAccess(t.projectId, ctx.user.id);
+      await assertEditorAccess(t.projectId, ctx.user.id);
 
       return prisma.term.delete({ where: { id: input.id } });
     }),

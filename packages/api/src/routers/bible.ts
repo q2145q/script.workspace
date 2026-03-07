@@ -3,49 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { prisma, type Prisma } from "@script/db";
 import { getBibleSchema, saveBibleSchema } from "@script/types";
-
-/** Verify the user can access this project */
-async function assertProjectAccess(projectId: string, userId: string) {
-  const project = await prisma.project.findFirst({
-    where: {
-      id: projectId,
-      OR: [
-        { ownerId: userId },
-        { members: { some: { userId } } },
-      ],
-    },
-    select: { id: true },
-  });
-  if (!project) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Project not found or no access" });
-  }
-  return project;
-}
-
-/** Verify editor-level access */
-async function assertEditorAccess(projectId: string, userId: string) {
-  const project = await prisma.project.findFirst({
-    where: {
-      id: projectId,
-      OR: [
-        { ownerId: userId },
-        {
-          members: {
-            some: {
-              userId,
-              role: { in: ["OWNER", "EDITOR"] },
-            },
-          },
-        },
-      ],
-    },
-    select: { id: true },
-  });
-  if (!project) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Project not found or no editor access" });
-  }
-  return project;
-}
+import { assertProjectAccess, assertEditorAccess } from "../access";
 
 /** Ensure bible record exists, return its id */
 async function ensureBible(projectId: string): Promise<string> {

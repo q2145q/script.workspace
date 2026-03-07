@@ -242,6 +242,7 @@ export function WorkspaceSidebar({
               disabled={createMutation.isPending}
               className="flex items-center justify-center rounded p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               title={tDoc("newDocument")}
+              aria-label={tDoc("newDocument")}
             >
               <Plus className="h-3.5 w-3.5" />
             </button>
@@ -321,6 +322,7 @@ function DocumentItem({
   onDuplicate: () => void;
   onDelete: () => void;
 }) {
+  const tDoc = useTranslations("Document");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -347,12 +349,14 @@ function DocumentItem({
         <button
           onClick={onRenameConfirm}
           className="shrink-0 text-muted-foreground hover:text-foreground"
+          aria-label={tDoc("confirmRename")}
         >
           <Check className="h-3 w-3" />
         </button>
         <button
           onClick={onRenameCancel}
           className="shrink-0 text-muted-foreground hover:text-foreground"
+          aria-label={tDoc("cancelRename")}
         >
           <X className="h-3 w-3" />
         </button>

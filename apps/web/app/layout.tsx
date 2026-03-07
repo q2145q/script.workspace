@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages } from "next-intl/server";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 import { TRPCReactProvider } from "@/lib/trpc/client";
@@ -55,6 +55,7 @@ export default async function RootLayout({
 }) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const tCommon = await getTranslations("Common");
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -63,7 +64,7 @@ export default async function RootLayout({
           href="#main-content"
           className="fixed left-2 top-2 z-[100] -translate-y-16 rounded-md bg-ai-accent px-4 py-2 text-sm font-medium text-white transition-transform focus:translate-y-0"
         >
-          Перейти к содержимому
+          {tCommon("skipToContent")}
         </a>
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>

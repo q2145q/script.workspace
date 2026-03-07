@@ -24,7 +24,8 @@
     "timeJustNow": "только что",
     "timeMinutesAgo": "{minutes} мин. назад",
     "timeHoursAgo": "{hours} ч. назад",
-    "timeDaysAgo": "{days} дн. назад"
+    "timeDaysAgo": "{days} дн. назад",
+    "skipToContent": "Перейти к содержимому"
   },
   "Auth": {
     "signIn": "Войти",
@@ -50,7 +51,9 @@
     "noAccount": "Нет аккаунта?",
     "hasAccount": "Уже есть аккаунт?",
     "failedSignIn": "Не удалось войти",
-    "failedSignUp": "Не удалось зарегистрироваться"
+    "failedSignUp": "Не удалось зарегистрироваться",
+    "betaQueueTitle": "Вы в очереди на подключение к бета-версии",
+    "betaQueueDescription": "Мы уведомим вас по электронной почте, когда ваш аккаунт будет одобрен. Спасибо за интерес к Script Workspace!"
   },
   "Dashboard": {
     "title": "Script Workspace",
@@ -146,7 +149,9 @@
     "deleted": "Документ удалён",
     "duplicated": "Документ дублирован",
     "restored": "Документ восстановлен",
-    "confirmDelete": "Удалить этот документ?"
+    "confirmDelete": "Удалить этот документ?",
+    "confirmRename": "Подтвердить переименование",
+    "cancelRename": "Отменить переименование"
   },
   "Sidebar": {
     "script": "Сценарий",
@@ -204,7 +209,8 @@
     "commentPlaceholder": "Добавить комментарий...",
     "commentAdded": "Комментарий добавлен",
     "dialoguePassBtn": "Диалог",
-    "dialoguePassTitle": "Улучшить диалог: субтекст, голос персонажа, ритм"
+    "dialoguePassTitle": "Улучшить диалог: субтекст, голос персонажа, ритм",
+    "shortcuts": "Горячие клавиши"
   },
   "RightPanel": {
     "comments": "Комментарии",
@@ -569,7 +575,10 @@
     "caseSensitive": "С учётом регистра",
     "regex": "Регулярное выражение",
     "matchCount": "{current} из {total}",
-    "noResults": "Не найдено"
+    "noResults": "Не найдено",
+    "previousMatch": "Предыдущее совпадение",
+    "nextMatch": "Следующее совпадение",
+    "close": "Закрыть поиск"
   },
   "Shortcuts": {
     "title": "Горячие клавиши",
@@ -640,7 +649,10 @@
     "workspaceError": "Произошла ошибка в рабочем пространстве. Ваша работа автоматически сохранена.",
     "projectError": "Ошибка проекта",
     "projectLoadFailed": "Не удалось загрузить проект. Возможно, он удалён или у вас нет доступа.",
-    "backToDashboard": "Вернуться к проектам"
+    "backToDashboard": "Вернуться к проектам",
+    "notFound": "Страница не найдена",
+    "notFoundDescription": "Запрашиваемая страница не существует или была удалена.",
+    "goHome": "На главную"
   },
   "Theme": {
     "toggle": "Переключить тему"

@@ -65,18 +65,21 @@ async function completeAnthropic(
   const startTime = Date.now();
   const client = new Anthropic({ apiKey: config.apiKey });
 
-  const response = await client.messages.create({
-    model: config.model || "claude-sonnet-4-6",
-    max_tokens: 16384,
-    system: [
-      {
-        type: "text" as const,
-        text: systemPrompt,
-        cache_control: { type: "ephemeral" },
-      } as Anthropic.TextBlockParam,
-    ],
-    messages: [{ role: "user", content: userPrompt }],
-  });
+  const response = await client.messages.create(
+    {
+      model: config.model || "claude-sonnet-4-6",
+      max_tokens: 16384,
+      system: [
+        {
+          type: "text" as const,
+          text: systemPrompt,
+          cache_control: { type: "ephemeral" },
+        } as Anthropic.TextBlockParam,
+      ],
+      messages: [{ role: "user", content: userPrompt }],
+    },
+    { signal: AbortSignal.timeout(120_000) },
+  );
 
   const textBlock = response.content.find((b) => b.type === "text");
   const text = textBlock && textBlock.type === "text" ? textBlock.text : "";

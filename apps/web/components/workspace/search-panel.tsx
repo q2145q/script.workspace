@@ -96,6 +96,7 @@ export function SearchPanel({ editor, onClose }: SearchPanelProps) {
             caseSensitive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
           }`}
           title={t("caseSensitive")}
+          aria-label={t("caseSensitive")}
         >
           <CaseSensitive className="h-3.5 w-3.5" />
         </button>
@@ -105,6 +106,7 @@ export function SearchPanel({ editor, onClose }: SearchPanelProps) {
             useRegex ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
           }`}
           title={t("regex")}
+          aria-label={t("regex")}
         >
           <Regex className="h-3.5 w-3.5" />
         </button>
@@ -119,6 +121,7 @@ export function SearchPanel({ editor, onClose }: SearchPanelProps) {
           onClick={() => editor.commands.prevSearchMatch()}
           disabled={searchState.matchCount === 0}
           className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
+          aria-label={t("previousMatch")}
         >
           <ChevronUp className="h-3.5 w-3.5" />
         </button>
@@ -126,6 +129,7 @@ export function SearchPanel({ editor, onClose }: SearchPanelProps) {
           onClick={() => editor.commands.nextSearchMatch()}
           disabled={searchState.matchCount === 0}
           className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
+          aria-label={t("nextMatch")}
         >
           <ChevronDown className="h-3.5 w-3.5" />
         </button>
@@ -148,6 +152,7 @@ export function SearchPanel({ editor, onClose }: SearchPanelProps) {
           disabled={searchState.matchCount === 0}
           className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
           title={t("replace")}
+          aria-label={t("replace")}
         >
           <Replace className="h-3.5 w-3.5" />
         </button>
@@ -156,6 +161,7 @@ export function SearchPanel({ editor, onClose }: SearchPanelProps) {
           disabled={searchState.matchCount === 0}
           className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-30"
           title={t("replaceAll")}
+          aria-label={t("replaceAll")}
         >
           <ReplaceAll className="h-3.5 w-3.5" />
         </button>
@@ -165,6 +171,7 @@ export function SearchPanel({ editor, onClose }: SearchPanelProps) {
       <button
         onClick={handleClose}
         className="rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        aria-label={t("close")}
       >
         <X className="h-3.5 w-3.5" />
       </button>

@@ -665,6 +665,7 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
             onClick={() => setShowSuggestions(!showSuggestions)}
             className="rounded p-1 text-[10px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             title={t("toggleSuggestions")}
+            aria-label={t("toggleSuggestions")}
           >
             <Sparkles className="h-3 w-3" />
           </button>
@@ -673,6 +674,7 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
               onClick={clearHistory}
               className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
               title={t("clearHistory")}
+              aria-label={t("clearHistory")}
             >
               <Trash2 className="h-3 w-3" />
             </button>
@@ -777,6 +779,7 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
                 }}
                 className="absolute bottom-2 right-2 rounded p-0.5 text-muted-foreground/40 transition-colors hover:text-ai-accent"
                 title={t("mentionScene")}
+                aria-label={t("mentionScene")}
               >
                 <AtSign className="h-3.5 w-3.5" />
               </button>
@@ -787,6 +790,7 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
               onClick={stopStreaming}
               className="shrink-0 rounded-md bg-destructive/10 p-2 text-destructive transition-colors hover:bg-destructive/20"
               title={t("stopGenerating")}
+              aria-label={t("stopGenerating")}
             >
               <Square className="h-4 w-4" />
             </button>
@@ -796,6 +800,7 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
               disabled={!input.trim()}
               className="shrink-0 rounded-md bg-ai-accent/10 p-2 text-ai-accent transition-colors hover:bg-ai-accent/20 disabled:opacity-30"
               title={t("sendMessage")}
+              aria-label={t("sendMessage")}
             >
               <Send className="h-4 w-4" />
             </button>

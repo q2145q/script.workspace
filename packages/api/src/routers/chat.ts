@@ -1,25 +1,8 @@
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { prisma } from "@script/db";
 import { listChatMessagesSchema, clearChatSchema } from "@script/types";
-
-/** Verify user has access to the project */
-async function assertProjectAccess(projectId: string, userId: string) {
-  const project = await prisma.project.findFirst({
-    where: {
-      id: projectId,
-      OR: [
-        { ownerId: userId },
-        { members: { some: { userId } } },
-      ],
-    },
-  });
-  if (!project) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Project not found or no access" });
-  }
-  return project;
-}
+import { assertProjectAccess } from "../access";
 
 export const chatRouter = createTRPCRouter({
   /** List chat messages for a project (newest last) */

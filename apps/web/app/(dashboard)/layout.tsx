@@ -3,6 +3,7 @@ import { auth } from "@script/api/auth";
 import { prisma } from "@script/db";
 import { headers } from "next/headers";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/dashboard/notification-bell";
@@ -19,6 +20,8 @@ export default async function DashboardLayout({
   if (!session) {
     redirect("/sign-in");
   }
+
+  const t = await getTranslations("Auth");
 
   // Beta gate
   const user = await prisma.user.findUnique({
@@ -45,10 +48,10 @@ export default async function DashboardLayout({
               <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
             <h1 className="text-2xl font-semibold text-foreground mb-3">
-              Вы в очереди на подключение к бета-версии
+              {t("betaQueueTitle")}
             </h1>
             <p className="text-muted-foreground">
-              Мы уведомим вас по электронной почте, когда ваш аккаунт будет одобрен. Спасибо за интерес к Script Workspace!
+              {t("betaQueueDescription")}
             </p>
           </div>
         </main>

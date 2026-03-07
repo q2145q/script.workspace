@@ -61,6 +61,7 @@ export function RightPanel({ editor, documentId, projectId, onToggle }: RightPan
             onClick={onToggle}
             className="flex items-center px-1.5 py-2.5 text-muted-foreground transition-colors hover:text-foreground"
             title={tEditor("hidePanel")}
+            aria-label={tEditor("hidePanel")}
           >
             <PanelRightClose className="h-3.5 w-3.5" />
           </button>

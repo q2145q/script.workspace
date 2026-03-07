@@ -2,21 +2,11 @@ import { TRPCError } from "@trpc/server";
 import { prisma } from "@script/db";
 
 /** Where clause for "user can view project" (owner or any member) */
-export function projectAccessWhere(userId: string) {
+function projectAccessWhere(userId: string) {
   return {
     OR: [
       { ownerId: userId },
       { members: { some: { userId } } },
-    ],
-  };
-}
-
-/** Where clause for "user can edit project" (owner or EDITOR role) */
-export function editorAccessWhere(userId: string) {
-  return {
-    OR: [
-      { ownerId: userId },
-      { members: { some: { userId, role: { in: ["OWNER", "EDITOR"] } } } },
     ],
   };
 }
@@ -42,7 +32,14 @@ export async function assertProjectAccess(projectId: string, userId: string) {
  */
 export async function assertEditorAccess(projectId: string, userId: string) {
   const project = await prisma.project.findFirst({
-    where: { id: projectId, deletedAt: null, ...editorAccessWhere(userId) },
+    where: {
+      id: projectId,
+      deletedAt: null,
+      OR: [
+        { ownerId: userId },
+        { members: { some: { userId, role: { in: ["OWNER", "EDITOR"] } } } },
+      ],
+    },
     select: { id: true, ownerId: true },
   });
   if (!project) {
