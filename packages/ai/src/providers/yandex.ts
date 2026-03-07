@@ -39,7 +39,6 @@ export class YandexProvider implements AIProvider {
           completionOptions: {
             stream: false,
             temperature,
-            maxTokens: 4096,
           },
           messages: [
             { role: "system", text: systemPrompt },

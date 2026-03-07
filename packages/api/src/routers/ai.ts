@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { prisma } from "@script/db";
-import { getProvider, composePrompt, completeAI, extractTextFromTipTapJson, stripCodeFences, withProviderFallback } from "@script/ai";
+import { getProvider, composePrompt, completeAI, extractTextFromTipTapJson, stripCodeFences, withProviderFallback, needsMapReduce, mapReduce } from "@script/ai";
 import type { ProviderId, FallbackKeyResolver } from "@script/ai";
 import {
   rewriteSchema,
@@ -119,6 +119,84 @@ async function callAIWithSchema<T>(
   );
 }
 
+/**
+ * Call AI with map-reduce support. If text fits in context, calls directly.
+ * Otherwise, chunks the text and processes via map-reduce pipeline,
+ * then parses the final result with the provided schema.
+ */
+async function callAIWithMapReduce<T>(
+  providerId: ProviderId,
+  taskName: string,
+  fullText: string,
+  config: { apiKey: string; model: string },
+  schema: z.ZodType<T>,
+  variables: Record<string, string> = {},
+): Promise<{ result: T; tokensIn: number; tokensOut: number; durationMs: number }> {
+  // Check if text fits in provider's context window
+  if (!needsMapReduce(fullText, providerId, config.model)) {
+    // Direct call — use existing callAIWithSchema
+    return callAIWithSchema(providerId, taskName, fullText, config, schema, variables);
+  }
+
+  // Map-reduce path
+  console.log(`[ai] Using map-reduce for ${taskName} (text too large for ${providerId}/${config.model})`);
+  const mrResult = await mapReduce({
+    providerId,
+    config: { apiKey: config.apiKey, model: config.model },
+    taskName,
+    fullText,
+    variables,
+    concurrency: 3,
+  });
+
+  const parsed = schema.parse(JSON.parse(stripCodeFences(mrResult.text)));
+  return {
+    result: parsed,
+    tokensIn: mrResult.usage.tokensIn,
+    tokensOut: mrResult.usage.tokensOut,
+    durationMs: mrResult.usage.durationMs,
+  };
+}
+
+/**
+ * Non-schema variant: map-reduce that returns raw text (for synopsis, logline).
+ */
+async function completeAIWithMapReduce(
+  providerId: ProviderId,
+  taskName: string,
+  fullText: string,
+  config: { apiKey: string; model: string },
+  variables: Record<string, string> = {},
+): Promise<{ text: string; tokensIn: number; tokensOut: number; durationMs: number }> {
+  if (!needsMapReduce(fullText, providerId, config.model)) {
+    const systemPrompt = composePrompt(providerId, taskName, variables);
+    const result = await completeAI(providerId, systemPrompt, fullText, config);
+    return {
+      text: result.text,
+      tokensIn: result.usage.tokensIn,
+      tokensOut: result.usage.tokensOut,
+      durationMs: result.usage.durationMs,
+    };
+  }
+
+  console.log(`[ai] Using map-reduce for ${taskName} (text too large for ${providerId}/${config.model})`);
+  const mrResult = await mapReduce({
+    providerId,
+    config: { apiKey: config.apiKey, model: config.model },
+    taskName,
+    fullText,
+    variables,
+    concurrency: 3,
+  });
+
+  return {
+    text: mrResult.text,
+    tokensIn: mrResult.usage.tokensIn,
+    tokensOut: mrResult.usage.tokensOut,
+    durationMs: mrResult.usage.durationMs,
+  };
+}
+
 export const aiRouter = createTRPCRouter({
   /** Rewrite selected text using AI */
   rewrite: protectedProcedure
@@ -127,6 +205,7 @@ export const aiRouter = createTRPCRouter({
       const document = await prisma.document.findFirst({
         where: {
           id: input.documentId,
+          deletedAt: null,
           project: {
             OR: [
               { ownerId: ctx.user.id },
@@ -211,7 +290,7 @@ export const aiRouter = createTRPCRouter({
         tokensIn: Math.ceil((input.selectedText.length + input.instruction.length) / 4),
         tokensOut: Math.ceil(JSON.stringify(result).length / 4),
         keySource: resolved.source,
-      }).catch(() => {});
+      }).catch((err) => console.error("[ai] Usage log failed:", err));
 
       const suggestion = await prisma.suggestion.create({
         data: {
@@ -244,6 +323,7 @@ export const aiRouter = createTRPCRouter({
       const document = await prisma.document.findFirst({
         where: {
           id: input.documentId,
+          deletedAt: null,
           project: {
             OR: [
               { ownerId: ctx.user.id },
@@ -300,7 +380,7 @@ export const aiRouter = createTRPCRouter({
           tokensIn: Math.ceil(input.selectedText.length / 4),
           tokensOut: Math.ceil(JSON.stringify(result).length / 4),
           keySource: resolved.source,
-        }).catch(() => {});
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
 
         return {
           blocks: result.blocks,
@@ -343,11 +423,12 @@ export const aiRouter = createTRPCRouter({
           tokensOut,
           durationMs,
           keySource: resolved.source,
-        }).catch(() => {});
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
 
         return result;
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        console.error("[ai] AI call failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
       }
@@ -361,7 +442,7 @@ export const aiRouter = createTRPCRouter({
       const providerId = resolved.provider as ProviderId;
 
       try {
-        const { result, tokensIn, tokensOut, durationMs } = await callAIWithSchema(
+        const { result, tokensIn, tokensOut, durationMs } = await callAIWithMapReduce(
           providerId,
           "character-analysis",
           input.text,
@@ -380,11 +461,12 @@ export const aiRouter = createTRPCRouter({
           tokensOut,
           durationMs,
           keySource: resolved.source,
-        }).catch(() => {});
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
 
         return result;
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        console.error("[ai] AI call failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
       }
@@ -398,7 +480,7 @@ export const aiRouter = createTRPCRouter({
       const providerId = resolved.provider as ProviderId;
 
       try {
-        const { result, tokensIn, tokensOut, durationMs } = await callAIWithSchema(
+        const { result, tokensIn, tokensOut, durationMs } = await callAIWithMapReduce(
           providerId,
           "structure-analysis",
           input.sceneText,
@@ -417,11 +499,12 @@ export const aiRouter = createTRPCRouter({
           tokensOut,
           durationMs,
           keySource: resolved.source,
-        }).catch(() => {});
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
 
         return result;
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        console.error("[ai] AI call failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
       }
@@ -437,7 +520,7 @@ export const aiRouter = createTRPCRouter({
       // Build project context: load documents + bible
       const [documents, bible] = await Promise.all([
         prisma.document.findMany({
-          where: { projectId: input.projectId },
+          where: { projectId: input.projectId, deletedAt: null },
           select: { content: true },
           orderBy: { createdAt: "asc" },
           take: 5,
@@ -452,18 +535,24 @@ export const aiRouter = createTRPCRouter({
       const bibleText = bible ? extractTextFromTipTapJson(bible.content) : "";
       const projectContext = [bibleText, ...docTexts].filter(Boolean).join("\n\n---\n\n");
 
-      const systemPrompt = composePrompt(providerId, "logline", {
-        PROJECT_CONTEXT: projectContext,
-        USER_REQUEST: input.userRequest || "",
-        USER_LANGUAGE: project.language,
-      });
+      if (!projectContext || projectContext.trim().length < 200) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Для генерации логлайна необходим текст сценария (минимум 200 символов). Напишите несколько сцен и попробуйте снова.",
+        });
+      }
 
       try {
-        const completion = await completeAI(
+        const completion = await completeAIWithMapReduce(
           providerId,
-          systemPrompt,
-          input.userRequest || "Generate a logline for this project.",
+          "logline",
+          projectContext,
           { apiKey: resolved.apiKey, model: resolved.model },
+          {
+            PROJECT_CONTEXT: projectContext,
+            USER_REQUEST: input.userRequest || "",
+            USER_LANGUAGE: project.language,
+          },
         );
 
         await logApiUsage({
@@ -472,11 +561,11 @@ export const aiRouter = createTRPCRouter({
           provider: resolved.provider,
           model: resolved.model,
           feature: "logline",
-          tokensIn: completion.usage.tokensIn,
-          tokensOut: completion.usage.tokensOut,
-          durationMs: completion.usage.durationMs,
+          tokensIn: completion.tokensIn,
+          tokensOut: completion.tokensOut,
+          durationMs: completion.durationMs,
           keySource: resolved.source,
-        }).catch(() => {});
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
 
         const loglineText = completion.text.trim();
         await prisma.project.update({
@@ -487,6 +576,7 @@ export const aiRouter = createTRPCRouter({
         return { logline: loglineText };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        console.error("[ai] AI call failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
       }
@@ -502,7 +592,7 @@ export const aiRouter = createTRPCRouter({
       // Load all documents + bible for full context
       const [documents, bible] = await Promise.all([
         prisma.document.findMany({
-          where: { projectId: input.projectId },
+          where: { projectId: input.projectId, deletedAt: null },
           select: { content: true },
           orderBy: { createdAt: "asc" },
         }),
@@ -516,16 +606,20 @@ export const aiRouter = createTRPCRouter({
       const bibleText = bible ? extractTextFromTipTapJson(bible.content) : "";
       const projectContext = [bibleText, ...docTexts].filter(Boolean).join("\n\n---\n\n");
 
-      const systemPrompt = composePrompt(providerId, "synopsis", {
-        USER_LANGUAGE: project.language,
-      });
+      if (!projectContext || projectContext.trim().length < 200) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Для генерации синопсиса необходим текст сценария (минимум 200 символов). Напишите несколько сцен и попробуйте снова.",
+        });
+      }
 
       try {
-        const completion = await completeAI(
+        const completion = await completeAIWithMapReduce(
           providerId,
-          systemPrompt,
-          projectContext || "No screenplay content available.",
+          "synopsis",
+          projectContext,
           { apiKey: resolved.apiKey, model: resolved.model },
+          { USER_LANGUAGE: project.language },
         );
 
         await logApiUsage({
@@ -534,11 +628,11 @@ export const aiRouter = createTRPCRouter({
           provider: resolved.provider,
           model: resolved.model,
           feature: "synopsis",
-          tokensIn: completion.usage.tokensIn,
-          tokensOut: completion.usage.tokensOut,
-          durationMs: completion.usage.durationMs,
+          tokensIn: completion.tokensIn,
+          tokensOut: completion.tokensOut,
+          durationMs: completion.durationMs,
           keySource: resolved.source,
-        }).catch(() => {});
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
 
         const synopsisText = completion.text.trim();
         await prisma.project.update({
@@ -549,6 +643,7 @@ export const aiRouter = createTRPCRouter({
         return { synopsis: synopsisText };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        console.error("[ai] AI call failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
       }
@@ -587,11 +682,12 @@ export const aiRouter = createTRPCRouter({
           tokensOut: completion.usage.tokensOut,
           durationMs: completion.usage.durationMs,
           keySource: resolved.source,
-        }).catch(() => {});
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
 
         return { description: completion.text.trim() };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        console.error("[ai] AI call failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
       }
@@ -630,11 +726,12 @@ export const aiRouter = createTRPCRouter({
           tokensOut: completion.usage.tokensOut,
           durationMs: completion.usage.durationMs,
           keySource: resolved.source,
-        }).catch(() => {});
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
 
         return { description: completion.text.trim() };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        console.error("[ai] AI call failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
       }
@@ -648,7 +745,7 @@ export const aiRouter = createTRPCRouter({
       const providerId = resolved.provider as ProviderId;
 
       try {
-        const { result, tokensIn, tokensOut, durationMs } = await callAIWithSchema(
+        const { result, tokensIn, tokensOut, durationMs } = await callAIWithMapReduce(
           providerId,
           "knowledge-graph",
           input.text,
@@ -667,7 +764,7 @@ export const aiRouter = createTRPCRouter({
           tokensOut,
           durationMs,
           keySource: resolved.source,
-        }).catch(() => {});
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await prisma.project.update({
@@ -678,6 +775,7 @@ export const aiRouter = createTRPCRouter({
         return result;
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        console.error("[ai] AI call failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
       }
@@ -712,11 +810,12 @@ export const aiRouter = createTRPCRouter({
           tokensOut: completion.usage.tokensOut,
           durationMs: completion.usage.durationMs,
           keySource: resolved.source,
-        }).catch(() => {});
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
 
         return { synopsis: completion.text.trim() };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        console.error("[ai] AI call failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
       }
@@ -730,6 +829,7 @@ export const aiRouter = createTRPCRouter({
       const providerId = resolved.provider as ProviderId;
 
       const results: Record<string, string> = {};
+      const errors: Record<string, string> = {};
 
       for (const scene of input.scenes) {
         const systemPrompt = composePrompt(providerId, "scene-synopsis", {
@@ -756,14 +856,15 @@ export const aiRouter = createTRPCRouter({
             tokensOut: completion.usage.tokensOut,
             durationMs: completion.usage.durationMs,
             keySource: resolved.source,
-          }).catch(() => {});
-        } catch {
-          // Skip failed scenes, continue with rest
+          }).catch((err) => console.error("[ai] Usage log failed:", err));
+        } catch (error) {
+          console.error(`[ai] Scene synopsis failed for "${scene.heading}":`, error);
           results[scene.heading] = "";
+          errors[scene.heading] = error instanceof Error ? error.message : "Unknown error";
         }
       }
 
-      return { synopses: results };
+      return { synopses: results, errors };
     }),
 
   // ============================================================
@@ -777,6 +878,7 @@ export const aiRouter = createTRPCRouter({
       const document = await prisma.document.findFirst({
         where: {
           id: input.documentId,
+          deletedAt: null,
           project: {
             OR: [
               { ownerId: ctx.user.id },
@@ -829,7 +931,7 @@ export const aiRouter = createTRPCRouter({
           tokensOut,
           durationMs,
           keySource: resolved.source,
-        }).catch(() => {});
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
 
         // Create a suggestion for review
         const newText = result.blocks.map(b => b.text).join("\n");
@@ -857,6 +959,7 @@ export const aiRouter = createTRPCRouter({
         };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        console.error("[ai] AI call failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
       }
@@ -870,7 +973,7 @@ export const aiRouter = createTRPCRouter({
       const providerId = resolved.provider as ProviderId;
 
       try {
-        const { result, tokensIn, tokensOut, durationMs } = await callAIWithSchema(
+        const { result, tokensIn, tokensOut, durationMs } = await callAIWithMapReduce(
           providerId,
           "consistency-check",
           input.text,
@@ -889,11 +992,12 @@ export const aiRouter = createTRPCRouter({
           tokensOut,
           durationMs,
           keySource: resolved.source,
-        }).catch(() => {});
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
 
         return result;
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        console.error("[ai] AI call failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
       }
@@ -907,7 +1011,7 @@ export const aiRouter = createTRPCRouter({
       const providerId = resolved.provider as ProviderId;
 
       try {
-        const { result, tokensIn, tokensOut, durationMs } = await callAIWithSchema(
+        const { result, tokensIn, tokensOut, durationMs } = await callAIWithMapReduce(
           providerId,
           "beat-sheet",
           input.text,
@@ -926,11 +1030,12 @@ export const aiRouter = createTRPCRouter({
           tokensOut,
           durationMs,
           keySource: resolved.source,
-        }).catch(() => {});
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
 
         return result;
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        console.error("[ai] AI call failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
       }
@@ -944,7 +1049,7 @@ export const aiRouter = createTRPCRouter({
       const providerId = resolved.provider as ProviderId;
 
       try {
-        const { result, tokensIn, tokensOut, durationMs } = await callAIWithSchema(
+        const { result, tokensIn, tokensOut, durationMs } = await callAIWithMapReduce(
           providerId,
           "pacing-analysis",
           input.text,
@@ -963,11 +1068,12 @@ export const aiRouter = createTRPCRouter({
           tokensOut,
           durationMs,
           keySource: resolved.source,
-        }).catch(() => {});
+        }).catch((err) => console.error("[ai] Usage log failed:", err));
 
         return result;
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        console.error("[ai] AI call failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI error: ${message}` });
       }

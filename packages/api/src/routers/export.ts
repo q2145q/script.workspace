@@ -10,10 +10,11 @@ export const exportRouter = createTRPCRouter({
   generate: protectedProcedure
     .input(exportOptionsSchema)
     .mutation(async ({ ctx, input }) => {
-      // Fetch document with project info
+      // Fetch document with project info + members
       const document = await prisma.document.findFirst({
         where: {
           id: input.documentId,
+          deletedAt: null,
           project: {
             OR: [
               { ownerId: ctx.user.id },
@@ -25,6 +26,10 @@ export const exportRouter = createTRPCRouter({
           project: {
             include: {
               owner: true,
+              members: {
+                where: { role: { in: ["OWNER", "EDITOR"] } },
+                include: { user: true },
+              },
             },
           },
         },
@@ -34,21 +39,32 @@ export const exportRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Document not found" });
       }
 
-      // Fetch user profile for author info
-      const profile = await prisma.userProfile.findUnique({
-        where: { userId: ctx.user.id },
-      });
+      // Use custom title page data if saved, otherwise auto-generate
+      const titlePageData = document.project.titlePage as Record<string, unknown> | null;
+      let metadata;
 
-      const authorName = profile?.lastName
-        ? `${document.project.owner.name} ${profile.lastName}`.trim()
-        : document.project.owner.name;
-
-      const metadata = {
-        title: document.project.title,
-        author: authorName,
-        contact: document.project.owner.email,
-        company: profile?.company ?? undefined,
-      };
+      if (titlePageData && titlePageData.title) {
+        metadata = {
+          title: String(titlePageData.title || document.project.title),
+          authors: Array.isArray(titlePageData.authors) ? titlePageData.authors.map(String) : [document.project.owner.name],
+          contact: titlePageData.contact ? String(titlePageData.contact) : undefined,
+          company: titlePageData.company ? String(titlePageData.company) : undefined,
+        };
+      } else {
+        // Auto-generate from project data
+        const authors: string[] = [document.project.owner.name];
+        for (const member of document.project.members) {
+          if (member.userId !== document.project.ownerId && member.user.name) {
+            authors.push(member.user.name);
+          }
+        }
+        metadata = {
+          title: document.project.title,
+          authors,
+          contact: document.project.owner.email,
+          company: undefined as string | undefined,
+        };
+      }
 
       const content = document.content as Record<string, unknown>;
 

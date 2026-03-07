@@ -14,6 +14,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  // CSRF protection for mutating admin API requests
+  // Cross-origin forms can't set custom headers, so requiring x-csrf-check
+  // blocks CSRF attacks without needing token management.
+  const method = request.method;
+  if (
+    pathname.startsWith("/api/admin/") &&
+    (method === "POST" || method === "PUT" || method === "DELETE" || method === "PATCH")
+  ) {
+    if (request.headers.get("x-csrf-check") !== "1") {
+      return NextResponse.json({ error: "CSRF check failed" }, { status: 403 });
+    }
+  }
+
   return NextResponse.next();
 }
 

@@ -14,7 +14,7 @@ export class AnthropicProvider implements AIProvider {
 
     const response = await client.messages.create({
       model: config.model || "claude-sonnet-4-6",
-      max_tokens: 4096,
+      max_tokens: 16384,
       system: [
         {
           type: "text" as const,
@@ -41,7 +41,7 @@ export class AnthropicProvider implements AIProvider {
 
     const response = await client.messages.create({
       model: config.model || "claude-sonnet-4-6",
-      max_tokens: 4096,
+      max_tokens: 16384,
       system: [
         {
           type: "text" as const,

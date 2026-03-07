@@ -37,7 +37,7 @@ export default function ModelsPage() {
     setSaving(id);
     await fetch("/api/admin/models", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-csrf-check": "1" },
       body: JSON.stringify({ id, ...updates }),
     });
     setModels((prev) =>

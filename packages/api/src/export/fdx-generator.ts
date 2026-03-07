@@ -85,9 +85,7 @@ export async function generateFDX(
       <Paragraph Type="Author">
         <Text>Written by</Text>
       </Paragraph>
-      <Paragraph Type="Author">
-        <Text>${escapeXml(metadata.author)}</Text>
-      </Paragraph>${
+${metadata.authors.map((a) => `      <Paragraph Type="Author">\n        <Text>${escapeXml(a)}</Text>\n      </Paragraph>`).join("\n")}${
         metadata.contact
           ? `\n      <Paragraph Type="Contact">\n        <Text>${escapeXml(metadata.contact)}</Text>\n      </Paragraph>`
           : ""

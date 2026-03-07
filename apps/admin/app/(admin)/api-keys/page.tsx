@@ -39,7 +39,7 @@ export default function ApiKeysPage() {
     setLoading(true);
     await fetch("/api/admin/keys", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-csrf-check": "1" },
       body: JSON.stringify({ provider, apiKey: newKey }),
     });
     setNewKey("");
@@ -52,7 +52,7 @@ export default function ApiKeysPage() {
   async function toggleActive(provider: string, isActive: boolean) {
     await fetch("/api/admin/keys", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-csrf-check": "1" },
       body: JSON.stringify({ provider, isActive }),
     });
     await fetchKeys();
@@ -62,7 +62,7 @@ export default function ApiKeysPage() {
     if (!confirm("Удалить ключ?")) return;
     await fetch("/api/admin/keys", {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-csrf-check": "1" },
       body: JSON.stringify({ provider }),
     });
     await fetchKeys();

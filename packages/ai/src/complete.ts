@@ -35,15 +35,17 @@ async function completeOpenAI(
   const modelId = config.model || defaultModel || "gpt-4.1";
   const isReasoner = modelId.includes("reasoner");
 
-  const response = await client.chat.completions.create({
-    model: modelId,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    ...(isReasoner ? {} : { temperature: 0.7 }),
-    max_tokens: 8192,
-  });
+  const response = await client.chat.completions.create(
+    {
+      model: modelId,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      ...(isReasoner ? {} : { temperature: 0.7 }),
+    },
+    { signal: AbortSignal.timeout(120_000) },
+  );
 
   const text = response.choices[0]?.message?.content || "";
   const usage: StreamUsageResult = {
@@ -65,7 +67,7 @@ async function completeAnthropic(
 
   const response = await client.messages.create({
     model: config.model || "claude-sonnet-4-6",
-    max_tokens: 8192,
+    max_tokens: 16384,
     system: [
       {
         type: "text" as const,
@@ -112,12 +114,13 @@ async function completeYandex(
       },
       body: JSON.stringify({
         modelUri,
-        completionOptions: { stream: false, temperature: 0.7, maxTokens: 8192 },
+        completionOptions: { stream: false, temperature: 0.7 },
         messages: [
           { role: "system", text: systemPrompt },
           { role: "user", text: userPrompt },
         ],
       }),
+      signal: AbortSignal.timeout(120_000),
     },
   );
 

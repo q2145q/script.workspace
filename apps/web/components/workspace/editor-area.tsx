@@ -18,6 +18,8 @@ import { ScriptStatsFooter } from "./script-stats-footer";
 import { SearchPanel } from "./search-panel";
 import { ImportDialog } from "./import-dialog";
 import { PrintPreviewModal } from "./print-preview-modal";
+import { TitlePageEditor } from "./title-page-editor";
+import { FormatAllDialog } from "./format-all-dialog";
 import type { CurrentUser } from "./workspace-shell";
 import type { CollaborationConfig } from "@script/editor";
 import { useSceneSync } from "@/hooks/use-scene-sync";
@@ -159,7 +161,9 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
 
   const { handleUpdate: handleAutosave, saveState } = useEditorAutosave(
     useCallback(async (content: JSONContent) => {
-      await saveFnRef.current({ id: documentIdRef.current, content });
+      // JSONContent.type is `string`, TipTapContent.type is `enum` — structurally compatible at runtime, server validates via Zod
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await saveFnRef.current({ id: documentIdRef.current, content: content as any });
     }, []),
     2000
   );
@@ -221,6 +225,8 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
           >
             <Printer className="h-3.5 w-3.5" />
           </button>
+          <FormatAllDialog editor={editor} documentId={document.id} />
+          <TitlePageEditor projectId={projectId} />
           <ImportDialog editor={editor} />
           <SaveDraftButton documentId={document.id} />
           <ExportDialog documentId={document.id} projectTitle={projectTitle} />

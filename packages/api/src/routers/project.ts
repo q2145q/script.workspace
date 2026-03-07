@@ -2,7 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { prisma, type Prisma } from "@script/db";
-import { createProjectSchema, updateProjectSchema } from "@script/types";
+import { createProjectSchema, updateProjectSchema, titlePageSchema } from "@script/types";
 
 export const projectRouter = createTRPCRouter({
   list: protectedProcedure
@@ -143,10 +143,22 @@ export const projectRouter = createTRPCRouter({
       if (!project) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
-      return prisma.project.update({
+      const result = await prisma.project.update({
         where: { id: input.id },
         data: { deletedAt: new Date() },
       });
+
+      // Audit log
+      await prisma.activityLog.create({
+        data: {
+          projectId: input.id,
+          userId: ctx.user.id,
+          action: "project_deleted",
+          details: { title: project.title },
+        },
+      }).catch((err) => console.error("[project] Audit log failed:", err));
+
+      return result;
     }),
 
   /** Restore from trash */
@@ -175,6 +187,8 @@ export const projectRouter = createTRPCRouter({
       if (!project) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
+      // Audit log before permanent delete (record will be cascade-deleted)
+      console.log(`[project] Permanent delete: ${project.title || input.id} by user ${ctx.user.id}`);
       return prisma.project.delete({ where: { id: input.id } });
     }),
 
@@ -220,5 +234,74 @@ export const projectRouter = createTRPCRouter({
         data: { status: "ARCHIVED" },
       });
       return { count: result.count };
+    }),
+
+  /** Get title page data */
+  getTitlePage: protectedProcedure
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const project = await prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          OR: [
+            { ownerId: ctx.user.id },
+            { members: { some: { userId: ctx.user.id } } },
+          ],
+        },
+        select: {
+          titlePage: true,
+          title: true,
+          owner: { select: { name: true, email: true } },
+          members: {
+            where: { role: { in: ["OWNER", "EDITOR"] } },
+            include: { user: { select: { name: true } } },
+          },
+        },
+      });
+      if (!project) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // Return saved title page or auto-generated defaults
+      if (project.titlePage) {
+        return project.titlePage as Record<string, unknown>;
+      }
+
+      // Auto-generate from project data
+      const authors = [project.owner.name];
+      for (const m of project.members) {
+        if (m.user.name) authors.push(m.user.name);
+      }
+      return {
+        title: project.title,
+        subtitle: "",
+        authors,
+        contact: project.owner.email,
+        company: "",
+        draftDate: "",
+        notes: "",
+      };
+    }),
+
+  /** Save title page data */
+  updateTitlePage: protectedProcedure
+    .input(z.object({
+      projectId: z.string(),
+      data: titlePageSchema,
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const project = await prisma.project.findFirst({
+        where: {
+          id: input.projectId,
+          OR: [
+            { ownerId: ctx.user.id },
+            { members: { some: { userId: ctx.user.id, role: { in: ["OWNER", "EDITOR"] } } } },
+          ],
+        },
+      });
+      if (!project) throw new TRPCError({ code: "FORBIDDEN" });
+
+      return prisma.project.update({
+        where: { id: input.projectId },
+        data: { titlePage: input.data as unknown as Prisma.InputJsonValue },
+      });
     }),
 });

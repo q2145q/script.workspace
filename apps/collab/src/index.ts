@@ -12,6 +12,9 @@ const port = parseInt(process.env.COLLAB_PORT || "3004");
 const server = Server.configure({
   port,
   quiet: false,
+  // Debounce persistence writes: wait 5s after last change, max 30s
+  debounce: 5000,
+  maxDebounce: 30000,
 
   // onConnect fires BEFORE onAuthenticate in Hocuspocus v2,
   // so we do nothing here — auth & permissions are in onAuthenticate.
@@ -63,7 +66,16 @@ const server = Server.configure({
         return loadDocument({ documentName });
       },
       store: async ({ documentName, state }) => {
-        await storeDocument({ documentName, state });
+        try {
+          await storeDocument({ documentName, state });
+        } catch (error) {
+          console.error(
+            `[collab] Failed to store ${documentName} after all retries:`,
+            error instanceof Error ? error.message : error,
+          );
+          // Don't throw — Hocuspocus will keep the Y.Doc in memory
+          // and retry on next change. Throwing crashes the connection.
+        }
       },
     }),
   ],

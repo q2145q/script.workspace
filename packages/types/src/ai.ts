@@ -191,17 +191,17 @@ export type KnowledgeGraph = z.infer<typeof knowledgeGraphSchema>;
 
 export const analyzeSceneSchema = z.object({
   projectId: z.string(),
-  sceneText: z.string().min(1).max(50000),
+  sceneText: z.string().min(1),
 });
 
 export const analyzeCharactersSchema = z.object({
   projectId: z.string(),
-  text: z.string().min(1).max(50000),
+  text: z.string().min(1),
 });
 
 export const analyzeStructureSchema = z.object({
   projectId: z.string(),
-  sceneText: z.string().min(1).max(50000),
+  sceneText: z.string().min(1),
 });
 
 export const generateLoglineSchema = z.object({
@@ -227,22 +227,22 @@ export const describeLocationSchema = z.object({
 
 export const extractKnowledgeGraphSchema = z.object({
   projectId: z.string(),
-  text: z.string().min(1).max(100000),
+  text: z.string().min(1),
 });
 
 // Scene synopsis schemas
 
 export const generateSceneSynopsisSchema = z.object({
   projectId: z.string(),
-  sceneHeading: z.string().min(1).max(500),
-  sceneText: z.string().min(1).max(50000),
+  sceneHeading: z.string().min(1),
+  sceneText: z.string().min(1),
 });
 
 export const generateAllSceneSynopsesSchema = z.object({
   projectId: z.string(),
   scenes: z.array(z.object({
     heading: z.string(),
-    text: z.string().max(50000),
+    text: z.string(),
   })).min(1).max(200),
 });
 
@@ -283,7 +283,7 @@ export type ConsistencyResult = z.infer<typeof consistencyResultSchema>;
 
 export const checkConsistencySchema = z.object({
   projectId: z.string(),
-  text: z.string().min(1).max(100000),
+  text: z.string().min(1),
 });
 
 /** Beat Sheet — Save the Cat structure analysis */
@@ -302,7 +302,7 @@ export type BeatSheetResult = z.infer<typeof beatSheetResultSchema>;
 
 export const generateBeatSheetSchema = z.object({
   projectId: z.string(),
-  text: z.string().min(1).max(100000),
+  text: z.string().min(1),
 });
 
 /** Pacing Analysis — tempo, action/dialogue ratio, recommendations */
@@ -324,5 +324,5 @@ export type PacingResult = z.infer<typeof pacingResultSchema>;
 
 export const analyzePacingSchema = z.object({
   projectId: z.string(),
-  text: z.string().min(1).max(100000),
+  text: z.string().min(1),
 });

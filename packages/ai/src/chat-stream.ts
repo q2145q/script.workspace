@@ -86,7 +86,6 @@ export async function streamChatOpenAI(
       stream: true,
       stream_options: { include_usage: true },
       ...(isReasoner ? {} : { temperature: 0.7 }),
-      max_tokens: 4096,
     },
     { signal: input.signal },
   );
@@ -140,7 +139,7 @@ export async function streamChatAnthropic(
   const stream = client.messages.stream(
     {
       model: config.model || "claude-sonnet-4-6",
-      max_tokens: 4096,
+      max_tokens: 16384,
       system: [
         {
           type: "text" as const,
@@ -210,7 +209,7 @@ export async function streamChatYandex(
       },
       body: JSON.stringify({
         modelUri,
-        completionOptions: { stream: false, temperature: 0.7, maxTokens: 4096 },
+        completionOptions: { stream: false, temperature: 0.7 },
         messages: apiMessages,
       }),
       signal: input.signal,

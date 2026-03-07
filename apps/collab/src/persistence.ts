@@ -90,6 +90,34 @@ export async function loadDocument({
   return null;
 }
 
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  label: string,
+  maxRetries = 3,
+): Promise<T> {
+  const delays = [1000, 2000, 4000];
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt === maxRetries) {
+        console.error(
+          `[persistence] ${label}: failed after ${maxRetries + 1} attempts`,
+          error,
+        );
+        throw error;
+      }
+      const delay = delays[attempt] ?? 4000;
+      console.warn(
+        `[persistence] ${label}: attempt ${attempt + 1} failed, retrying in ${delay}ms`,
+        error instanceof Error ? error.message : error,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error("unreachable");
+}
+
 export async function storeDocument({
   documentName,
   state,
@@ -104,29 +132,43 @@ export async function storeDocument({
   Y.applyUpdate(ydoc, state);
   const jsonContent = yDocToProsemirrorJSON(ydoc);
 
+  const label = `store(${documentName})`;
+
   if (type === "document") {
-    await prisma.document.update({
-      where: { id },
-      data: {
-        yjsState: Buffer.from(state),
-        content: jsonContent,
-      },
-    });
+    await withRetry(
+      () =>
+        prisma.document.update({
+          where: { id },
+          data: {
+            yjsState: Buffer.from(state),
+            content: jsonContent,
+          },
+        }),
+      label,
+    );
   } else if (type === "bible") {
-    await prisma.projectBible.update({
-      where: { projectId: id },
-      data: {
-        yjsState: Buffer.from(state),
-        content: jsonContent,
-      },
-    });
+    await withRetry(
+      () =>
+        prisma.projectBible.update({
+          where: { projectId: id },
+          data: {
+            yjsState: Buffer.from(state),
+            content: jsonContent,
+          },
+        }),
+      label,
+    );
   } else if (type === "note") {
-    await prisma.projectNote.update({
-      where: { id },
-      data: {
-        yjsState: Buffer.from(state),
-        content: jsonContent,
-      },
-    });
+    await withRetry(
+      () =>
+        prisma.projectNote.update({
+          where: { id },
+          data: {
+            yjsState: Buffer.from(state),
+            content: jsonContent,
+          },
+        }),
+      label,
+    );
   }
 }

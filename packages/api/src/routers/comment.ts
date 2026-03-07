@@ -162,10 +162,9 @@ export const commentRouter = createTRPCRouter({
       const isProjectOwner =
         thread.document.project.ownerId === ctx.user.id;
       const memberRole = thread.document.project.members[0]?.role;
-      const isThreadCreator = thread.createdById === ctx.user.id;
 
+      // Only OWNER or EDITOR can delete threads (not COMMENTER)
       if (
-        !isThreadCreator &&
         !isProjectOwner &&
         memberRole !== "OWNER" &&
         memberRole !== "EDITOR"

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ScriptEditor, useEditorAutosave, type JSONContent, type CollaborationConfig, type HocuspocusProvider } from "@script/editor";
+import { ScriptEditor, useEditorAutosave, type JSONContent, type CollaborationConfig, type HocuspocusProvider, type ConnectionStatus } from "@script/editor";
 import { StickyNote, Plus, Trash2, Pencil, Check, X, Save } from "lucide-react";
 import { CollabStatus } from "./collab-status";
 import { OnlineUsers } from "./online-users";
@@ -219,6 +219,8 @@ function NoteListItem({
   );
 }
 
+const FALLBACK_TIMEOUT_MS = 10_000;
+
 function NoteEditor({
   noteId,
   projectId,
@@ -232,12 +234,59 @@ function NoteEditor({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [collabProvider, setCollabProvider] = useState<HocuspocusProvider | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("connecting");
+  const [fallbackActive, setFallbackActive] = useState(false);
   const noteIdRef = useRef(noteId);
   noteIdRef.current = noteId;
+  const disconnectedAtRef = useRef<number | null>(null);
+  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Only use collab if explicitly configured
   const collabWsUrl = process.env.NEXT_PUBLIC_COLLAB_WS_URL || "";
   const useCollab = !!collabWsUrl;
+
+  // Handle connection status changes — activate fallback after 10s disconnect
+  const handleConnectionStatus = useCallback(
+    (status: ConnectionStatus) => {
+      setConnectionStatus(status);
+
+      if (status === "disconnected") {
+        if (!disconnectedAtRef.current) {
+          disconnectedAtRef.current = Date.now();
+        }
+        // Start fallback timer
+        if (!fallbackTimerRef.current) {
+          fallbackTimerRef.current = setTimeout(() => {
+            setFallbackActive(true);
+            toast.warning(t("fallbackSave"));
+          }, FALLBACK_TIMEOUT_MS);
+        }
+      } else if (status === "connected") {
+        // Clear fallback
+        if (disconnectedAtRef.current) {
+          disconnectedAtRef.current = null;
+        }
+        if (fallbackTimerRef.current) {
+          clearTimeout(fallbackTimerRef.current);
+          fallbackTimerRef.current = null;
+        }
+        if (fallbackActive) {
+          setFallbackActive(false);
+          toast.success(t("reconnected"));
+        }
+      }
+    },
+    [fallbackActive, t],
+  );
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+      }
+    };
+  }, []);
 
   const collabConfig: CollaborationConfig | undefined = useMemo(() => {
     if (!useCollab) return undefined;
@@ -259,7 +308,7 @@ function NoteEditor({
     enabled: !useCollab,
   });
 
-  // Direct-save for notes
+  // Direct-save for notes (used as fallback when collab is disconnected)
   const saveMutation = useMutation(
     trpc.note.updateContent.mutationOptions({
       onSuccess: () => {
@@ -277,18 +326,20 @@ function NoteEditor({
 
   const { handleUpdate: handleAutosave } = useEditorAutosave(
     useCallback(async (content: JSONContent) => {
-      await saveFnRef.current({ id: noteIdRef.current, content });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await saveFnRef.current({ id: noteIdRef.current, content: content as any });
     }, []),
     2000
   );
 
   const handleUpdate = useCallback(
     (content: JSONContent) => {
-      if (!useCollab) {
+      // Save directly when collab is off OR when fallback is active (disconnected >10s)
+      if (!useCollab || fallbackActive) {
         handleAutosave(content);
       }
     },
-    [useCollab, handleAutosave]
+    [useCollab, fallbackActive, handleAutosave]
   );
 
   // Wait for note data to load before rendering editor (content is only read on mount)
@@ -310,6 +361,12 @@ function NoteEditor({
           <>
             <OnlineUsers provider={collabProvider} />
             <CollabStatus provider={collabProvider} />
+            {fallbackActive && (
+              <span className="flex items-center gap-1 text-[10px] text-yellow-500">
+                <Save className="h-3 w-3" />
+                {t("autoSave")}
+              </span>
+            )}
           </>
         ) : (
           <span className="flex items-center gap-1 text-[10px] text-emerald-500">
@@ -325,6 +382,7 @@ function NoteEditor({
           collaboration={collabConfig}
           onUpdate={handleUpdate}
           onCollabProvider={useCollab ? setCollabProvider : undefined}
+          onConnectionStatus={useCollab ? handleConnectionStatus : undefined}
           hideToolbar
           plainText
         />

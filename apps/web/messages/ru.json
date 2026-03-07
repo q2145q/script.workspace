@@ -170,7 +170,14 @@
     "noAct": "Без акта",
     "act1": "Акт 1",
     "act2": "Акт 2",
-    "act3": "Акт 3"
+    "act3": "Акт 3",
+    "characters": "Персонажи",
+    "synopsis": "Синопсис",
+    "previewText": "Текст сцены",
+    "autoAssign": "Авто-акты",
+    "autoAssignTitle": "Автоматически распределить сцены по актам",
+    "autoAssignDone": "Сцены распределены по актам",
+    "autoAssignError": "Не удалось распределить сцены"
   },
   "Editor": {
     "showPanel": "Показать панель",
@@ -262,7 +269,9 @@
     "noteCreated": "Заметка создана",
     "noteDeleted": "Заметка удалена",
     "autoSave": "Автосохранение",
-    "failedSave": "Не удалось сохранить заметку"
+    "failedSave": "Не удалось сохранить заметку",
+    "fallbackSave": "Соединение потеряно. Сохранение напрямую...",
+    "reconnected": "Соединение восстановлено"
   },
   "Outline": {
     "title": "Структура",
@@ -619,7 +628,9 @@
   "Collab": {
     "synced": "Синхронизировано",
     "connecting": "Подключение...",
-    "offline": "Офлайн"
+    "offline": "Офлайн",
+    "reconnecting": "Переподключение...",
+    "saveError": "Ошибка сохранения"
   },
   "Errors": {
     "somethingWentWrong": "Что-то пошло не так",
@@ -650,5 +661,39 @@
     "title": "Предпросмотр печати",
     "pageCount": "{count} стр.",
     "print": "Печать"
+  },
+  "TitlePage": {
+    "title": "Титульная страница",
+    "scriptTitle": "Название сценария",
+    "scriptTitlePlaceholder": "Введите название",
+    "subtitle": "Подзаголовок",
+    "subtitlePlaceholder": "Например: Based on the novel by...",
+    "authors": "Авторы",
+    "authorPlaceholder": "Имя автора",
+    "addAuthor": "Добавить автора",
+    "company": "Компания",
+    "companyPlaceholder": "Название студии/компании",
+    "contact": "Контакт",
+    "contactPlaceholder": "Email или телефон",
+    "draftDate": "Дата черновика",
+    "draftDatePlaceholder": "Например: March 2026",
+    "notes": "Примечания",
+    "notesPlaceholder": "Дополнительная информация",
+    "save": "Сохранить",
+    "saving": "Сохранение...",
+    "saved": "Титульная страница сохранена",
+    "cancel": "Отмена"
+  },
+  "FormatAll": {
+    "title": "Форматировать всё",
+    "description": "Найдено блоков: {count}. AI автоматически распознает типы блоков сценария (заголовки сцен, действие, диалоги и т.д.) и отформатирует весь документ.",
+    "undoHint": "Ctrl+Z / Cmd+Z для отмены всех изменений",
+    "start": "Форматировать",
+    "cancel": "Отмена",
+    "progress": "Форматирование... Блок {current} из {total}",
+    "stopProcessing": "Остановить",
+    "completed": "Документ отформатирован",
+    "cancelled": "Форматирование остановлено",
+    "noContent": "Документ пуст"
   }
 }

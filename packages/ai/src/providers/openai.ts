@@ -18,7 +18,6 @@ export class OpenAIProvider implements AIProvider {
         { role: "user", content: buildRewritePrompt(input) },
       ],
       temperature: 0.7,
-      max_tokens: 4096,
       response_format: { type: "json_object" },
     });
 
@@ -41,7 +40,6 @@ export class OpenAIProvider implements AIProvider {
         { role: "user", content: buildFormatPrompt(input) },
       ],
       temperature: 0.3,
-      max_tokens: 4096,
       response_format: { type: "json_object" },
     });
 

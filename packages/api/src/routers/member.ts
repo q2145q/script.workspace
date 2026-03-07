@@ -101,6 +101,16 @@ export const memberRouter = createTRPCRouter({
         },
       });
 
+      // Audit log
+      await prisma.activityLog.create({
+        data: {
+          projectId: input.projectId,
+          userId: ctx.user.id,
+          action: "member_invited",
+          details: { targetEmail: input.email, targetUserId: targetUser.id, role: input.role },
+        },
+      }).catch((err) => console.error("[member] Audit log failed:", err));
+
       return { success: true, user: targetUser };
     }),
 
@@ -120,10 +130,21 @@ export const memberRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Member not found" });
       }
 
+      const oldRole = member.role;
       await prisma.projectMember.update({
         where: { id: member.id },
         data: { role: input.role },
       });
+
+      // Audit log
+      await prisma.activityLog.create({
+        data: {
+          projectId: input.projectId,
+          userId: ctx.user.id,
+          action: "member_role_changed",
+          details: { targetUserId: input.userId, oldRole, newRole: input.role },
+        },
+      }).catch((err) => console.error("[member] Audit log failed:", err));
 
       return { success: true };
     }),
@@ -158,6 +179,16 @@ export const memberRouter = createTRPCRouter({
           projectId_userId: { projectId: input.projectId, userId: input.userId },
         },
       });
+
+      // Audit log
+      await prisma.activityLog.create({
+        data: {
+          projectId: input.projectId,
+          userId: ctx.user.id,
+          action: isSelf ? "member_left" : "member_removed",
+          details: { targetUserId: input.userId },
+        },
+      }).catch((err) => console.error("[member] Audit log failed:", err));
 
       return { success: true };
     }),

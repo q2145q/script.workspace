@@ -49,7 +49,7 @@ export const episodeRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       await assertProjectAccess(input.projectId, ctx.user.id);
       return prisma.episode.findMany({
-        where: { projectId: input.projectId },
+        where: { projectId: input.projectId, deletedAt: null },
         orderBy: { number: "asc" },
         include: {
           document: { select: { id: true, title: true } },
@@ -66,7 +66,7 @@ export const episodeRouter = createTRPCRouter({
       let number = input.number;
       if (!number) {
         const lastEp = await prisma.episode.findFirst({
-          where: { projectId: input.projectId },
+          where: { projectId: input.projectId, deletedAt: null },
           orderBy: { number: "desc" },
           select: { number: true },
         });
@@ -126,10 +126,11 @@ export const episodeRouter = createTRPCRouter({
 
       await assertProjectEditAccess(episode.projectId, ctx.user.id);
 
-      // Delete episode and its document
+      // Soft delete episode and its document
+      const now = new Date();
       await prisma.$transaction([
-        prisma.episode.delete({ where: { id: input.id } }),
-        prisma.document.delete({ where: { id: episode.documentId } }),
+        prisma.episode.update({ where: { id: input.id }, data: { deletedAt: now } }),
+        prisma.document.update({ where: { id: episode.documentId }, data: { deletedAt: now } }),
       ]);
 
       return { success: true };

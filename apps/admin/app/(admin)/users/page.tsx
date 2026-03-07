@@ -33,7 +33,7 @@ export default function UsersPage() {
   async function toggleBeta(userId: string, betaApproved: boolean) {
     await fetch("/api/admin/users", {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-csrf-check": "1" },
       body: JSON.stringify({ userId, betaApproved }),
     });
     setUsers((prev) =>

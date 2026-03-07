@@ -284,19 +284,21 @@ function buildTitlePage(metadata: ScreenplayMetadata): Paragraph[] {
 
   paragraphs.push(new Paragraph({ children: [] }));
 
-  // Author
-  paragraphs.push(
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      children: [
-        new TextRun({
-          text: metadata.author,
-          font: "Cousine",
-          size: 24,
-        }),
-      ],
-    })
-  );
+  // Authors
+  for (const author of metadata.authors) {
+    paragraphs.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: author,
+            font: "Cousine",
+            size: 24,
+          }),
+        ],
+      })
+    );
+  }
 
   // Spacers for contact info
   for (let i = 0; i < 20; i++) {

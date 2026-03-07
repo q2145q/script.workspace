@@ -22,9 +22,10 @@ export interface SceneBoardItem {
 interface SceneBoardCardProps {
   scene: SceneBoardItem;
   onClick: () => void;
+  onDoubleClick?: () => void;
 }
 
-export const SceneBoardCard = memo(function SceneBoardCard({ scene, onClick }: SceneBoardCardProps) {
+export const SceneBoardCard = memo(function SceneBoardCard({ scene, onClick, onDoubleClick }: SceneBoardCardProps) {
   const {
     attributes,
     listeners,
@@ -47,6 +48,7 @@ export const SceneBoardCard = memo(function SceneBoardCard({ scene, onClick }: S
       {...attributes}
       {...listeners}
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       className="cursor-pointer rounded-lg border border-border bg-card p-2.5 shadow-sm transition-all hover:border-ai-accent/30 hover:shadow-md"
     >
       {/* Color tag strip */}

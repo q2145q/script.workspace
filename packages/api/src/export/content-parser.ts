@@ -21,7 +21,7 @@ export interface ScreenplayBlock {
 
 export interface ScreenplayMetadata {
   title: string;
-  author: string;
+  authors: string[];
   contact?: string;
   company?: string;
 }
@@ -57,7 +57,7 @@ export function parseContent(
 
     const blockType = BLOCK_TYPES.has(type)
       ? (type as ScreenplayBlock["type"])
-      : "paragraph";
+      : "action"; // Map unknown types (including "paragraph") to "action"
 
     if (blockType === "sceneHeading") {
       sceneCount++;

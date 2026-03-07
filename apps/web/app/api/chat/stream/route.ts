@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
 
   // 8. Load screenplay structure from project documents
   const projectDocuments = await prisma.document.findMany({
-    where: { projectId },
+    where: { projectId, deletedAt: null },
     select: { title: true, content: true },
     orderBy: { createdAt: "asc" },
   });
@@ -204,7 +204,7 @@ export async function POST(req: NextRequest) {
               tokensOut: usage.tokensOut,
               durationMs: usage.durationMs,
               keySource: resolvedKey.source,
-            }).catch(() => {}); // Non-critical, don't fail the stream
+            }).catch((err) => console.error("[chat/stream] Usage log failed:", err));
           }
 
           controller.enqueue(
@@ -222,11 +222,12 @@ export async function POST(req: NextRequest) {
           if (isRetryableError(error)) {
             recordFailure(activeProviderId);
           }
-          // Sanitize — never expose API keys or internal details to client
-          const safeMessage = error.message.replace(/(?:sk-|Api-Key\s|Bearer\s)\S+/gi, "[REDACTED]");
+          // Log full error server-side for debugging
+          console.error("[chat/stream] AI error:", error.message, error.stack);
+          // Send generic message to client — never expose internals
           controller.enqueue(
             encoder.encode(
-              `data: ${JSON.stringify({ error: safeMessage })}\n\n`
+              `data: ${JSON.stringify({ error: "Произошла ошибка при обработке запроса. Попробуйте ещё раз." })}\n\n`
             )
           );
           controller.close();

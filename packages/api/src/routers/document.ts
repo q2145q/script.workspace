@@ -5,7 +5,7 @@ import { prisma, type Prisma } from "@script/db";
 import { tipTapContentSchema } from "@script/types";
 
 /** Common where clause for project access check */
-function projectAccessWhere(userId: string) {
+function docProjectAccess(userId: string) {
   return {
     project: {
       OR: [
@@ -17,7 +17,7 @@ function projectAccessWhere(userId: string) {
 }
 
 /** Editor-level access (owner or editor role) */
-function editorAccessWhere(userId: string) {
+function docEditorAccess(userId: string) {
   return {
     project: {
       OR: [
@@ -40,7 +40,7 @@ export const documentRouter = createTRPCRouter({
         where: {
           projectId: input.projectId,
           ...(!input.includeDeleted ? { deletedAt: null } : {}),
-          ...projectAccessWhere(ctx.user.id),
+          ...docProjectAccess(ctx.user.id),
         },
         select: {
           id: true,
@@ -61,7 +61,7 @@ export const documentRouter = createTRPCRouter({
         where: {
           id: input.id,
           deletedAt: null,
-          ...projectAccessWhere(ctx.user.id),
+          ...docProjectAccess(ctx.user.id),
         },
       });
       if (!doc) {
@@ -91,20 +91,22 @@ export const documentRouter = createTRPCRouter({
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
-      // Get max sortOrder
-      const last = await prisma.document.findFirst({
-        where: { projectId: input.projectId, deletedAt: null },
-        orderBy: { sortOrder: "desc" },
-        select: { sortOrder: true },
-      });
+      // Use transaction to prevent sortOrder race condition
+      return prisma.$transaction(async (tx) => {
+        const last = await tx.document.findFirst({
+          where: { projectId: input.projectId, deletedAt: null },
+          orderBy: { sortOrder: "desc" },
+          select: { sortOrder: true },
+        });
 
-      return prisma.document.create({
-        data: {
-          projectId: input.projectId,
-          title: input.title,
-          content: { type: "doc", content: [{ type: "paragraph" }] },
-          sortOrder: (last?.sortOrder ?? 0) + 1,
-        },
+        return tx.document.create({
+          data: {
+            projectId: input.projectId,
+            title: input.title,
+            content: { type: "doc", content: [{ type: "paragraph" }] },
+            sortOrder: (last?.sortOrder ?? 0) + 1,
+          },
+        });
       });
     }),
 
@@ -116,7 +118,7 @@ export const documentRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
       const doc = await prisma.document.findFirst({
-        where: { id: input.id, deletedAt: null, ...editorAccessWhere(ctx.user.id) },
+        where: { id: input.id, deletedAt: null, ...docEditorAccess(ctx.user.id) },
       });
       if (!doc) throw new TRPCError({ code: "FORBIDDEN" });
 
@@ -131,7 +133,7 @@ export const documentRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const doc = await prisma.document.findFirst({
-        where: { id: input.id, deletedAt: null, ...editorAccessWhere(ctx.user.id) },
+        where: { id: input.id, deletedAt: null, ...docEditorAccess(ctx.user.id) },
       });
       if (!doc) throw new TRPCError({ code: "FORBIDDEN" });
 
@@ -149,7 +151,7 @@ export const documentRouter = createTRPCRouter({
         where: {
           id: input.id,
           deletedAt: { not: null },
-          ...editorAccessWhere(ctx.user.id),
+          ...docEditorAccess(ctx.user.id),
         },
       });
       if (!doc) throw new TRPCError({ code: "NOT_FOUND" });
@@ -168,25 +170,27 @@ export const documentRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
       const doc = await prisma.document.findFirst({
-        where: { id: input.id, deletedAt: null, ...editorAccessWhere(ctx.user.id) },
+        where: { id: input.id, deletedAt: null, ...docEditorAccess(ctx.user.id) },
       });
       if (!doc) throw new TRPCError({ code: "FORBIDDEN" });
 
-      // Get max sortOrder
-      const last = await prisma.document.findFirst({
-        where: { projectId: doc.projectId, deletedAt: null },
-        orderBy: { sortOrder: "desc" },
-        select: { sortOrder: true },
-      });
+      // Use transaction to prevent sortOrder race condition
+      return prisma.$transaction(async (tx) => {
+        const last = await tx.document.findFirst({
+          where: { projectId: doc.projectId, deletedAt: null },
+          orderBy: { sortOrder: "desc" },
+          select: { sortOrder: true },
+        });
 
-      return prisma.document.create({
-        data: {
-          projectId: doc.projectId,
-          title: input.newTitle || `${doc.title} (копия)`,
-          content: doc.content as Prisma.InputJsonValue,
-          metadata: doc.metadata as Prisma.InputJsonValue ?? undefined,
-          sortOrder: (last?.sortOrder ?? 0) + 1,
-        },
+        return tx.document.create({
+          data: {
+            projectId: doc.projectId,
+            title: input.newTitle || `${doc.title} (копия)`,
+            content: doc.content as Prisma.InputJsonValue,
+            metadata: doc.metadata as Prisma.InputJsonValue ?? undefined,
+            sortOrder: (last?.sortOrder ?? 0) + 1,
+          },
+        });
       });
     }),
 
@@ -200,7 +204,7 @@ export const documentRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const doc = await prisma.document.findFirst({
-        where: { id: input.id, deletedAt: null, ...editorAccessWhere(ctx.user.id) },
+        where: { id: input.id, deletedAt: null, ...docEditorAccess(ctx.user.id) },
       });
       if (!doc) {
         throw new TRPCError({ code: "FORBIDDEN" });
@@ -223,7 +227,7 @@ export const documentRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
       const doc = await prisma.document.findFirst({
-        where: { id: input.id, deletedAt: null, ...editorAccessWhere(ctx.user.id) },
+        where: { id: input.id, deletedAt: null, ...docEditorAccess(ctx.user.id) },
       });
       if (!doc) {
         throw new TRPCError({ code: "FORBIDDEN" });

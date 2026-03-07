@@ -33,6 +33,13 @@ export { AIProviderError } from "./errors";
 export { completeAI } from "./complete";
 export type { CompleteResult } from "./complete";
 
+// Context limits & Map-Reduce
+export { getEffectiveLimit, fitsInContext, getContextLimitInfo } from "./context-limits";
+export { chunkByScenes } from "./chunker";
+export type { Chunk } from "./chunker";
+export { mapReduce, needsMapReduce } from "./map-reduce";
+export type { MapReduceOptions, MapReduceResult, MapReduceProgressFn } from "./map-reduce";
+
 // Thinking configuration (Phase 4)
 export { getThinkingConfig } from "./thinking-config";
 

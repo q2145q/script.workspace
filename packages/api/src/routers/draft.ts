@@ -129,6 +129,7 @@ export const draftRouter = createTRPCRouter({
             select: {
               id: true,
               content: true,
+              deletedAt: true,
               project: {
                 select: {
                   ownerId: true,
@@ -142,6 +143,10 @@ export const draftRouter = createTRPCRouter({
         },
       });
       if (!draft) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (draft.document.deletedAt) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot restore draft to a deleted document" });
+      }
 
       const project = draft.document.project;
       const isOwner = project.ownerId === ctx.user.id;

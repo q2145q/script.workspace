@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import {
   DndContext,
   DragOverlay,
-  closestCorners,
+  pointerWithin,
   type DragEndEvent,
   type DragStartEvent,
   PointerSensor,
@@ -18,13 +18,15 @@ import {
 } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { useState } from "react";
-import { LayoutList } from "lucide-react";
+import { LayoutList, Sparkles, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import type { Editor } from "@script/editor";
 import { useEditorState } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseSceneHeading } from "@/lib/scene-parser";
 import { SceneBoardCard, type SceneBoardItem } from "./scene-board-card";
+import { SceneDetailModal } from "./scene-detail-modal";
 
 interface SceneBoardProps {
   editor: Editor | null;
@@ -44,11 +46,13 @@ function DroppableColumn({
   label,
   items,
   onSceneClick,
+  onSceneDoubleClick,
 }: {
   id: string;
   label: string;
   items: SceneBoardItem[];
   onSceneClick: (pos: number) => void;
+  onSceneDoubleClick: (scene: SceneBoardItem) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
@@ -75,6 +79,7 @@ function DroppableColumn({
               key={scene.id}
               scene={scene}
               onClick={() => onSceneClick(scene.sceneIndex)}
+              onDoubleClick={() => onSceneDoubleClick(scene)}
             />
           ))}
         </SortableContext>
@@ -118,6 +123,8 @@ export function SceneBoard({ editor, documentId, projectId }: SceneBoardProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [detailScene, setDetailScene] = useState<SceneBoardItem | null>(null);
+  const [isAutoAssigning, setIsAutoAssigning] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -252,6 +259,36 @@ export function SceneBoard({ editor, documentId, projectId }: SceneBoardProps) {
     [editor, editorScenes]
   );
 
+  const handleAutoAssignActs = useCallback(async () => {
+    if (!editorScenes || editorScenes.length === 0) return;
+    setIsAutoAssigning(true);
+
+    try {
+      const totalScenes = editorScenes.length;
+      // Simple heuristic: first ~25% → Act 1, next ~50% → Act 2, last ~25% → Act 3
+      const act1End = Math.max(1, Math.round(totalScenes * 0.25));
+      const act2End = Math.max(act1End + 1, Math.round(totalScenes * 0.75));
+
+      for (let i = 0; i < totalScenes; i++) {
+        const act = i < act1End ? 1 : i < act2End ? 2 : 3;
+        const existing = boardItems.find((b) => b.sceneIndex === i);
+        if (existing && existing.act !== act) {
+          updateMutation.mutate({
+            documentId,
+            sceneIndex: i,
+            act,
+          });
+        }
+      }
+
+      toast.success(t("autoAssignDone"));
+    } catch {
+      toast.error(t("autoAssignError"));
+    } finally {
+      setIsAutoAssigning(false);
+    }
+  }, [editorScenes, boardItems, documentId, updateMutation, t]);
+
   const activeScene = activeId ? boardItems.find((s) => s.id === activeId) : null;
 
   if (!editor) {
@@ -279,12 +316,27 @@ export function SceneBoard({ editor, documentId, projectId }: SceneBoardProps) {
         <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
           {boardItems.length}
         </span>
+        <div className="ml-auto">
+          <button
+            onClick={handleAutoAssignActs}
+            disabled={isAutoAssigning}
+            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+            title={t("autoAssignTitle")}
+          >
+            {isAutoAssigning ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="h-3.5 w-3.5" />
+            )}
+            {t("autoAssign")}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-1 gap-2 overflow-x-auto p-3">
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCorners}
+          collisionDetection={pointerWithin}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
@@ -298,6 +350,7 @@ export function SceneBoard({ editor, documentId, projectId }: SceneBoardProps) {
                 label={t(col.labelKey)}
                 items={columnItems[key] ?? []}
                 onSceneClick={handleSceneClick}
+                onSceneDoubleClick={setDetailScene}
               />
             );
           })}
@@ -310,6 +363,8 @@ export function SceneBoard({ editor, documentId, projectId }: SceneBoardProps) {
           </DragOverlay>
         </DndContext>
       </div>
+
+      <SceneDetailModal scene={detailScene} onClose={() => setDetailScene(null)} />
     </div>
   );
 }

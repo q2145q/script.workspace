@@ -20,6 +20,8 @@ export interface CollaborationConfig {
   user: { id: string; name: string; color: string };
 }
 
+export type ConnectionStatus = "connected" | "connecting" | "disconnected";
+
 export interface ScriptEditorProps {
   content?: JSONContent;
   onUpdate?: (content: JSONContent) => void;
@@ -29,6 +31,7 @@ export interface ScriptEditorProps {
   className?: string;
   collaboration?: CollaborationConfig;
   onCollabProvider?: (provider: HocuspocusProvider) => void;
+  onConnectionStatus?: (status: ConnectionStatus) => void;
   /** When true, uses plain text editing (no screenplay blocks) */
   plainText?: boolean;
 }
@@ -42,6 +45,7 @@ export function ScriptEditor({
   className,
   collaboration,
   onCollabProvider,
+  onConnectionStatus,
   plainText = false,
 }: ScriptEditorProps) {
   const providerRef = useRef<HocuspocusProvider | null>(null);
@@ -64,11 +68,25 @@ export function ScriptEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collaboration?.documentName, collaboration?.wsUrl]);
 
-  // Manage provider lifecycle
+  // Manage provider lifecycle + connection status
   useEffect(() => {
     if (collabState) {
       providerRef.current = collabState.provider;
       onCollabProvider?.(collabState.provider);
+
+      if (onConnectionStatus) {
+        const handleStatus = ({ status: s }: { status: string }) => {
+          if (s === "connected") onConnectionStatus("connected");
+          else if (s === "connecting") onConnectionStatus("connecting");
+          else onConnectionStatus("disconnected");
+        };
+        collabState.provider.on("status", handleStatus);
+
+        // Emit initial status
+        if (collabState.provider.status === "connected") onConnectionStatus("connected");
+        else if (collabState.provider.status === "connecting") onConnectionStatus("connecting");
+        else onConnectionStatus("disconnected");
+      }
     }
 
     return () => {

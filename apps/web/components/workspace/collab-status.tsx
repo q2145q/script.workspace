@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import type { HocuspocusProvider } from "@script/editor";
 import { useTranslations } from "next-intl";
 
-type ConnectionStatus = "connected" | "connecting" | "disconnected";
+type ConnectionStatus = "connected" | "connecting" | "reconnecting" | "disconnected";
 
 export function CollabStatus({ provider }: { provider: HocuspocusProvider | null }) {
   const t = useTranslations("Collab");
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [userCount, setUserCount] = useState(0);
+  const wasConnectedRef = useRef(false);
 
   useEffect(() => {
     if (!provider) {
@@ -17,17 +18,29 @@ export function CollabStatus({ provider }: { provider: HocuspocusProvider | null
       return;
     }
 
+    wasConnectedRef.current = false;
+
     const onStatus = ({ status: s }: { status: string }) => {
-      if (s === "connected") setStatus("connected");
-      else if (s === "connecting") setStatus("connecting");
-      else setStatus("disconnected");
+      if (s === "connected") {
+        wasConnectedRef.current = true;
+        setStatus("connected");
+      } else if (s === "connecting") {
+        // Show "reconnecting" if we were connected before
+        setStatus(wasConnectedRef.current ? "reconnecting" : "connecting");
+      } else {
+        setStatus("disconnected");
+      }
     };
 
     provider.on("status", onStatus);
 
     // Check initial status
-    if (provider.status === "connected") setStatus("connected");
-    else if (provider.status === "connecting") setStatus("connecting");
+    if (provider.status === "connected") {
+      wasConnectedRef.current = true;
+      setStatus("connected");
+    } else if (provider.status === "connecting") {
+      setStatus("connecting");
+    }
 
     // Track online user count via awareness
     const awareness = provider.awareness;
@@ -53,6 +66,7 @@ export function CollabStatus({ provider }: { provider: HocuspocusProvider | null
   const statusConfig = {
     connected: { color: "bg-emerald-500", text: t("synced"), pulse: false },
     connecting: { color: "bg-yellow-500", text: t("connecting"), pulse: true },
+    reconnecting: { color: "bg-yellow-500", text: t("reconnecting"), pulse: true },
     disconnected: { color: "bg-red-500", text: t("offline"), pulse: false },
   };
 

@@ -252,7 +252,9 @@ function renderTitlePage(
   doc.text("Written by", { width: contentWidth, align: "center" });
 
   doc.moveDown(1);
-  doc.text(metadata.author, { width: contentWidth, align: "center" });
+  for (const author of metadata.authors) {
+    doc.text(author, { width: contentWidth, align: "center" });
+  }
 
   if (metadata.contact || metadata.company) {
     let contactY = pageHeight - MARGINS.bottom - 60;
