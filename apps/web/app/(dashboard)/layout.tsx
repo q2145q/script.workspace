@@ -66,10 +66,10 @@ export default async function DashboardLayout({
           <Link href="/dashboard" className="text-lg font-semibold text-foreground">
             Script Workspace
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/profile"
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:block"
             >
               {session.user.name}
             </Link>
@@ -79,7 +79,7 @@ export default async function DashboardLayout({
           </div>
         </div>
       </header>
-      <main id="main-content" className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <main id="main-content" className="mx-auto max-w-5xl px-4 py-4 sm:py-8">{children}</main>
     </div>
   );
 }

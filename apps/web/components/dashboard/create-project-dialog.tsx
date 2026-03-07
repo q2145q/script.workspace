@@ -8,6 +8,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Film, Tv, Clapperboard } from "lucide-react";
+import { z } from "zod";
+
+const createProjectSchema = z.object({
+  title: z.string().min(1).max(255),
+});
 
 interface ProjectTemplate {
   id: string;
@@ -51,6 +56,7 @@ export function CreateProjectDialog() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<string>("FEATURE_FILM");
+  const [titleError, setTitleError] = useState("");
   const t = useTranslations("Dashboard");
   const tTypes = useTranslations("ProjectTypes");
   const tCommon = useTranslations("Common");
@@ -135,6 +141,12 @@ export function CreateProjectDialog() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
+                  setTitleError("");
+                  const result = createProjectSchema.safeParse({ title });
+                  if (!result.success) {
+                    setTitleError(t("validationTitle"));
+                    return;
+                  }
                   createMutation.mutate({
                     title,
                     description: description || undefined,
@@ -142,17 +154,20 @@ export function CreateProjectDialog() {
                   });
                 }}
                 className="space-y-4"
+                noValidate
               >
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-foreground">{t("projectTitle")}</label>
                   <input
                     type="text"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                    className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
+                    onChange={(e) => { setTitle(e.target.value); setTitleError(""); }}
+                    className={`w-full rounded-lg border ${titleError ? "border-destructive" : "border-border"} bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring`}
                     placeholder={t("projectTitlePlaceholder")}
                   />
+                  {titleError && (
+                    <p className="mt-1 text-xs text-destructive">{titleError}</p>
+                  )}
                 </div>
 
                 <div>

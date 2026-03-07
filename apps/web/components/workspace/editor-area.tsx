@@ -122,6 +122,11 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [printPreviewOpen, setPrintPreviewOpen] = useState(false);
+  const [suggestionSignal, setSuggestionSignal] = useState<{ id: string; from: number; to: number; _ts: number } | null>(null);
+
+  const handleSuggestionCreated = useCallback((detail: { id: string; from: number; to: number }) => {
+    setSuggestionSignal({ ...detail, _ts: Date.now() });
+  }, []);
   const stats = useScriptStats(editor);
   const documentIdRef = useRef(document.id);
   documentIdRef.current = document.id;
@@ -268,13 +273,13 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
       <ScriptStatsFooter stats={stats} />
 
       {/* Floating selection toolbar (Format / Rewrite / Pin) */}
-      <SelectionToolbar editor={editor} documentId={document.id} projectId={projectId} />
+      <SelectionToolbar editor={editor} documentId={document.id} projectId={projectId} onSuggestionCreated={handleSuggestionCreated} />
 
       {/* Inline comment popover — appears when clicking on commented text */}
       <CommentPopover editor={editor} documentId={document.id} />
 
       {/* Inline suggestion popover — appears when clicking on AI rewrite decorations */}
-      <SuggestionPopover editor={editor} documentId={document.id} />
+      <SuggestionPopover editor={editor} documentId={document.id} suggestionSignal={suggestionSignal} />
 
       <ShortcutsModal open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
       <PrintPreviewModal open={printPreviewOpen} onOpenChange={setPrintPreviewOpen} editor={editor} />

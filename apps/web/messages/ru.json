@@ -52,6 +52,10 @@
     "hasAccount": "Уже есть аккаунт?",
     "failedSignIn": "Не удалось войти",
     "failedSignUp": "Не удалось зарегистрироваться",
+    "validationEmail": "Введите корректный email",
+    "validationPassword": "Пароль должен быть не менее 8 символов",
+    "validationName": "Введите имя",
+    "validationLastName": "Введите фамилию",
     "betaQueueTitle": "Вы в очереди на подключение к бета-версии",
     "betaQueueDescription": "Мы уведомим вас по электронной почте, когда ваш аккаунт будет одобрен. Спасибо за интерес к Script Workspace!"
   },
@@ -76,6 +80,7 @@
     "templateSeriesDesc": "Структура для пилотного эпизода или серии (45-60 страниц)",
     "templateShort": "Короткометражка",
     "templateShortDesc": "Компактный формат для короткого метра (5-30 страниц)",
+    "validationTitle": "Введите название проекта",
     "projectCreated": "Проект создан",
     "projectDeleted": "Проект удалён",
     "deleteProject": "Удалить этот проект?",

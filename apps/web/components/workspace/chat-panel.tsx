@@ -12,137 +12,17 @@ import { useChatStream, type ChatMessage } from "@/hooks/use-chat-stream";
 import { estimateChatCost } from "@/lib/token-estimate";
 import { SuggestionPreview } from "./suggestion-preview";
 import { SuggestionHistory } from "./suggestion-history";
+import {
+  extractEditorContext,
+  extractSceneHeadings,
+  parseSceneReferences,
+  getScenePositions,
+} from "@/lib/editor-helpers";
 
 interface ChatPanelProps {
   editor: Editor | null;
   documentId: string;
   projectId: string;
-}
-
-function extractEditorContext(editor: Editor | null) {
-  if (!editor) return undefined;
-
-  const { doc, selection } = editor.state;
-  const cursorPos = selection.from;
-
-  let sceneStart = 0;
-  let sceneEnd = doc.content.size;
-  let prevSceneStart = 0;
-  let nextSceneEnd = doc.content.size;
-  let foundCurrent = false;
-
-  doc.descendants((node, pos) => {
-    if (node.type.name === "sceneHeading" || node.type.name === "scene-heading") {
-      if (pos <= cursorPos) {
-        prevSceneStart = sceneStart;
-        sceneStart = pos;
-        foundCurrent = true;
-      } else if (foundCurrent && sceneEnd === doc.content.size) {
-        sceneEnd = pos;
-        nextSceneEnd = doc.content.size;
-      } else if (sceneEnd !== doc.content.size && nextSceneEnd === doc.content.size) {
-        nextSceneEnd = pos;
-      }
-    }
-  });
-
-  const currentSceneText = doc.textBetween(sceneStart, sceneEnd, "\n");
-
-  let adjacentScenesText = "";
-  if (prevSceneStart !== sceneStart) {
-    adjacentScenesText += doc.textBetween(prevSceneStart, sceneStart, "\n");
-  }
-  if (sceneEnd < nextSceneEnd) {
-    adjacentScenesText += "\n" + doc.textBetween(sceneEnd, nextSceneEnd, "\n");
-  }
-
-  const fullText = doc.textBetween(0, doc.content.size, "\n");
-  const documentSummary = fullText.slice(0, 10000);
-
-  return {
-    currentSceneText,
-    adjacentScenesText: adjacentScenesText || undefined,
-    documentSummary,
-  };
-}
-
-/** Extract all scene headings from the editor for @-mentions */
-function extractSceneHeadings(editor: Editor | null): string[] {
-  if (!editor) return [];
-  const headings: string[] = [];
-  editor.state.doc.descendants((node) => {
-    if (node.type.name === "sceneHeading" || node.type.name === "scene-heading") {
-      const text = node.textContent.trim();
-      if (text) headings.push(text);
-    }
-  });
-  return headings;
-}
-
-/** Extract full text of a scene by heading */
-function extractSceneTextByHeading(editor: Editor, heading: string): string {
-  const { doc } = editor.state;
-  let sceneStart = -1;
-  let sceneEnd = doc.content.size;
-
-  doc.descendants((node, pos) => {
-    if (node.type.name === "sceneHeading" || node.type.name === "scene-heading") {
-      const text = node.textContent.trim();
-      if (text === heading && sceneStart === -1) {
-        sceneStart = pos;
-      } else if (sceneStart !== -1 && sceneEnd === doc.content.size) {
-        sceneEnd = pos;
-      }
-    }
-  });
-
-  if (sceneStart === -1) return "";
-  return doc.textBetween(sceneStart, sceneEnd, "\n");
-}
-
-/** Parse @[SCENE HEADING] references from text and extract scene contents */
-function parseSceneReferences(
-  text: string,
-  editor: Editor | null,
-): { cleanText: string; sceneTexts: string[] } {
-  if (!editor) return { cleanText: text, sceneTexts: [] };
-
-  const refPattern = /@\[([^\]]+)\]/g;
-  const sceneTexts: string[] = [];
-  let match;
-
-  while ((match = refPattern.exec(text)) !== null) {
-    const heading = match[1];
-    const sceneText = extractSceneTextByHeading(editor, heading);
-    if (sceneText) sceneTexts.push(sceneText);
-  }
-
-  // Clean text — keep the references as-is (they serve as visual context for the user)
-  return { cleanText: text, sceneTexts };
-}
-
-/**
- * Insert text into the editor by formatting it into screenplay blocks.
- */
-/** Get scene heading positions for the insert picker */
-function getScenePositions(editor: Editor): Array<{ heading: string; endPos: number }> {
-  const { doc } = editor.state;
-  const scenes: Array<{ heading: string; startPos: number; endPos: number }> = [];
-
-  doc.descendants((node, pos) => {
-    if (node.type.name === "sceneHeading" || node.type.name === "scene-heading") {
-      const text = node.textContent.trim();
-      if (text) {
-        // Close previous scene
-        if (scenes.length > 0) {
-          scenes[scenes.length - 1].endPos = pos;
-        }
-        scenes.push({ heading: text, startPos: pos, endPos: doc.content.size });
-      }
-    }
-  });
-
-  return scenes.map((s) => ({ heading: s.heading, endPos: s.endPos }));
 }
 
 function InsertButton({
@@ -422,7 +302,7 @@ function ChatBubble({
   );
 }
 
-function ModelSelector({ projectId }: { projectId: string }) {
+function ModelSelector({ projectId, onModelSelect }: { projectId: string; onModelSelect: (provider: string, model: string) => void }) {
   const [open, setOpen] = useState(false);
   const trpc = useTRPC();
   const t = useTranslations("Chat");
@@ -478,13 +358,7 @@ function ModelSelector({ projectId }: { projectId: string }) {
                   <button
                     key={m.id}
                     onClick={() => {
-                      // This is a session-level override — stored in the hook
-                      // We dispatch a custom event the hook can listen to
-                      window.dispatchEvent(
-                        new CustomEvent("chat-model-override", {
-                          detail: { provider: p.provider, model: m.id },
-                        })
-                      );
+                      onModelSelect(p.provider, m.id);
                       setOpen(false);
                     }}
                     className={`w-full rounded px-2 py-1.5 text-left text-xs transition-colors hover:bg-accent ${
@@ -530,18 +404,6 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
     trpcCtx.project.getById.queryOptions({ id: projectId })
   );
   const activeModel = overrideModel || (projectData as { preferredModel?: string | null } | undefined)?.preferredModel || null;
-
-  // Listen for model override events from the selector
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail && setModelOverride) {
-        setModelOverride(detail.provider, detail.model);
-      }
-    };
-    window.addEventListener("chat-model-override", handler);
-    return () => window.removeEventListener("chat-model-override", handler);
-  }, [setModelOverride]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -660,7 +522,7 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
           {t("title")}
         </span>
         <div className="flex items-center gap-1">
-          <ModelSelector projectId={projectId} />
+          <ModelSelector projectId={projectId} onModelSelect={setModelOverride} />
           <button
             onClick={() => setShowSuggestions(!showSuggestions)}
             className="rounded p-1 text-[10px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"

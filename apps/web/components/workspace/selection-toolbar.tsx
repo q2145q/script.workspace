@@ -15,6 +15,7 @@ interface SelectionToolbarProps {
   editor: Editor | null;
   documentId: string;
   projectId: string;
+  onSuggestionCreated?: (detail: { id: string; from: number; to: number }) => void;
 }
 
 interface SelectionInfo {
@@ -70,7 +71,7 @@ function getToolbarPosition(editor: Editor) {
   return { left, top };
 }
 
-export function SelectionToolbar({ editor, documentId, projectId }: SelectionToolbarProps) {
+export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCreated }: SelectionToolbarProps) {
   const t = useTranslations("Editor");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -143,11 +144,7 @@ export function SelectionToolbar({ editor, documentId, projectId }: SelectionToo
         editor.commands.setSuggestion(suggestionData);
 
         // Signal SuggestionPopover to auto-open
-        window.dispatchEvent(
-          new CustomEvent("suggestion-created", {
-            detail: { id: result.id, from: sel.from, to: sel.to },
-          })
-        );
+        onSuggestionCreated?.({ id: result.id, from: sel.from, to: sel.to });
 
         hideToolbar();
       },
@@ -211,11 +208,7 @@ export function SelectionToolbar({ editor, documentId, projectId }: SelectionToo
 
         editor.commands.setSuggestion(suggestionData);
 
-        window.dispatchEvent(
-          new CustomEvent("suggestion-created", {
-            detail: { id: result.id, from: sel.from, to: sel.to },
-          })
-        );
+        onSuggestionCreated?.({ id: result.id, from: sel.from, to: sel.to });
 
         hideToolbar();
       },

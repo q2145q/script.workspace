@@ -6,6 +6,12 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { signIn } from "@script/api/auth-client";
+import { z } from "zod";
+
+const signInSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
 
 export default function SignInPage() {
   const router = useRouter();
@@ -13,11 +19,26 @@ export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setFieldErrors({});
+
+    const result = signInSchema.safeParse({ email, password });
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      for (const issue of result.error.issues) {
+        const field = issue.path[0] as string;
+        if (field === "email") errors.email = t("validationEmail");
+        if (field === "password") errors.password = t("validationPassword");
+      }
+      setFieldErrors(errors);
+      return;
+    }
+
     setLoading(true);
 
     const { error } = await signIn.email({
@@ -33,6 +54,9 @@ export default function SignInPage() {
     }
   }
 
+  const inputClass = (field: string) =>
+    `w-full rounded-lg border ${fieldErrors[field] ? "border-destructive" : "border-border"} bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring`;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -47,7 +71,7 @@ export default function SignInPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         {error && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -66,11 +90,13 @@ export default function SignInPage() {
             id="email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
+            onChange={(e) => { setEmail(e.target.value); setFieldErrors((p) => ({ ...p, email: "" })); }}
+            className={inputClass("email")}
             placeholder={t("emailPlaceholder")}
           />
+          {fieldErrors.email && (
+            <p className="mt-1 text-xs text-destructive">{fieldErrors.email}</p>
+          )}
         </div>
 
         <div>
@@ -81,11 +107,13 @@ export default function SignInPage() {
             id="password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring"
+            onChange={(e) => { setPassword(e.target.value); setFieldErrors((p) => ({ ...p, password: "" })); }}
+            className={inputClass("password")}
             placeholder="••••••••"
           />
+          {fieldErrors.password && (
+            <p className="mt-1 text-xs text-destructive">{fieldErrors.password}</p>
+          )}
         </div>
 
         <button

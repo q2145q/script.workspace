@@ -9,9 +9,20 @@ import { signUp } from "@script/api/auth-client";
 import { POSITIONS, LANGUAGES } from "@script/types";
 import { useTRPC } from "@/lib/trpc/client";
 import { useMutation } from "@tanstack/react-query";
+import { z } from "zod";
+
+const signUpSchema = z.object({
+  name: z.string().min(1),
+  lastName: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(8),
+});
 
 const inputClass =
   "w-full rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring";
+
+const inputErrorClass =
+  "w-full rounded-lg border border-destructive bg-muted/50 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ring";
 
 const labelClass = "mb-1.5 block text-sm font-medium text-foreground";
 
@@ -31,14 +42,35 @@ export default function SignUpPage() {
   const [company, setCompany] = useState("");
   const [defaultLanguage, setDefaultLanguage] = useState("en");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   const trpc = useTRPC();
   const profileMutation = useMutation(trpc.user.updateProfile.mutationOptions());
 
+  function clearFieldError(field: string) {
+    setFieldErrors((p) => ({ ...p, [field]: "" }));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setFieldErrors({});
+
+    const result = signUpSchema.safeParse({ name, lastName, email, password });
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      for (const issue of result.error.issues) {
+        const field = issue.path[0] as string;
+        if (field === "name" && !errors.name) errors.name = t("validationName");
+        if (field === "lastName" && !errors.lastName) errors.lastName = t("validationLastName");
+        if (field === "email" && !errors.email) errors.email = t("validationEmail");
+        if (field === "password" && !errors.password) errors.password = t("validationPassword");
+      }
+      setFieldErrors(errors);
+      return;
+    }
+
     setLoading(true);
 
     const { error } = await signUp.email({
@@ -67,6 +99,8 @@ export default function SignUpPage() {
     router.push("/dashboard");
   }
 
+  const getInputClass = (field: string) => fieldErrors[field] ? inputErrorClass : inputClass;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -81,7 +115,7 @@ export default function SignUpPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         {error && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -101,11 +135,13 @@ export default function SignUpPage() {
               id="name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className={inputClass}
+              onChange={(e) => { setName(e.target.value); clearFieldError("name"); }}
+              className={getInputClass("name")}
               placeholder={t("firstNamePlaceholder")}
             />
+            {fieldErrors.name && (
+              <p className="mt-1 text-xs text-destructive">{fieldErrors.name}</p>
+            )}
           </div>
           <div>
             <label htmlFor="lastName" className={labelClass}>
@@ -115,11 +151,13 @@ export default function SignUpPage() {
               id="lastName"
               type="text"
               value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              required
-              className={inputClass}
+              onChange={(e) => { setLastName(e.target.value); clearFieldError("lastName"); }}
+              className={getInputClass("lastName")}
               placeholder={t("lastNamePlaceholder")}
             />
+            {fieldErrors.lastName && (
+              <p className="mt-1 text-xs text-destructive">{fieldErrors.lastName}</p>
+            )}
           </div>
         </div>
 
@@ -131,11 +169,13 @@ export default function SignUpPage() {
             id="email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className={inputClass}
+            onChange={(e) => { setEmail(e.target.value); clearFieldError("email"); }}
+            className={getInputClass("email")}
             placeholder={t("emailPlaceholder")}
           />
+          {fieldErrors.email && (
+            <p className="mt-1 text-xs text-destructive">{fieldErrors.email}</p>
+          )}
         </div>
 
         <div>
@@ -146,12 +186,13 @@ export default function SignUpPage() {
             id="password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
-            className={inputClass}
+            onChange={(e) => { setPassword(e.target.value); clearFieldError("password"); }}
+            className={getInputClass("password")}
             placeholder={t("passwordPlaceholder")}
           />
+          {fieldErrors.password && (
+            <p className="mt-1 text-xs text-destructive">{fieldErrors.password}</p>
+          )}
         </div>
 
         <div>

@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 interface SuggestionPopoverProps {
   editor: Editor | null;
   documentId: string;
+  suggestionSignal?: { id: string; from: number; to: number; _ts: number } | null;
 }
 
 /** Detect if stored operations are blocks format (new) vs legacy */
@@ -46,6 +47,7 @@ type SuggestionRecord = {
 export function SuggestionPopover({
   editor,
   documentId,
+  suggestionSignal,
 }: SuggestionPopoverProps) {
   const t = useTranslations("Suggestions");
   const [activeSuggestionId, setActiveSuggestionId] = useState<string | null>(
@@ -67,55 +69,49 @@ export function SuggestionPopover({
     trpc.suggestion.pending.queryOptions({ documentId })
   );
 
-  // Auto-open popover when a suggestion is created (via custom event)
-  useEffect(() => {
-    if (!editor) return;
-
-    const handler = (e: Event) => {
-      const { id, to } = (e as CustomEvent).detail as {
-        id: string;
-        from: number;
-        to: number;
-      };
-
-      // Trigger refetch so suggestion data is available for rendering
-      invalidate();
-
-      // Wait for ProseMirror decoration to render in DOM
-      setTimeout(() => {
-        const el = document.querySelector(
-          `[data-suggestion-id="${id}"]`
-        ) as HTMLElement | null;
-
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          setActiveSuggestionId(id);
-          setPosition({ top: rect.bottom + 6, left: rect.left });
-        } else {
-          // Fallback: use ProseMirror coords
-          try {
-            const coords = editor.view.coordsAtPos(to);
-            setActiveSuggestionId(id);
-            setPosition({ top: coords.bottom + 6, left: coords.left });
-          } catch {
-            // Position not available, skip auto-open
-          }
-        }
-      }, 200);
-    };
-
-    window.addEventListener("suggestion-created", handler);
-    return () => window.removeEventListener("suggestion-created", handler);
-  }, [editor]);
-
-  const invalidate = () => {
+  const invalidate = useCallback(() => {
     queryClient.invalidateQueries({
       queryKey: trpc.suggestion.pending.queryKey({ documentId }),
     });
     queryClient.invalidateQueries({
       queryKey: trpc.suggestion.list.queryKey({ documentId }),
     });
-  };
+  }, [queryClient, trpc, documentId]);
+
+  // Auto-open popover when a suggestion is created (via signal prop)
+  const openSuggestion = useCallback((id: string, to: number) => {
+    if (!editor) return;
+
+    invalidate();
+
+    // Wait for ProseMirror decoration to render in DOM
+    setTimeout(() => {
+      const el = document.querySelector(
+        `[data-suggestion-id="${id}"]`
+      ) as HTMLElement | null;
+
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        setActiveSuggestionId(id);
+        setPosition({ top: rect.bottom + 6, left: rect.left });
+      } else {
+        // Fallback: use ProseMirror coords
+        try {
+          const coords = editor.view.coordsAtPos(to);
+          setActiveSuggestionId(id);
+          setPosition({ top: coords.bottom + 6, left: coords.left });
+        } catch {
+          // Position not available, skip auto-open
+        }
+      }
+    }, 200);
+  }, [editor, invalidate]);
+
+  useEffect(() => {
+    if (suggestionSignal) {
+      openSuggestion(suggestionSignal.id, suggestionSignal.to);
+    }
+  }, [suggestionSignal, openSuggestion]);
 
   const applyMutation = useMutation(
     trpc.suggestion.accept.mutationOptions({
@@ -154,16 +150,8 @@ export function SuggestionPopover({
         });
         invalidate();
 
-        // Signal auto-open via custom event
-        window.dispatchEvent(
-          new CustomEvent("suggestion-created", {
-            detail: {
-              id: result.id,
-              from: result.selectionFrom,
-              to: result.selectionTo,
-            },
-          })
-        );
+        // Auto-open at the new suggestion position
+        openSuggestion(result.id, result.selectionTo);
       },
       onError: (err) => toast.error(t("failedRetry", { message: err.message })),
     })
