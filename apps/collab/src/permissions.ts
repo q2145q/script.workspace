@@ -4,7 +4,7 @@ import type { AuthenticatedUser } from "./auth";
 export async function checkPermissions(data: {
   documentName: string;
   context: { user: AuthenticatedUser };
-  connection: { readOnly: boolean };
+  connection: { readOnly: boolean | Boolean };
 }): Promise<void> {
   const { documentName, context, connection } = data;
   const [type, id] = documentName.split(":");

@@ -274,6 +274,8 @@ export const aiRouter = createTRPCRouter({
           }
         );
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        console.error("[ai] Rewrite failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -387,6 +389,8 @@ export const aiRouter = createTRPCRouter({
           explanation: result.explanation,
         };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        console.error("[ai] Format failed:", error);
         const message = error instanceof Error ? error.message : "Unknown AI error";
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI provider error: ${message}` });
       }

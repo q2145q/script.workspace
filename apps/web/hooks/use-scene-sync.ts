@@ -95,7 +95,7 @@ export function useSceneSync(
     if (hash === lastHashRef.current) return;
     lastHashRef.current = hash;
 
-    syncRef.current({ documentId, scenes }).catch(() => {});
+    syncRef.current({ documentId, scenes }).catch((err) => console.error("[scene-sync] Sync failed:", err));
   }, [editor, documentId]);
 
   useEffect(() => {

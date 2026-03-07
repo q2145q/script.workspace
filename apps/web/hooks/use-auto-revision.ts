@@ -45,7 +45,7 @@ export function useAutoRevision(
     if (!editor) return;
     const content = editor.getJSON();
     const hash = fnv1a(JSON.stringify(content));
-    mutateRef.current({ documentId, contentHash: hash }).catch(() => {});
+    mutateRef.current({ documentId, contentHash: hash }).catch((err) => console.error("[auto-revision] Snapshot failed:", err));
   }, [editor, documentId]);
 
   useEffect(() => {
