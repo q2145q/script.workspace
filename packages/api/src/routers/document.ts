@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { prisma, type Prisma } from "@script/db";
 import { tipTapContentSchema } from "@script/types";
+import { extractPlainText } from "../content-text";
 
 /** Common where clause for project access check */
 function docProjectAccess(userId: string) {
@@ -187,6 +188,7 @@ export const documentRouter = createTRPCRouter({
             projectId: doc.projectId,
             title: input.newTitle || `${doc.title} (копия)`,
             content: doc.content as Prisma.InputJsonValue,
+            contentText: extractPlainText(doc.content),
             metadata: doc.metadata as Prisma.InputJsonValue ?? undefined,
             sortOrder: (last?.sortOrder ?? 0) + 1,
           },
@@ -214,6 +216,7 @@ export const documentRouter = createTRPCRouter({
         where: { id: input.id },
         data: {
           content: input.content as unknown as Prisma.InputJsonValue,
+          contentText: extractPlainText(input.content),
           ...(input.title && { title: input.title }),
         },
       });

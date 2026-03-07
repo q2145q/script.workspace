@@ -8,6 +8,15 @@ import { getScreenplaySchema } from "@script/editor/schema";
 
 const schema = getScreenplaySchema();
 
+/** Extract plain text from TipTap JSON for full-text search indexing */
+function extractPlainText(content: unknown): string {
+  if (!content || typeof content !== "object") return "";
+  const node = content as Record<string, unknown>;
+  if (node.type === "text" && typeof node.text === "string") return node.text;
+  if (!Array.isArray(node.content)) return "";
+  return (node.content as unknown[]).map(extractPlainText).join(" ");
+}
+
 function parseDocumentName(documentName: string): {
   type: "document" | "bible" | "note";
   id: string;
@@ -142,6 +151,7 @@ export async function storeDocument({
           data: {
             yjsState: Buffer.from(state),
             content: jsonContent,
+            contentText: extractPlainText(jsonContent),
           },
         }),
       label,

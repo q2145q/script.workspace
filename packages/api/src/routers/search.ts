@@ -1,15 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { prisma } from "@script/db";
-
-/** Extract plain text from TipTap JSON */
-function extractPlainText(content: unknown): string {
-  if (!content || typeof content !== "object") return "";
-  const node = content as Record<string, unknown>;
-  if (node.type === "text" && typeof node.text === "string") return node.text;
-  if (!Array.isArray(node.content)) return "";
-  return (node.content as unknown[]).map(extractPlainText).join(" ");
-}
+import { prisma, Prisma } from "@script/db";
 
 export interface SearchResultItem {
   id: string;
@@ -70,40 +61,47 @@ export const searchRouter = createTRPCRouter({
         matchType: "title" as const,
       }));
 
-      // Also search in content — fetch docs not already found
+      // Content search via PostgreSQL FTS (GIN index on contentText)
       if (results.length < input.limit) {
         const titleIds = results.map((r) => r.id);
         const remaining = input.limit - results.length;
 
-        const contentDocs = await prisma.document.findMany({
-          where: {
-            ...accessFilter,
-            id: { notIn: titleIds },
-          },
-          select: {
-            id: true,
-            title: true,
-            projectId: true,
-            project: { select: { title: true } },
-            content: true,
-          },
-          take: remaining * 3,
-          orderBy: { updatedAt: "desc" },
-        });
+        const projectFilter = input.projectId
+          ? Prisma.sql`AND d."projectId" = ${input.projectId}`
+          : Prisma.empty;
 
-        const contentMatches = contentDocs
-          .filter((doc) => {
-            const text = extractPlainText(doc.content);
-            return text.toLowerCase().includes(searchTerm.toLowerCase());
-          })
-          .slice(0, remaining);
+        const excludeFilter = titleIds.length > 0
+          ? Prisma.sql`AND d.id NOT IN (${Prisma.join(titleIds)})`
+          : Prisma.empty;
+
+        const contentMatches = await prisma.$queryRaw<
+          { id: string; title: string; projectId: string; projectTitle: string }[]
+        >(Prisma.sql`
+          SELECT d.id, d.title, d."projectId", p.title AS "projectTitle"
+          FROM document d
+          JOIN project p ON d."projectId" = p.id
+          WHERE d."deletedAt" IS NULL
+            AND d."contentText" IS NOT NULL
+            ${projectFilter}
+            ${excludeFilter}
+            AND (
+              p."ownerId" = ${userId}
+              OR EXISTS (
+                SELECT 1 FROM project_member pm
+                WHERE pm."projectId" = p.id AND pm."userId" = ${userId}
+              )
+            )
+            AND to_tsvector('simple', d."contentText") @@ plainto_tsquery('simple', ${searchTerm})
+          ORDER BY d."updatedAt" DESC
+          LIMIT ${remaining}
+        `);
 
         for (const doc of contentMatches) {
           results.push({
             id: doc.id,
             title: doc.title,
             projectId: doc.projectId,
-            projectTitle: doc.project.title,
+            projectTitle: doc.projectTitle,
             matchType: "content",
           });
         }

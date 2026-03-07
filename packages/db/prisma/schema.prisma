@@ -183,16 +183,17 @@ model ProjectMember {
 }
 
 model Document {
-  id        String    @id @default(cuid())
-  projectId String
-  title     String    @default("Untitled")
-  content   Json      @default("{}")
-  yjsState  Bytes?
-  metadata  Json?
-  sortOrder Int       @default(0)
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id          String    @id @default(cuid())
+  projectId   String
+  title       String    @default("Untitled")
+  content     Json      @default("{}")
+  contentText String?   @db.Text
+  yjsState    Bytes?
+  metadata    Json?
+  sortOrder   Int       @default(0)
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   project         Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
   commentThreads  CommentThread[]
