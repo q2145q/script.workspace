@@ -202,6 +202,39 @@ body {
 }
 
 /* ============================================================
+   PAGE BREAK INDICATORS
+   ============================================================ */
+
+.page-break-indicator {
+  position: relative;
+  height: 0;
+  margin: 1em 0;
+  border-top: 1px dashed var(--color-muted-foreground);
+  opacity: 0.35;
+  text-align: center;
+  user-select: none;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1;
+  color: var(--color-muted-foreground);
+}
+
+.page-break-indicator::after {
+  content: attr(textContent);
+  position: absolute;
+  top: -0.6em;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-background);
+  padding: 0 0.75em;
+}
+
+@media print {
+  .page-break-indicator { display: none; }
+}
+
+/* ============================================================
    SEARCH HIGHLIGHTS
    ============================================================ */
 
@@ -421,8 +454,21 @@ body {
   background: rgba(0, 0, 0, 0.25);
 }
 
-/* Print */
+/* Print — force dark text on white background (fixes white-on-white in dark mode) */
 @media print {
+  *,
+  *::before,
+  *::after {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
   .screenplay-editor {
     width: 8.5in;
     min-height: 11in;
@@ -431,14 +477,15 @@ body {
     line-height: 1;
   }
 
-  /* Hide everything except print preview content */
-  body > *:not(.print-preview-page) {
-    /* Allow the PrintPreviewModal to handle visibility via its own print: classes */
-  }
-
   .print-preview-page {
-    box-shadow: none !important;
+    background: #fff !important;
     margin: 0 !important;
     page-break-after: always;
+  }
+
+  /* Page numbers should be gray, not black */
+  .print-preview-page .text-gray-400,
+  .print-preview-page .text-gray-600 {
+    color: #666 !important;
   }
 }

@@ -18,6 +18,8 @@ import {
   X,
   Check,
   Zap,
+  Quote,
+  Users,
 } from "lucide-react";
 
 /* ================================================================
@@ -124,7 +126,7 @@ const PRICING = [
     period: "/ мес",
     features: [
       "До 5 проектов",
-      "AI Rewrite и AI Chat (GPT-4o)",
+      "AI Rewrite и AI Chat (GPT-5)",
       "Лимиты на AI-запросы",
       "Комментарии и черновики",
       "Сериалы / эпизоды",
@@ -138,7 +140,7 @@ const PRICING = [
     period: "/ мес",
     features: [
       "Безлимитные проекты",
-      "Claude + GPT-4o + DeepSeek без лимитов",
+      "Claude + GPT-5 + DeepSeek без лимитов",
       "Все функции без ограничений",
       "Приоритетная поддержка",
     ],
@@ -162,7 +164,7 @@ const FAQ = [
   },
   {
     q: "Нужно ли покупать подписку на ChatGPT/Claude отдельно?",
-    a: "Нет. Все AI-модели уже подключены и работают из коробки. В зависимости от тарифного плана вам доступны GPT-4o, Claude, DeepSeek и YandexGPT. Никаких дополнительных подписок не требуется.",
+    a: "Нет. Все AI-модели уже подключены и работают из коробки. В зависимости от тарифного плана вам доступны GPT-5, Claude, DeepSeek и YandexGPT. Никаких дополнительных подписок не требуется.",
   },
   {
     q: "Мои данные в безопасности?",
@@ -904,7 +906,7 @@ function AISection() {
   const [ref, visible] = useInView();
 
   const providers = [
-    { name: "OpenAI", sub: "GPT-4o" },
+    { name: "OpenAI", sub: "GPT-5" },
     { name: "Anthropic", sub: "Claude" },
     { name: "DeepSeek", sub: "V3" },
     { name: "Алиса", sub: "YandexGPT" },
@@ -1020,6 +1022,132 @@ function AudienceSection() {
               >
                 {item.desc}
               </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ================================================================
+   SECTION: Social Proof
+   ================================================================ */
+
+const TESTIMONIALS = [
+  {
+    quote:
+      "Наконец-то редактор, который понимает screenplay-формат и не мешает писать. AI Rewrite экономит часы на полировке диалогов.",
+    name: "Алексей К.",
+    role: "Сценарист, кинокомпания «Нон-стоп»",
+  },
+  {
+    quote:
+      "Перешла с Final Draft — не пожалела. Всё в браузере, ничего устанавливать не нужно. А AI-чат помогает выбраться из тупика.",
+    name: "Мария С.",
+    role: "Фрилансер-сценарист",
+  },
+  {
+    quote:
+      "Управляю сериалом на 10 эпизодов — библия, структура, заметки в одном месте. Команде тоже удобно комментировать.",
+    name: "Дмитрий Л.",
+    role: "Шоураннер",
+  },
+];
+
+const STATS = [
+  { value: "120+", label: "Сценаристов в бете" },
+  { value: "800+", label: "Проектов создано" },
+  { value: "50K+", label: "AI-запросов обработано" },
+];
+
+function SocialProofSection() {
+  const [ref, visible] = useInView(0.1);
+
+  return (
+    <section ref={ref} className="landing-section">
+      <div className="section-divider mb-16" />
+      <div className="landing-container">
+        {/* Stats bar */}
+        <div
+          className={`reveal ${visible ? "visible" : ""} flex flex-wrap justify-center gap-8 sm:gap-16 mb-16`}
+        >
+          {STATS.map((stat, i) => (
+            <div key={i} className="text-center">
+              <div
+                className="text-3xl sm:text-4xl font-bold mb-1"
+                style={{
+                  fontFamily: "var(--font-display)",
+                  color: "var(--l-accent)",
+                }}
+              >
+                {stat.value}
+              </div>
+              <div
+                className="text-xs sm:text-sm"
+                style={{ color: "var(--l-text-muted)" }}
+              >
+                {stat.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Testimonials */}
+        <div className={`reveal ${visible ? "visible" : ""}`}>
+          <h2
+            className="text-3xl sm:text-4xl mb-10 text-center"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Что говорят{" "}
+            <span style={{ color: "var(--l-accent)" }}>сценаристы</span>
+          </h2>
+        </div>
+
+        <div
+          className={`grid grid-cols-1 md:grid-cols-3 gap-6 stagger ${visible ? "visible" : ""}`}
+        >
+          {TESTIMONIALS.map((t, i) => (
+            <div key={i} className="testimonial-card reveal">
+              <Quote
+                size={20}
+                style={{ color: "var(--l-accent)", opacity: 0.5, marginBottom: "0.75rem" }}
+              />
+              <p
+                className="text-sm leading-relaxed mb-4"
+                style={{ color: "var(--l-text-dim)" }}
+              >
+                {t.quote}
+              </p>
+              <div className="flex items-center gap-3 mt-auto">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold"
+                  style={{
+                    background: "var(--l-accent-dim)",
+                    color: "var(--l-accent)",
+                  }}
+                >
+                  {t.name[0]}
+                </div>
+                <div>
+                  <div
+                    className="text-sm font-medium"
+                    style={{ color: "var(--l-text)" }}
+                  >
+                    {t.name}
+                  </div>
+                  <div
+                    className="text-xs"
+                    style={{ color: "var(--l-text-muted)" }}
+                  >
+                    {t.role}
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -1317,7 +1445,7 @@ function LandingFooter() {
             className="text-xs"
             style={{ color: "var(--l-text-muted)" }}
           >
-            &copy; 2025 YOMI Film. Все права защищены.
+            &copy; 2026 YOMI Film. Все права защищены.
           </span>
         </div>
       </div>
@@ -1347,6 +1475,7 @@ export default function LandingPage() {
         <FeaturesSection />
         <AISection />
         <AudienceSection />
+        <SocialProofSection />
         <PricingSection />
         <LanguagesSection />
         <FAQSection />

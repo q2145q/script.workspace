@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
 
   const where = { createdAt: { gte: rangeStart } };
 
-  const [aggregate, byProvider, byUser] = await Promise.all([
+  const [aggregate, byProvider, byModel, byFeature, byUser] = await Promise.all([
     // Aggregate stats
     prisma.apiUsageLog.aggregate({
       where,
@@ -43,6 +43,24 @@ export async function GET(req: NextRequest) {
       _count: true,
     }),
 
+    // By model (provider + model)
+    prisma.apiUsageLog.groupBy({
+      by: ["provider", "model"],
+      where,
+      _sum: { tokensIn: true, tokensOut: true, costUsd: true },
+      _count: true,
+      orderBy: { _count: { model: "desc" } },
+    }),
+
+    // By feature
+    prisma.apiUsageLog.groupBy({
+      by: ["feature"],
+      where,
+      _sum: { tokensIn: true, tokensOut: true, costUsd: true },
+      _count: true,
+      orderBy: { _count: { feature: "desc" } },
+    }),
+
     // By user (top 50)
     prisma.apiUsageLog.groupBy({
       by: ["userId"],
@@ -53,6 +71,20 @@ export async function GET(req: NextRequest) {
       take: 50,
     }),
   ]);
+
+  // Daily time-series (raw SQL for date truncation)
+  const daily = await prisma.$queryRaw<
+    Array<{ day: string; requests: bigint; cost: number }>
+  >`
+    SELECT
+      DATE("createdAt") AS day,
+      COUNT(*)::bigint AS requests,
+      COALESCE(SUM("costUsd"), 0)::float AS cost
+    FROM api_usage_log
+    WHERE "createdAt" >= ${rangeStart}
+    GROUP BY DATE("createdAt")
+    ORDER BY day ASC
+  `;
 
   // Enrich user data
   const userIds = byUser.map((u) => u.userId);
@@ -77,6 +109,13 @@ export async function GET(req: NextRequest) {
       avgTokensOut: Math.round(aggregate._avg.tokensOut || 0),
     },
     byProvider,
+    byModel,
+    byFeature,
     byUser: byUserEnriched,
+    daily: daily.map((d) => ({
+      day: d.day,
+      requests: Number(d.requests),
+      cost: d.cost,
+    })),
   });
 }

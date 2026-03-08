@@ -1,13 +1,14 @@
 import { TRPCError } from "@trpc/server";
 import { redis, ensureRedis } from "./redis";
+import { logger } from "./logger";
 
 let useRedis = false;
 
 // Try to connect to Redis on startup
 ensureRedis().then((ok) => {
   useRedis = ok;
-  if (ok) console.log("[rate-limit] Using Redis backend");
-  else console.warn("[rate-limit] Redis unavailable, using in-memory fallback");
+  if (ok) logger.info("Rate-limit using Redis backend");
+  else logger.warn("Rate-limit Redis unavailable, using in-memory fallback");
 });
 
 // --- In-memory fallback ---

@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { SceneNavigator } from "./scene-navigator";
 import { EpisodeNavigator } from "./episode-navigator";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ReportButton } from "./report-button";
 import { DocumentContextMenu } from "./document-context-menu";
 import type { WorkspaceMode } from "./workspace-shell";
 
@@ -271,6 +272,7 @@ export function WorkspaceSidebar({
                     deleteMutation.mutate({ id: doc.id });
                   }
                 }}
+                onNavigate={() => onModeChange("script")}
               />
             ))
           )}
@@ -286,6 +288,7 @@ export function WorkspaceSidebar({
           <Settings className="h-3.5 w-3.5" />
           {t("settings")}
         </Link>
+        <ReportButton />
       </div>
 
       <div className="shrink-0 flex items-center justify-between border-t border-sidebar-border px-3 py-2">
@@ -309,6 +312,7 @@ function DocumentItem({
   onStartRename,
   onDuplicate,
   onDelete,
+  onNavigate,
 }: {
   doc: { id: string; title: string };
   projectId: string;
@@ -321,6 +325,7 @@ function DocumentItem({
   onStartRename: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onNavigate: () => void;
 }) {
   const tDoc = useTranslations("Document");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -374,6 +379,7 @@ function DocumentItem({
     >
       <Link
         href={`/project/${projectId}/script/${doc.id}`}
+        onClick={onNavigate}
         className={`flex w-full items-center rounded-md px-3 py-1.5 pr-7 text-sm transition-all duration-200 ${
           isActive
             ? "bg-accent text-accent-foreground"

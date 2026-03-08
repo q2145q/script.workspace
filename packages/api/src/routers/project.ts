@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { prisma, type Prisma } from "@script/db";
 import { createProjectSchema, updateProjectSchema, titlePageSchema } from "@script/types";
+import { logger } from "../logger";
 
 export const projectRouter = createTRPCRouter({
   list: protectedProcedure
@@ -156,7 +157,7 @@ export const projectRouter = createTRPCRouter({
           action: "project_deleted",
           details: { title: project.title },
         },
-      }).catch((err) => console.error("[project] Audit log failed:", err));
+      }).catch((err) => logger.error({ err }, "Audit log failed"));
 
       return result;
     }),
@@ -188,7 +189,7 @@ export const projectRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
       // Audit log before permanent delete (record will be cascade-deleted)
-      console.log(`[project] Permanent delete: ${project.title || input.id} by user ${ctx.user.id}`);
+      logger.info({ projectId: input.id, userId: ctx.user.id, title: project.title }, "Project permanently deleted");
       return prisma.project.delete({ where: { id: input.id } });
     }),
 

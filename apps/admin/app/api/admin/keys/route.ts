@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@script/db";
 import { encrypt, decrypt } from "@script/ai";
 import { validateSession } from "@/lib/auth";
+import { z } from "zod";
+
+const VALID_PROVIDERS = ["openai", "anthropic", "deepseek", "gemini", "yandex", "grok"] as const;
+
+const saveKeySchema = z.object({
+  provider: z.enum(VALID_PROVIDERS),
+  apiKey: z.string().min(1).max(500).optional(),
+  isActive: z.boolean().optional(),
+});
+
+const deleteKeySchema = z.object({
+  provider: z.enum(VALID_PROVIDERS),
+});
 
 function getSecret(): string {
   const secret = process.env.AI_ENCRYPTION_SECRET;
@@ -45,11 +58,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { provider, apiKey, isActive } = await req.json();
-
-  if (!provider) {
-    return NextResponse.json({ error: "Provider required" }, { status: 400 });
+  const body = await req.json();
+  const parsed = saveKeySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid input", details: parsed.error.flatten().fieldErrors },
+      { status: 400 },
+    );
   }
+
+  const { provider, apiKey, isActive } = parsed.data;
 
   // Toggle active status
   if (apiKey === undefined && isActive !== undefined) {
@@ -57,6 +75,16 @@ export async function POST(req: NextRequest) {
       where: { provider },
       data: { isActive },
     });
+
+    await prisma.activityLog.create({
+      data: {
+        projectId: "admin",
+        userId: "admin",
+        action: "admin:toggle_api_key",
+        details: { provider, isActive },
+      },
+    }).catch((err) => console.error("[admin] Audit log failed:", err));
+
     return NextResponse.json({ success: true });
   }
 
@@ -72,6 +100,15 @@ export async function POST(req: NextRequest) {
     create: { provider, apiKeyEnc: encrypted },
   });
 
+  await prisma.activityLog.create({
+    data: {
+      projectId: "admin",
+      userId: "admin",
+      action: "admin:update_api_key",
+      details: { provider, action: "save" },
+    },
+  }).catch((err) => console.error("[admin] Audit log failed:", err));
+
   return NextResponse.json({ success: true });
 }
 
@@ -80,7 +117,26 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { provider } = await req.json();
+  const body = await req.json();
+  const parsed = deleteKeySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid input", details: parsed.error.flatten().fieldErrors },
+      { status: 400 },
+    );
+  }
+
+  const { provider } = parsed.data;
   await prisma.globalApiKey.delete({ where: { provider } });
+
+  await prisma.activityLog.create({
+    data: {
+      projectId: "admin",
+      userId: "admin",
+      action: "admin:delete_api_key",
+      details: { provider },
+    },
+  }).catch((err) => console.error("[admin] Audit log failed:", err));
+
   return NextResponse.json({ success: true });
 }

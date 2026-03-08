@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Key, Cpu, Users, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Key, Cpu, Users, BarChart3, FileText, MessageSquare } from "lucide-react";
 
 const links = [
   { href: "/", label: "Дашборд", icon: LayoutDashboard },
@@ -10,6 +10,8 @@ const links = [
   { href: "/models", label: "Модели", icon: Cpu },
   { href: "/users", label: "Пользователи", icon: Users },
   { href: "/usage", label: "Использование", icon: BarChart3 },
+  { href: "/ai-logs", label: "AI Logs", icon: FileText },
+  { href: "/reports", label: "Обращения", icon: MessageSquare },
 ];
 
 export function AdminNav() {

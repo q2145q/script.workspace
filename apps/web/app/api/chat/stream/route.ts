@@ -15,7 +15,7 @@ import {
 } from "@script/ai";
 import type { ProviderId, StreamUsageResult } from "@script/ai";
 import { resolveApiKey } from "@script/api/global-key-resolver";
-import { logApiUsage } from "@script/api/usage-logger";
+import { logApiUsage, logAiResponse } from "@script/api/usage-logger";
 import { isRateLimited } from "@script/api/rate-limit";
 
 export async function POST(req: NextRequest) {
@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
               tokensOut: usage.tokensOut,
               durationMs: usage.durationMs,
               keySource: resolvedKey.source,
-            }).catch((err) => console.error("[chat/stream] Usage log failed:", err));
+            }).catch(() => { /* usage log failure is non-critical */ });
           }
 
           controller.enqueue(
@@ -210,8 +210,16 @@ export async function POST(req: NextRequest) {
           if (isRetryableError(error)) {
             recordFailure(activeProviderId);
           }
-          // Log full error server-side for debugging
-          console.error("[chat/stream] AI error:", error.message, error.stack);
+          // Log error to AiResponseLog and console
+          logAiResponse({
+            userId,
+            projectId,
+            provider: activeProviderId,
+            model: activeConfig.model,
+            feature: "chat",
+            status: "error",
+            errorMessage: error.message,
+          });
           // Send generic message to client — never expose internals
           controller.enqueue(
             encoder.encode(

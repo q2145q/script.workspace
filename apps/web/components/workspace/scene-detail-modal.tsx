@@ -114,7 +114,7 @@ export function SceneDetailModal({ scene, onClose }: SceneDetailModalProps) {
             {scene.preview && (
               <div>
                 <div className="mb-1 text-xs font-medium text-muted-foreground">{t("previewText")}</div>
-                <p className="text-sm leading-relaxed text-muted-foreground">{scene.preview}</p>
+                <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{scene.preview}</p>
               </div>
             )}
           </motion.div>

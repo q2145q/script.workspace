@@ -62,3 +62,4 @@ Return a JSON object:
 - `action_ratio` + `dialogue_ratio` should approximately equal 1.0
 - Provide 2-5 specific recommendations.
 - `avg_scene_length` is measured in approximate lines.
+- IMPORTANT: Always use English for JSON keys and enum values (`tempo` must be exactly `"slow"`, `"medium"`, or `"fast"`). The user language applies only to free-text fields (notes, overall_assessment, recommendations).

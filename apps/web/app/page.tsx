@@ -43,8 +43,37 @@ export default async function Home() {
     redirect("/dashboard");
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Script Workspace",
+    applicationCategory: "MultimediaApplication",
+    operatingSystem: "Web",
+    url: "https://script.yomimovie.art",
+    description:
+      "Профессиональный редактор сценариев с AI-соавтором. Форматирование screenplay, AI Rewrite, комментарии, версии.",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+      description: "Бесплатный бета-доступ",
+    },
+    featureList: [
+      "AI Rewrite & Format",
+      "Screenplay formatting",
+      "Real-time collaboration",
+      "Version history",
+      "PDF/FDX export",
+      "Multi-provider AI (OpenAI, Anthropic, DeepSeek, Gemini, Yandex, Grok)",
+    ],
+  };
+
   return (
     <div className={`${playfair.variable} ${ibmPlex.variable}`}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <LandingPage />
     </div>
   );

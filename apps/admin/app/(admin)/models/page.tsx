@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 
 interface ModelConfig {
   id: string;
@@ -25,25 +26,39 @@ const PROVIDER_LABELS: Record<string, string> = {
 export default function ModelsPage() {
   const [models, setModels] = useState<ModelConfig[]>([]);
   const [saving, setSaving] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchModels = useCallback(async () => {
-    const res = await fetch("/api/admin/models");
-    if (res.ok) setModels(await res.json());
+    try {
+      const res = await fetch("/api/admin/models");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setModels(await res.json());
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка загрузки моделей");
+    }
   }, []);
 
   useEffect(() => { fetchModels(); }, [fetchModels]);
 
   async function updateModel(id: string, updates: Partial<ModelConfig>) {
     setSaving(id);
-    await fetch("/api/admin/models", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", "x-csrf-check": "1" },
-      body: JSON.stringify({ id, ...updates }),
-    });
-    setModels((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, ...updates } : m))
-    );
-    setSaving(null);
+    try {
+      const res = await fetch("/api/admin/models", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-csrf-check": "1" },
+        body: JSON.stringify({ id, ...updates }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setModels((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, ...updates } : m))
+      );
+      toast.success("Модель обновлена");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Ошибка сохранения");
+    } finally {
+      setSaving(null);
+    }
   }
 
   // Group by provider
@@ -55,6 +70,13 @@ export default function ModelsPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-6">Модели</h1>
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-400">
+          {error}
+          <button onClick={() => setError(null)} className="ml-2 underline">Закрыть</button>
+        </div>
+      )}
 
       {Object.entries(grouped).map(([provider, providerModels]) => (
         <div key={provider} className="mb-8">

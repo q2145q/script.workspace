@@ -5,6 +5,7 @@ import {
 } from "y-prosemirror";
 import { prisma } from "@script/db";
 import { getScreenplaySchema } from "@script/editor/schema";
+import { logger } from "./logger.js";
 
 const schema = getScreenplaySchema();
 
@@ -44,7 +45,8 @@ export async function loadDocument({
     }
 
     // Lazy migration: convert JSONContent → Y.Doc
-    const ydoc = prosemirrorJSONToYDoc(schema, doc.content as Record<string, unknown>);
+    // Hocuspocus/TipTap uses "default" as the XML fragment name
+    const ydoc = prosemirrorJSONToYDoc(schema, doc.content as Record<string, unknown>, "default");
     const state = Y.encodeStateAsUpdate(ydoc);
 
     await prisma.document.update({
@@ -65,7 +67,7 @@ export async function loadDocument({
       return new Uint8Array(bible.yjsState);
     }
 
-    const ydoc = prosemirrorJSONToYDoc(schema, bible.content as Record<string, unknown>);
+    const ydoc = prosemirrorJSONToYDoc(schema, bible.content as Record<string, unknown>, "default");
     const state = Y.encodeStateAsUpdate(ydoc);
 
     await prisma.projectBible.update({
@@ -85,7 +87,7 @@ export async function loadDocument({
     }
 
     // Lazy migration: convert JSONContent → Y.Doc
-    const ydoc = prosemirrorJSONToYDoc(schema, note.content as Record<string, unknown>);
+    const ydoc = prosemirrorJSONToYDoc(schema, note.content as Record<string, unknown>, "default");
     const state = Y.encodeStateAsUpdate(ydoc);
 
     await prisma.projectNote.update({
@@ -110,16 +112,13 @@ async function withRetry<T>(
       return await fn();
     } catch (error) {
       if (attempt === maxRetries) {
-        console.error(
-          `[persistence] ${label}: failed after ${maxRetries + 1} attempts`,
-          error,
-        );
+        logger.error({ err: error, label, attempts: maxRetries + 1 }, "Persistence failed after all retries");
         throw error;
       }
       const delay = delays[attempt] ?? 4000;
-      console.warn(
-        `[persistence] ${label}: attempt ${attempt + 1} failed, retrying in ${delay}ms`,
-        error instanceof Error ? error.message : error,
+      logger.warn(
+        { label, attempt: attempt + 1, delay, err: error instanceof Error ? error.message : error },
+        "Persistence attempt failed, retrying",
       );
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
@@ -137,9 +136,10 @@ export async function storeDocument({
   const { type, id } = parseDocumentName(documentName);
 
   // Convert Y.Doc → JSONContent for backward compat (AI, export, etc.)
+  // Hocuspocus/TipTap uses "default" as the XML fragment name
   const ydoc = new Y.Doc();
   Y.applyUpdate(ydoc, state);
-  const jsonContent = yDocToProsemirrorJSON(ydoc);
+  const jsonContent = yDocToProsemirrorJSON(ydoc, "default");
 
   const label = `store(${documentName})`;
 

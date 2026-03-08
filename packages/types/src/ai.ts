@@ -8,23 +8,16 @@ export const PROVIDER_MODELS: Record<
   Array<{ id: string; label: string; description: string }>
 > = {
   openai: [
-    { id: "gpt-4.1", label: "GPT-4.1", description: "Best balance of cost & capability" },
-    { id: "gpt-4.1-mini", label: "GPT-4.1 Mini", description: "Fast & affordable" },
-    { id: "gpt-4.1-nano", label: "GPT-4.1 Nano", description: "Fastest, lowest cost" },
-    { id: "gpt-4o", label: "GPT-4o", description: "Previous generation" },
-    { id: "gpt-4o-mini", label: "GPT-4o Mini", description: "Previous gen, affordable" },
-    { id: "o3", label: "o3", description: "Reasoning model" },
-    { id: "o4-mini", label: "o4-mini", description: "Fast reasoning model" },
+    { id: "gpt-5", label: "GPT-5", description: "Most capable" },
+    { id: "gpt-5-mini", label: "GPT-5 Mini", description: "Fast & affordable" },
+    { id: "gpt-5-nano", label: "GPT-5 Nano", description: "Fastest, lowest cost" },
   ],
   anthropic: [
-    { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6", description: "Fast + intelligent" },
-    { id: "claude-opus-4-6", label: "Claude Opus 4.6", description: "Most capable" },
-    { id: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5", description: "Fastest, low cost" },
-    { id: "claude-sonnet-4-5-20250929", label: "Claude Sonnet 4.5", description: "Previous generation" },
+    { id: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5", description: "Fast, cost-efficient (default)" },
+    { id: "claude-sonnet-4-6", label: "Claude Sonnet 4.6", description: "Most intelligent" },
   ],
   deepseek: [
     { id: "deepseek-chat", label: "DeepSeek Chat (V3)", description: "General purpose" },
-    { id: "deepseek-reasoner", label: "DeepSeek Reasoner (R1)", description: "Reasoning model" },
   ],
   gemini: [
     { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro", description: "Most capable" },
@@ -173,7 +166,7 @@ export const knowledgeGraphSchema = z.object({
   relationships: z.array(z.object({
     from: z.string(),
     to: z.string(),
-    type: z.string(),
+    type: z.string().optional(),
     description: z.string().optional(),
   })),
   events: z.array(z.object({
@@ -181,7 +174,7 @@ export const knowledgeGraphSchema = z.object({
     name: z.string(),
     description: z.string().optional(),
     participants: z.array(z.string()),
-    location: z.string().optional(),
+    location: z.string().nullish(),
     importance: z.string(),
   })),
 });
@@ -289,7 +282,7 @@ export const checkConsistencySchema = z.object({
 /** Beat Sheet — Save the Cat structure analysis */
 export const beatSchema = z.object({
   beat_name: z.string(),
-  page_range: z.string(),
+  page_range: z.string().nullish(),
   description: z.string(),
   scene_reference: z.string().nullish(),
   status: z.enum(["present", "weak", "missing"]),

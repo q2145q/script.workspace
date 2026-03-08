@@ -1,3 +1,27 @@
+const { readFileSync } = require("fs");
+const { resolve } = require("path");
+
+function loadEnv() {
+  const envFile = resolve(__dirname, ".env");
+  const vars = {};
+  try {
+    const lines = readFileSync(envFile, "utf8").split("\n");
+    for (const line of lines) {
+      const eqIdx = line.indexOf("=");
+      if (eqIdx === -1 || line.startsWith("#")) continue;
+      const key = line.slice(0, eqIdx).trim();
+      let val = line.slice(eqIdx + 1).trim();
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      if (key) vars[key] = val;
+    }
+  } catch {}
+  return vars;
+}
+
+const env = loadEnv();
+
 module.exports = {
   apps: [
     {
@@ -27,8 +51,8 @@ module.exports = {
       interpreter: "node",
       env: {
         NODE_ENV: "production",
-        ADMIN_LOGIN: process.env.ADMIN_LOGIN || "",
-        ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || "",
+        ADMIN_LOGIN: env.ADMIN_LOGIN || "",
+        ADMIN_PASSWORD: env.ADMIN_PASSWORD || "",
       },
       instances: 1,
       exec_mode: "fork",

@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@script/db";
 import { validateSession } from "@/lib/auth";
 import { PROVIDER_MODELS } from "@script/types";
+import { z } from "zod";
+
+const updateModelSchema = z.object({
+  id: z.string().min(1),
+  isEnabled: z.boolean().optional(),
+  costInputPerMillion: z.number().min(0).max(1000).optional(),
+  costOutputPerMillion: z.number().min(0).max(1000).optional(),
+});
 
 export async function GET() {
   if (!(await validateSession())) {
@@ -37,18 +45,33 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id, isEnabled, costInputPerMillion, costOutputPerMillion } = await req.json();
-
-  if (!id) {
-    return NextResponse.json({ error: "Model ID required" }, { status: 400 });
+  const body = await req.json();
+  const parsed = updateModelSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid input", details: parsed.error.flatten().fieldErrors },
+      { status: 400 },
+    );
   }
+
+  const { id, isEnabled, costInputPerMillion, costOutputPerMillion } = parsed.data;
 
   const data: Record<string, unknown> = {};
   if (isEnabled !== undefined) data.isEnabled = isEnabled;
-  if (costInputPerMillion !== undefined) data.costInputPerMillion = Number(costInputPerMillion);
-  if (costOutputPerMillion !== undefined) data.costOutputPerMillion = Number(costOutputPerMillion);
+  if (costInputPerMillion !== undefined) data.costInputPerMillion = costInputPerMillion;
+  if (costOutputPerMillion !== undefined) data.costOutputPerMillion = costOutputPerMillion;
 
   await prisma.globalModelConfig.update({ where: { id }, data });
+
+  // Audit log
+  await prisma.activityLog.create({
+    data: {
+      projectId: "admin",
+      userId: "admin",
+      action: "admin:update_model",
+      details: { modelId: id, ...data },
+    },
+  }).catch((err) => console.error("[admin] Audit log failed:", err));
 
   return NextResponse.json({ success: true });
 }

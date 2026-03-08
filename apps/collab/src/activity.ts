@@ -5,6 +5,14 @@ import type { AuthenticatedUser } from "./auth";
 const lastLogTime = new Map<string, number>();
 const DEBOUNCE_MS = 30_000; // 30 seconds
 
+// Clean stale entries from lastLogTime every minute to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, time] of lastLogTime) {
+    if (now - time > DEBOUNCE_MS) lastLogTime.delete(key);
+  }
+}, 60_000);
+
 async function getProjectId(
   type: string,
   id: string

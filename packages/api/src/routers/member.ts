@@ -7,6 +7,7 @@ import {
 } from "@script/types";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../trpc";
+import { logger } from "../logger";
 
 async function assertProjectOwner(projectId: string, userId: string) {
   const project = await prisma.project.findFirst({
@@ -73,7 +74,7 @@ export const memberRouter = createTRPCRouter({
       if (!targetUser) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "User with this email not found. They need to register first.",
+          message: "Invitation sent. If the user is registered, they will see it.",
         });
       }
 
@@ -109,7 +110,7 @@ export const memberRouter = createTRPCRouter({
           action: "member_invited",
           details: { targetEmail: input.email, targetUserId: targetUser.id, role: input.role },
         },
-      }).catch((err) => console.error("[member] Audit log failed:", err));
+      }).catch((err) => logger.error({ err }, "Audit log failed"));
 
       return { success: true, user: targetUser };
     }),
@@ -144,7 +145,7 @@ export const memberRouter = createTRPCRouter({
           action: "member_role_changed",
           details: { targetUserId: input.userId, oldRole, newRole: input.role },
         },
-      }).catch((err) => console.error("[member] Audit log failed:", err));
+      }).catch((err) => logger.error({ err }, "Audit log failed"));
 
       return { success: true };
     }),
@@ -188,7 +189,7 @@ export const memberRouter = createTRPCRouter({
           action: isSelf ? "member_left" : "member_removed",
           details: { targetUserId: input.userId },
         },
-      }).catch((err) => console.error("[member] Audit log failed:", err));
+      }).catch((err) => logger.error({ err }, "Audit log failed"));
 
       return { success: true };
     }),

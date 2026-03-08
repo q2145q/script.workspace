@@ -3,6 +3,7 @@ import type { AIProvider, RewriteInput, FormatInput, ProviderConfig, AIRewriteRe
 import { aiRewriteResponseSchema, aiFormatResponseSchema } from "../types";
 import { buildRewritePrompt, buildFormatPrompt } from "./base";
 import { composePrompt } from "../prompts/compose";
+import { isFixedTemperatureModel } from "../utils";
 
 /**
  * Gemini provider — uses Google's OpenAI-compatible REST endpoint.
@@ -22,13 +23,14 @@ export class GeminiProvider implements AIProvider {
     const client = this.getClient(config.apiKey);
     const systemPrompt = composePrompt(this.id, "rewrite", { USER_LANGUAGE: input.language || "en" });
 
+    const modelId = config.model || "gemini-2.5-flash";
     const response = await client.chat.completions.create({
-      model: config.model || "gemini-2.5-flash",
+      model: modelId,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: buildRewritePrompt(input) },
       ],
-      temperature: 0.7,
+      ...(isFixedTemperatureModel(modelId) ? {} : { temperature: 0.7 }),
       response_format: { type: "json_object" },
     });
 
@@ -44,13 +46,14 @@ export class GeminiProvider implements AIProvider {
     const client = this.getClient(config.apiKey);
     const systemPrompt = composePrompt(this.id, "format", { USER_LANGUAGE: input.language || "en" });
 
+    const fmtModelId = config.model || "gemini-2.5-flash";
     const response = await client.chat.completions.create({
-      model: config.model || "gemini-2.5-flash",
+      model: fmtModelId,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: buildFormatPrompt(input) },
       ],
-      temperature: 0.3,
+      ...(isFixedTemperatureModel(fmtModelId) ? {} : { temperature: 0.3 }),
       response_format: { type: "json_object" },
     });
 

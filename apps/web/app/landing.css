@@ -513,6 +513,21 @@
   color: var(--l-accent);
 }
 
+/* ---------- Testimonials ---------- */
+.testimonial-card {
+  background: var(--l-card);
+  border: 1px solid var(--l-border);
+  border-radius: 14px;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, border-color 0.3s ease;
+}
+.testimonial-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(232, 201, 122, 0.25);
+}
+
 /* ---------- FAQ ---------- */
 .faq-item {
   border-bottom: 1px solid var(--l-border);

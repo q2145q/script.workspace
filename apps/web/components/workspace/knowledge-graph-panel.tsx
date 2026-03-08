@@ -38,7 +38,7 @@ interface GraphNode extends SimulationNodeDatum {
 
 // d3 link type
 interface GraphLink extends SimulationLinkDatum<GraphNode> {
-  type: string;
+  type?: string;
   description?: string;
 }
 
@@ -143,7 +143,7 @@ function GraphVisualization({ data }: { data: KnowledgeGraph }) {
       .selectAll("text")
       .data(links)
       .join("text")
-      .text((d) => d.type)
+      .text((d) => d.type ?? "")
       .attr("font-size", "9px")
       .attr("fill", "#6b7280")
       .attr("text-anchor", "middle")

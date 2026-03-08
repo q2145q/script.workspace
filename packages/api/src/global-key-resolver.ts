@@ -46,7 +46,7 @@ export async function resolveApiKey(
       where: { provider: globalKey.provider, isEnabled: true },
       orderBy: { sortOrder: "asc" },
     });
-    model = defaultModel?.modelId || "gpt-4.1";
+    model = defaultModel?.modelId || "gpt-5";
   }
 
   return {

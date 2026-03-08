@@ -3,7 +3,7 @@ import { resolve } from "path";
 import type { ProviderId, ProviderConfig } from "../../types";
 
 // Load .env.test from packages/ai root
-config({ path: resolve(__dirname, "../../../.env.test") });
+config({ path: resolve(__dirname, "../../../.env.test"), override: true });
 
 // Also load root .env for YANDEX_FOLDER_ID fallback
 config({ path: resolve(__dirname, "../../../../.env") });
@@ -17,8 +17,8 @@ export const PROVIDER_CONFIGS: Array<{
 }> = [
   {
     id: "openai",
-    label: "OpenAI (GPT-4.1)",
-    config: { apiKey: process.env.OPENAI_API_KEY || "", model: "gpt-4.1-mini" },
+    label: "OpenAI (GPT-5)",
+    config: { apiKey: process.env.OPENAI_API_KEY || "", model: "gpt-5-mini" },
     available: !!process.env.OPENAI_API_KEY,
   },
   {

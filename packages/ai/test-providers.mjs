@@ -16,7 +16,7 @@ const DATABASE_URL = "postgresql://neondb_owner:npg_yKDL5prUvVz7@ep-holy-flower-
 const PROVIDERS_TO_TEST = ["openai", "anthropic", "deepseek", "gemini", "yandex"];
 
 const PROVIDER_CONFIG = {
-  openai:    { model: "gpt-4.1-mini",              baseURL: undefined },
+  openai:    { model: "gpt-5-mini",                 baseURL: undefined },
   anthropic: { model: "claude-haiku-4-5-20251001",  baseURL: undefined },
   deepseek:  { model: "deepseek-chat",              baseURL: "https://api.deepseek.com" },
   gemini:    { model: "gemini-2.5-flash",           baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/" },

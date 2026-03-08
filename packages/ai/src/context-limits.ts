@@ -9,22 +9,18 @@ const CONTEXT_WINDOWS: Record<string, number> = {
   "gemini:default": 1_000_000,
 
   // Anthropic
-  "anthropic:claude-opus-4-6": 200_000,
   "anthropic:claude-sonnet-4-6": 200_000,
   "anthropic:claude-haiku-4-5-20251001": 200_000,
   "anthropic:default": 200_000,
 
   // OpenAI
-  "openai:gpt-4.1": 1_000_000,
-  "openai:gpt-4.1-mini": 1_000_000,
-  "openai:gpt-4o": 128_000,
-  "openai:o3": 200_000,
-  "openai:o4-mini": 200_000,
-  "openai:default": 128_000,
+  "openai:gpt-5": 1_000_000,
+  "openai:gpt-5-mini": 1_000_000,
+  "openai:gpt-5-nano": 1_000_000,
+  "openai:default": 1_000_000,
 
   // DeepSeek
   "deepseek:deepseek-chat": 64_000,
-  "deepseek:deepseek-reasoner": 64_000,
   "deepseek:default": 64_000,
 
   // Grok

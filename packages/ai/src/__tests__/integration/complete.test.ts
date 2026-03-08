@@ -7,15 +7,8 @@ import {
   structureAnalysisSchema,
   knowledgeGraphSchema,
 } from "@script/types";
+import { extractJson } from "../../utils";
 import { PROVIDER_CONFIGS, TEST_SCENE, TEST_PROJECT_CONTEXT } from "./test-helpers";
-
-function stripCodeFences(text: string): string {
-  let raw = text.trim();
-  if (raw.startsWith("```")) {
-    raw = raw.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-  }
-  return raw;
-}
 
 describe("Scene Analysis: all providers return valid JSON", () => {
   for (const provider of PROVIDER_CONFIGS) {
@@ -32,10 +25,11 @@ describe("Scene Analysis: all providers return valid JSON", () => {
         systemPrompt,
         TEST_SCENE,
         provider.config,
+        { jsonMode: true },
       );
 
       expect(result.text.length).toBeGreaterThan(10);
-      const parsed = JSON.parse(stripCodeFences(result.text));
+      const parsed = JSON.parse(extractJson(result.text));
       expect(() => sceneAnalysisSchema.parse(parsed)).not.toThrow();
       expect(parsed.characters_present.length).toBeGreaterThan(0);
     }, 90_000);
@@ -57,10 +51,11 @@ describe("Character Analysis: all providers return valid JSON", () => {
         systemPrompt,
         TEST_SCENE,
         provider.config,
+        { jsonMode: true },
       );
 
       expect(result.text.length).toBeGreaterThan(10);
-      const parsed = JSON.parse(stripCodeFences(result.text));
+      const parsed = JSON.parse(extractJson(result.text));
       expect(() => characterAnalysisSchema.parse(parsed)).not.toThrow();
       expect(parsed.characters.length).toBeGreaterThan(0);
     }, 90_000);
@@ -82,10 +77,11 @@ describe("Structure Analysis: all providers return valid JSON", () => {
         systemPrompt,
         TEST_SCENE,
         provider.config,
+        { jsonMode: true },
       );
 
       expect(result.text.length).toBeGreaterThan(10);
-      const parsed = JSON.parse(stripCodeFences(result.text));
+      const parsed = JSON.parse(extractJson(result.text));
       expect(() => structureAnalysisSchema.parse(parsed)).not.toThrow();
     }, 90_000);
   }
@@ -193,10 +189,11 @@ describe("Knowledge Graph: all providers return valid JSON", () => {
         systemPrompt,
         TEST_SCENE,
         provider.config,
+        { jsonMode: true },
       );
 
       expect(result.text.length).toBeGreaterThan(10);
-      const parsed = JSON.parse(stripCodeFences(result.text));
+      const parsed = JSON.parse(extractJson(result.text));
       expect(() => knowledgeGraphSchema.parse(parsed)).not.toThrow();
       expect(parsed.entities.length).toBeGreaterThan(0);
     }, 90_000);

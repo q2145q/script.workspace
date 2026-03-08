@@ -20,6 +20,7 @@ import { sceneMetadataRouter } from "./routers/scene-metadata";
 import { revisionRouter } from "./routers/revision";
 import { searchRouter } from "./routers/search";
 import { notificationRouter } from "./routers/notification";
+import { reportRouter } from "./routers/report";
 
 export const appRouter = createTRPCRouter({
   project: projectRouter,
@@ -43,6 +44,7 @@ export const appRouter = createTRPCRouter({
   revision: revisionRouter,
   search: searchRouter,
   notification: notificationRouter,
+  report: reportRouter,
 });
 
 export type AppRouter = typeof appRouter;

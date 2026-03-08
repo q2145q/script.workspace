@@ -26,12 +26,12 @@ export { buildChatContext } from "./context";
 export type { ChatContextInput, ChatContext, ContextLayer } from "./context";
 export { streamChatOpenAI, streamChatAnthropic, streamChatYandex, streamChat } from "./chat-stream";
 export type { ChatStreamInput, StreamCallbacks } from "./chat-stream";
-export { extractTextFromTipTapJson, extractScreenplayStructure, stripCodeFences, estimateTokens } from "./utils";
+export { extractTextFromTipTapJson, extractScreenplayStructure, stripCodeFences, extractJson, estimateTokens, isFixedTemperatureModel } from "./utils";
 export { AIProviderError } from "./errors";
 
 // Non-streaming completion (Phase 3)
 export { completeAI } from "./complete";
-export type { CompleteResult } from "./complete";
+export type { CompleteResult, CompleteOptions } from "./complete";
 
 // Context limits & Map-Reduce
 export { getEffectiveLimit, fitsInContext, getContextLimitInfo } from "./context-limits";

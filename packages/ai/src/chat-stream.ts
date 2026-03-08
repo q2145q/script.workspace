@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import type { ProviderConfig, ProviderId, StreamUsageResult } from "./types";
-import { estimateTokens } from "./utils";
+import { estimateTokens, isFixedTemperatureModel } from "./utils";
 
 export interface ChatStreamInput {
   messages: Array<{ role: "user" | "assistant"; content: string }>;
@@ -49,7 +49,7 @@ const OPENAI_COMPATIBLE_BASE_URLS: Partial<Record<ProviderId, string>> = {
 };
 
 const OPENAI_COMPATIBLE_DEFAULTS: Partial<Record<ProviderId, string>> = {
-  openai: "gpt-4.1",
+  openai: "gpt-5",
   deepseek: "deepseek-chat",
   grok: "grok-3",
   gemini: "gemini-2.5-flash",
@@ -70,8 +70,7 @@ export async function streamChatOpenAI(
     ? [{ role: "system" as const, content: input.systemPrompt }]
     : [];
 
-  const modelId = config.model || defaultModel || "gpt-4.1";
-  const isReasoner = modelId.includes("reasoner");
+  const modelId = config.model || defaultModel || "gpt-5";
 
   const stream = await client.chat.completions.create(
     {
@@ -85,7 +84,7 @@ export async function streamChatOpenAI(
       ],
       stream: true,
       stream_options: { include_usage: true },
-      ...(isReasoner ? {} : { temperature: 0.7 }),
+      ...(isFixedTemperatureModel(modelId) ? {} : { temperature: 0.7 }),
     },
     { signal: input.signal },
   );

@@ -2,6 +2,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { auth } from "./auth";
 import { checkRateLimit } from "./rate-limit";
+import { logger } from "./logger";
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const session = await auth.api.getSession({
@@ -19,6 +20,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 });
 
 export const createTRPCRouter = t.router;
+export const mergeRouters = t.mergeRouters;
 export const createCallerFactory = t.createCallerFactory;
 
 const SLOW_REQUEST_MS = 2000;
@@ -30,13 +32,9 @@ const timingMiddleware = t.middleware(async ({ path, type, next }) => {
   const durationMs = Math.round(performance.now() - start);
 
   if (!result.ok) {
-    console.error(
-      JSON.stringify({ level: "error", type, path, durationMs, error: (result.error as { code?: string })?.code }),
-    );
+    logger.error({ type, path, durationMs, error: (result.error as { code?: string })?.code }, "tRPC request failed");
   } else if (durationMs > SLOW_REQUEST_MS) {
-    console.warn(
-      JSON.stringify({ level: "warn", msg: "slow_request", type, path, durationMs }),
-    );
+    logger.warn({ type, path, durationMs }, "Slow tRPC request");
   }
 
   return result;

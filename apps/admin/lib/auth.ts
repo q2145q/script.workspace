@@ -2,17 +2,14 @@ import { cookies, headers } from "next/headers";
 import { createHash, randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
 
-const ADMIN_LOGIN = process.env.ADMIN_LOGIN || "";
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || "";
 const COOKIE_NAME = "admin_session";
-const SESSION_SECRET = process.env.ADMIN_SESSION_SECRET;
 
-if (!SESSION_SECRET) {
-  console.warn("[admin] ADMIN_SESSION_SECRET is not set — admin sessions will not work securely");
-}
+function getAdminLogin() { return process.env.ADMIN_LOGIN || ""; }
+function getAdminPasswordHash() { return process.env.ADMIN_PASSWORD_HASH || ""; }
+function getSessionSecret() { return process.env.ADMIN_SESSION_SECRET || ""; }
 
 function signToken(token: string): string {
-  return createHash("sha256").update(token + (SESSION_SECRET || "")).digest("hex");
+  return createHash("sha256").update(token + getSessionSecret()).digest("hex");
 }
 
 // Rate limiting: 5 attempts per 15 minutes per IP
@@ -37,9 +34,11 @@ export async function getClientIp(): Promise<string> {
 }
 
 export async function validateCredentials(login: string, password: string): Promise<boolean> {
-  if (login !== ADMIN_LOGIN) return false;
-  if (!ADMIN_PASSWORD_HASH) return false;
-  return bcrypt.compare(password, ADMIN_PASSWORD_HASH);
+  const adminLogin = getAdminLogin();
+  const adminHash = getAdminPasswordHash();
+  if (login !== adminLogin) return false;
+  if (!adminHash) return false;
+  return bcrypt.compare(password, adminHash);
 }
 
 export async function createSession(): Promise<void> {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { Key, Eye, EyeOff, Trash2 } from "lucide-react";
 
 const PROVIDERS = [
@@ -26,10 +27,17 @@ export default function ApiKeysPage() {
   const [newKey, setNewKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchKeys = useCallback(async () => {
-    const res = await fetch("/api/admin/keys");
-    if (res.ok) setKeys(await res.json());
+    try {
+      const res = await fetch("/api/admin/keys");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setKeys(await res.json());
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ошибка загрузки ключей");
+    }
   }, []);
 
   useEffect(() => { fetchKeys(); }, [fetchKeys]);
@@ -37,40 +45,67 @@ export default function ApiKeysPage() {
   async function saveKey(provider: string) {
     if (!newKey.trim()) return;
     setLoading(true);
-    await fetch("/api/admin/keys", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-csrf-check": "1" },
-      body: JSON.stringify({ provider, apiKey: newKey }),
-    });
-    setNewKey("");
-    setEditingProvider(null);
-    setShowKey(false);
-    await fetchKeys();
-    setLoading(false);
+    try {
+      const res = await fetch("/api/admin/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-csrf-check": "1" },
+        body: JSON.stringify({ provider, apiKey: newKey }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setNewKey("");
+      setEditingProvider(null);
+      setShowKey(false);
+      await fetchKeys();
+      toast.success("Ключ сохранён");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Ошибка сохранения ключа");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function toggleActive(provider: string, isActive: boolean) {
-    await fetch("/api/admin/keys", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-csrf-check": "1" },
-      body: JSON.stringify({ provider, isActive }),
-    });
-    await fetchKeys();
+    try {
+      const res = await fetch("/api/admin/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-csrf-check": "1" },
+        body: JSON.stringify({ provider, isActive }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await fetchKeys();
+      toast.success(isActive ? "Ключ активирован" : "Ключ отключён");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Ошибка переключения");
+    }
   }
 
   async function deleteKey(provider: string) {
     if (!confirm("Удалить ключ?")) return;
-    await fetch("/api/admin/keys", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json", "x-csrf-check": "1" },
-      body: JSON.stringify({ provider }),
-    });
-    await fetchKeys();
+    try {
+      const res = await fetch("/api/admin/keys", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", "x-csrf-check": "1" },
+        body: JSON.stringify({ provider }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await fetchKeys();
+      toast.success("Ключ удалён");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Ошибка удаления ключа");
+    }
   }
 
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-6">API Ключи</h1>
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-400">
+          {error}
+          <button onClick={() => setError(null)} className="ml-2 underline">Закрыть</button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {PROVIDERS.map((p) => {
           const stored = keys.find((k) => k.provider === p.id);

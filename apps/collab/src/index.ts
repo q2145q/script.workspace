@@ -8,6 +8,7 @@ import { authenticateConnection } from "./auth.js";
 import { loadDocument, storeDocument } from "./persistence.js";
 import { checkPermissions } from "./permissions.js";
 import { logActivity, logJoinLeave } from "./activity.js";
+import { logger } from "./logger.js";
 
 const port = parseInt(process.env.COLLAB_PORT || "3004");
 
@@ -22,10 +23,18 @@ try {
     lazyConnect: false,
   });
   redis.on("error", () => { /* handled silently, fallback used */ });
-  console.log("[collab] Redis rate limiter connected");
+  logger.info("Redis rate limiter connected");
 } catch {
-  console.warn("[collab] Redis unavailable, using in-memory rate limiter");
+  logger.warn("Redis unavailable, using in-memory rate limiter");
 }
+
+// Clean expired entries from fallbackStore every minute to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of fallbackStore) {
+    if (now > entry.resetAt) fallbackStore.delete(key);
+  }
+}, 60_000);
 
 async function checkRateLimit(userId: string, documentName: string): Promise<boolean> {
   const key = `ws:${userId}:${documentName}`;
@@ -80,7 +89,7 @@ const server = Server.configure({
     });
 
     // 3. Log join
-    logJoinLeave("join", data.documentName, result.user).catch(console.error);
+    logJoinLeave("join", data.documentName, result.user).catch((err) => logger.error({ err }, "Join log failed"));
 
     // IMPORTANT: Return context additions — Hocuspocus merges them into
     // hookPayload.context via callback. Mutating data.context does NOT work
@@ -96,20 +105,20 @@ const server = Server.configure({
 
     // Rate limiting: reject excessive changes
     if (context?.user && !(await checkRateLimit(context.user.id, data.documentName))) {
-      console.warn(`[collab] Rate limit exceeded for ${context.user.email} on ${data.documentName}`);
+      logger.warn({ email: context.user.email, document: data.documentName }, "Rate limit exceeded");
       return;
     }
 
     logActivity({
       documentName: data.documentName,
       context,
-    }).catch(console.error);
+    }).catch((err) => logger.error({ err }, "Activity log failed"));
   },
 
   async onDisconnect(data) {
     const user = (data.context as { user: { id: string; name: string; email: string } })?.user;
     if (user) {
-      logJoinLeave("leave", data.documentName, user).catch(console.error);
+      logJoinLeave("leave", data.documentName, user).catch((err) => logger.error({ err }, "Leave log failed"));
     }
   },
 
@@ -127,9 +136,9 @@ const server = Server.configure({
         try {
           await storeDocument({ documentName, state });
         } catch (error) {
-          console.error(
-            `[collab] Failed to store ${documentName} after all retries:`,
-            error instanceof Error ? error.message : error,
+          logger.error(
+            { err: error instanceof Error ? error.message : error, document: documentName },
+            "Failed to store document after all retries",
           );
           // Don't throw — Hocuspocus will keep the Y.Doc in memory
           // and retry on next change. Throwing crashes the connection.
@@ -141,7 +150,7 @@ const server = Server.configure({
 
 server.listen();
 
-console.log(`Collab server running on port ${port}`);
+logger.info({ port }, "Collab server running");
 
 // Periodic session re-validation: disconnect users with expired/revoked sessions
 setInterval(async () => {
@@ -165,9 +174,7 @@ setInterval(async () => {
           connection: conn,
         });
       } catch {
-        console.log(
-          `[collab] Session/permission expired for ${ctx.user.email} on ${docName}, disconnecting`,
-        );
+        logger.info({ email: ctx.user.email, document: docName }, "Session/permission expired, disconnecting");
         try {
           conn.close();
         } catch {

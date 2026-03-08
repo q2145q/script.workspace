@@ -3,6 +3,7 @@ import type { AIProvider, RewriteInput, FormatInput, ProviderConfig, AIRewriteRe
 import { aiRewriteResponseSchema, aiFormatResponseSchema } from "../types";
 import { buildRewritePrompt, buildFormatPrompt } from "./base";
 import { composePrompt } from "../prompts/compose";
+import { isFixedTemperatureModel } from "../utils";
 
 export class OpenAIProvider implements AIProvider {
   readonly id = "openai" as const;
@@ -11,13 +12,14 @@ export class OpenAIProvider implements AIProvider {
     const client = new OpenAI({ apiKey: config.apiKey });
     const systemPrompt = composePrompt(this.id, "rewrite", { USER_LANGUAGE: input.language || "en" });
 
+    const modelId = config.model || "gpt-5";
     const response = await client.chat.completions.create({
-      model: config.model || "gpt-4.1",
+      model: modelId,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: buildRewritePrompt(input) },
       ],
-      temperature: 0.7,
+      ...(isFixedTemperatureModel(modelId) ? {} : { temperature: 0.7 }),
       response_format: { type: "json_object" },
     });
 
@@ -33,13 +35,14 @@ export class OpenAIProvider implements AIProvider {
     const client = new OpenAI({ apiKey: config.apiKey });
     const systemPrompt = composePrompt(this.id, "format", { USER_LANGUAGE: input.language || "en" });
 
+    const fmtModelId = config.model || "gpt-5";
     const response = await client.chat.completions.create({
-      model: config.model || "gpt-4.1",
+      model: fmtModelId,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: buildFormatPrompt(input) },
       ],
-      temperature: 0.3,
+      ...(isFixedTemperatureModel(fmtModelId) ? {} : { temperature: 0.3 }),
       response_format: { type: "json_object" },
     });
 

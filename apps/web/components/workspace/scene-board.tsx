@@ -101,16 +101,17 @@ function extractEditorScenes(editor: Editor): Array<{
   editor.state.doc.descendants((node, pos) => {
     if (node.type.name === "sceneHeading") {
       const heading = node.textContent || `Scene ${i + 1}`;
-      let preview = "";
-      const nextPos = pos + node.nodeSize;
-      if (nextPos < editor.state.doc.content.size) {
-        const $next = editor.state.doc.resolve(nextPos);
-        const nextNode = $next.nodeAfter;
-        if (nextNode && nextNode.type.name !== "sceneHeading") {
-          preview = nextNode.textContent.slice(0, 100);
-        }
+      // Collect all text until the next sceneHeading
+      const parts: string[] = [];
+      let cursor = pos + node.nodeSize;
+      while (cursor < editor.state.doc.content.size) {
+        const $pos = editor.state.doc.resolve(cursor);
+        const next = $pos.nodeAfter;
+        if (!next || next.type.name === "sceneHeading") break;
+        if (next.textContent) parts.push(next.textContent);
+        cursor += next.nodeSize;
       }
-      scenes.push({ index: i, heading, preview, pos });
+      scenes.push({ index: i, heading, preview: parts.join("\n"), pos });
       i++;
     }
   });

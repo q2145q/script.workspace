@@ -4,6 +4,7 @@ import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
 import { TRPCReactProvider } from "@/lib/trpc/client";
+import { MotionConfigProvider } from "@/components/motion-config-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -69,7 +70,9 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <TRPCReactProvider>
+              <MotionConfigProvider>
               {children}
+              </MotionConfigProvider>
               <Toaster
                 position="bottom-right"
                 toastOptions={{

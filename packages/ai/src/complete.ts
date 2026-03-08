@@ -1,7 +1,13 @@
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import type { ProviderConfig, ProviderId, StreamUsageResult } from "./types";
-import { estimateTokens } from "./utils";
+import { estimateTokens, isFixedTemperatureModel } from "./utils";
+
+/** Options for AI completion */
+export interface CompleteOptions {
+  /** When true, enforce JSON output (response_format for OpenAI, prefill for Anthropic) */
+  jsonMode?: boolean;
+}
 
 /** Result from a non-streaming AI completion */
 export interface CompleteResult {
@@ -17,7 +23,7 @@ const OPENAI_COMPATIBLE_BASE_URLS: Partial<Record<ProviderId, string>> = {
 };
 
 const OPENAI_COMPATIBLE_DEFAULTS: Partial<Record<ProviderId, string>> = {
-  openai: "gpt-4.1",
+  openai: "gpt-5",
   deepseek: "deepseek-chat",
   grok: "grok-3",
   gemini: "gemini-2.5-flash",
@@ -29,12 +35,11 @@ async function completeOpenAI(
   config: ProviderConfig,
   baseURL?: string,
   defaultModel?: string,
+  options?: CompleteOptions,
 ): Promise<CompleteResult> {
   const startTime = Date.now();
   const client = new OpenAI({ apiKey: config.apiKey, ...(baseURL ? { baseURL } : {}) });
-  const modelId = config.model || defaultModel || "gpt-4.1";
-  const isReasoner = modelId.includes("reasoner");
-
+  const modelId = config.model || defaultModel || "gpt-5";
   const response = await client.chat.completions.create(
     {
       model: modelId,
@@ -42,7 +47,8 @@ async function completeOpenAI(
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      ...(isReasoner ? {} : { temperature: 0.7 }),
+      ...(isFixedTemperatureModel(modelId) ? {} : { temperature: 0.7 }),
+      ...(options?.jsonMode ? { response_format: { type: "json_object" as const } } : {}),
     },
     { signal: AbortSignal.timeout(120_000) },
   );
@@ -61,13 +67,20 @@ async function completeAnthropic(
   systemPrompt: string,
   userPrompt: string,
   config: ProviderConfig,
+  options?: CompleteOptions,
 ): Promise<CompleteResult> {
   const startTime = Date.now();
   const client = new Anthropic({ apiKey: config.apiKey });
 
+  const messages: Anthropic.MessageParam[] = [{ role: "user", content: userPrompt }];
+  // JSON prefill: start assistant response with "{" to force JSON output
+  if (options?.jsonMode) {
+    messages.push({ role: "assistant", content: "{" });
+  }
+
   const response = await client.messages.create(
     {
-      model: config.model || "claude-sonnet-4-6",
+      model: config.model || "claude-haiku-4-5-20251001",
       max_tokens: 16384,
       system: [
         {
@@ -76,13 +89,17 @@ async function completeAnthropic(
           cache_control: { type: "ephemeral" },
         } as Anthropic.TextBlockParam,
       ],
-      messages: [{ role: "user", content: userPrompt }],
+      messages,
     },
     { signal: AbortSignal.timeout(120_000) },
   );
 
   const textBlock = response.content.find((b) => b.type === "text");
-  const text = textBlock && textBlock.type === "text" ? textBlock.text : "";
+  let text = textBlock && textBlock.type === "text" ? textBlock.text : "";
+  // Prepend the prefilled "{" back to complete the JSON
+  if (options?.jsonMode) {
+    text = "{" + text;
+  }
 
   return {
     text,
@@ -148,15 +165,17 @@ async function completeYandex(
 /**
  * Unified non-streaming completion — sends system + user prompt, returns text.
  * Used by analysis, logline, synopsis, and other non-streaming AI features.
+ * Pass options.jsonMode = true to enforce JSON output across all providers.
  */
 export async function completeAI(
   providerId: ProviderId,
   systemPrompt: string,
   userPrompt: string,
   config: ProviderConfig,
+  options?: CompleteOptions,
 ): Promise<CompleteResult> {
   if (providerId === "anthropic") {
-    return completeAnthropic(systemPrompt, userPrompt, config);
+    return completeAnthropic(systemPrompt, userPrompt, config, options);
   }
 
   if (providerId === "yandex") {
@@ -166,5 +185,5 @@ export async function completeAI(
   // OpenAI-compatible: openai, deepseek, grok, gemini
   const baseURL = OPENAI_COMPATIBLE_BASE_URLS[providerId];
   const defaultModel = OPENAI_COMPATIBLE_DEFAULTS[providerId];
-  return completeOpenAI(systemPrompt, userPrompt, config, baseURL, defaultModel);
+  return completeOpenAI(systemPrompt, userPrompt, config, baseURL, defaultModel, options);
 }

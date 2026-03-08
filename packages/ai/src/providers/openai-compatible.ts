@@ -3,6 +3,7 @@ import type { AIProvider, RewriteInput, FormatInput, ProviderConfig, AIRewriteRe
 import { aiRewriteResponseSchema, aiFormatResponseSchema } from "../types";
 import { buildRewritePrompt, buildFormatPrompt } from "./base";
 import { composePrompt } from "../prompts/compose";
+import { isFixedTemperatureModel } from "../utils";
 
 export class OpenAICompatibleProvider implements AIProvider {
   constructor(
@@ -15,7 +16,6 @@ export class OpenAICompatibleProvider implements AIProvider {
     const client = new OpenAI({ apiKey: config.apiKey, baseURL: this.baseURL });
     const systemPrompt = composePrompt(this.id, "rewrite", { USER_LANGUAGE: input.language || "en" });
     const modelId = config.model || this.defaultModel;
-    const isReasoner = modelId.includes("reasoner");
 
     const response = await client.chat.completions.create({
       model: modelId,
@@ -23,7 +23,7 @@ export class OpenAICompatibleProvider implements AIProvider {
         { role: "system", content: systemPrompt },
         { role: "user", content: buildRewritePrompt(input) },
       ],
-      ...(isReasoner ? {} : { temperature: 0.7 }),
+      ...(isFixedTemperatureModel(modelId) ? {} : { temperature: 0.7 }),
       response_format: { type: "json_object" },
     });
 
@@ -39,7 +39,6 @@ export class OpenAICompatibleProvider implements AIProvider {
     const client = new OpenAI({ apiKey: config.apiKey, baseURL: this.baseURL });
     const systemPrompt = composePrompt(this.id, "format", { USER_LANGUAGE: input.language || "en" });
     const modelId = config.model || this.defaultModel;
-    const isReasoner = modelId.includes("reasoner");
 
     const response = await client.chat.completions.create({
       model: modelId,
@@ -47,7 +46,7 @@ export class OpenAICompatibleProvider implements AIProvider {
         { role: "system", content: systemPrompt },
         { role: "user", content: buildFormatPrompt(input) },
       ],
-      ...(isReasoner ? {} : { temperature: 0.3 }),
+      ...(isFixedTemperatureModel(modelId) ? {} : { temperature: 0.3 }),
       response_format: { type: "json_object" },
     });
 

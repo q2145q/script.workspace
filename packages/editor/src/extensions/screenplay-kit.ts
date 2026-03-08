@@ -15,6 +15,7 @@ import { SelectionHighlight } from "./selection-highlight";
 import { SuggestionDecoration } from "./suggestion-decoration";
 import { AutocompleteExtension } from "./autocomplete/autocomplete-extension";
 import { SearchReplace } from "./search-replace";
+import { PageBreakDecoration } from "./page-break-decoration";
 
 export const ScreenplayKit = Extension.create({
   name: "screenplayKit",
@@ -35,6 +36,7 @@ export const ScreenplayKit = Extension.create({
       SuggestionDecoration,
       AutocompleteExtension,
       SearchReplace,
+      PageBreakDecoration,
     ];
   },
 });

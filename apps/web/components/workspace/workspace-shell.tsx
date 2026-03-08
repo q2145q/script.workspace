@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { PanelRightOpen, Menu, X } from "lucide-react";
 import type { Editor } from "@script/editor";
 import type { ImperativePanelHandle } from "react-resizable-panels";
 import {
@@ -88,11 +89,35 @@ function PanelFallback() {
 
 export function WorkspaceShell({ project, document, currentUser }: WorkspaceShellProps) {
   const t = useTranslations("Editor");
+  const searchParams = useSearchParams();
   const [editor, setEditor] = useState<Editor | null>(null);
-  const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("script");
+
+  // Read initial mode from URL ?mode= param
+  const VALID_MODES: WorkspaceMode[] = [
+    "script", "bible", "outline", "characters", "locations",
+    "versions", "graph", "one-pager", "notes", "scene-board",
+  ];
+  const urlMode = searchParams.get("mode") as WorkspaceMode | null;
+  const initialMode = urlMode && VALID_MODES.includes(urlMode) ? urlMode : "script";
+
+  const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>(initialMode);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const rightPanelRef = useRef<ImperativePanelHandle>(null);
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // Sync mode to URL without navigation + close mobile sidebar
+  const handleModeChange = useCallback((mode: WorkspaceMode) => {
+    setWorkspaceMode(mode);
+    setMobileSidebarOpen(false);
+    const url = new URL(window.location.href);
+    if (mode === "script") {
+      url.searchParams.delete("mode");
+    } else {
+      url.searchParams.set("mode", mode);
+    }
+    window.history.replaceState(null, "", url.toString());
+  }, []);
 
   // Cmd+Shift+F to open global search
   useEffect(() => {
@@ -105,6 +130,16 @@ export function WorkspaceShell({ project, document, currentUser }: WorkspaceShel
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+
+  // Close mobile sidebar on Escape
+  useEffect(() => {
+    if (!mobileSidebarOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileSidebarOpen(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [mobileSidebarOpen]);
 
   const renderCenterPanel = () => {
     switch (workspaceMode) {
@@ -173,6 +208,16 @@ export function WorkspaceShell({ project, document, currentUser }: WorkspaceShel
     }
   };
 
+  const sidebarContent = (
+    <WorkspaceSidebar
+      project={project}
+      activeDocumentId={document.id}
+      editor={editor}
+      workspaceMode={workspaceMode}
+      onModeChange={handleModeChange}
+    />
+  );
+
   return (
     <motion.div
       className="h-screen overflow-hidden bg-background"
@@ -181,25 +226,28 @@ export function WorkspaceShell({ project, document, currentUser }: WorkspaceShel
       transition={{ duration: 0.3 }}
     >
       <ResizablePanelGroup direction="horizontal" className="h-full">
+        {/* Desktop sidebar — hidden on mobile */}
         <ResizablePanel
           defaultSize={15}
           minSize={10}
           maxSize={25}
-          className="glass-panel border-r border-sidebar-border"
+          className="glass-panel border-r border-sidebar-border max-md:hidden"
         >
-          <WorkspaceSidebar
-            project={project}
-            activeDocumentId={document.id}
-            editor={editor}
-            workspaceMode={workspaceMode}
-            onModeChange={setWorkspaceMode}
-          />
+          {sidebarContent}
         </ResizablePanel>
 
-        <ResizableHandle className="w-px bg-border/50 transition-colors hover:bg-ai-accent/30" />
+        <ResizableHandle className="w-px bg-border/50 transition-colors hover:bg-ai-accent/30 max-md:hidden" />
 
         <ResizablePanel defaultSize={rightPanelOpen ? 60 : 85} minSize={40}>
           <div className="relative h-full">
+            {/* Mobile hamburger button */}
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="absolute left-2 top-2.5 z-20 rounded-md border border-border bg-background/80 p-1 text-muted-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-muted hover:text-foreground md:hidden"
+              aria-label="Open menu"
+            >
+              <Menu className="h-4 w-4" />
+            </button>
             {renderCenterPanel()}
             {/* Show reopen button when right panel is collapsed */}
             {!rightPanelOpen && (
@@ -214,7 +262,7 @@ export function WorkspaceShell({ project, document, currentUser }: WorkspaceShel
           </div>
         </ResizablePanel>
 
-        <ResizableHandle className="w-px bg-border/50 transition-colors hover:bg-ai-accent/30" />
+        <ResizableHandle className="w-px bg-border/50 transition-colors hover:bg-ai-accent/30 max-md:hidden" />
 
         <ResizablePanel
           ref={rightPanelRef}
@@ -225,7 +273,7 @@ export function WorkspaceShell({ project, document, currentUser }: WorkspaceShel
           collapsedSize={0}
           onCollapse={() => setRightPanelOpen(false)}
           onExpand={() => setRightPanelOpen(true)}
-          className="glass-panel border-l border-sidebar-border"
+          className="glass-panel border-l border-sidebar-border max-md:hidden"
         >
           <RightPanel
             editor={editor}
@@ -241,6 +289,37 @@ export function WorkspaceShell({ project, document, currentUser }: WorkspaceShel
           />
         </ResizablePanel>
       </ResizablePanelGroup>
+
+      {/* Mobile sidebar overlay */}
+      <AnimatePresence>
+        {mobileSidebarOpen && (
+          <>
+            <motion.div
+              className="fixed inset-0 z-40 bg-black/50 md:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileSidebarOpen(false)}
+            />
+            <motion.div
+              className="fixed inset-y-0 left-0 z-50 w-72 bg-background shadow-xl md:hidden"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            >
+              <button
+                onClick={() => setMobileSidebarOpen(false)}
+                className="absolute right-2 top-2 z-10 rounded-md p-1 text-muted-foreground hover:text-foreground"
+                aria-label="Close menu"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              {sidebarContent}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <GlobalSearchDialog
         open={globalSearchOpen}
