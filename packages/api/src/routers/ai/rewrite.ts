@@ -166,15 +166,15 @@ export const rewriteRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Document not found or no editor access" });
       }
 
-      // Format uses DeepSeek for reliable screenplay block classification
+      // Format uses OpenAI gpt-5-mini for reliable screenplay block classification
       let resolved;
       try {
-        resolved = await resolveApiKey(getSecret(), "deepseek", "deepseek-chat");
+        resolved = await resolveApiKey(getSecret(), "openai", "gpt-5-mini");
       } catch {
-        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No DeepSeek key configured for formatting." });
+        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No OpenAI key configured for formatting." });
       }
 
-      const provider = getProvider("deepseek" as ProviderId);
+      const provider = getProvider("openai" as ProviderId);
 
       try {
         const result = await provider.format(
@@ -184,14 +184,14 @@ export const rewriteRouter = createTRPCRouter({
             contextAfter: input.contextAfter,
             language: document.project.language,
           },
-          { apiKey: resolved.apiKey, model: "deepseek-chat" }
+          { apiKey: resolved.apiKey, model: "gpt-5-mini" }
         );
 
         await logApiUsage({
           userId: ctx.user.id,
           projectId: document.project.id,
-          provider: "deepseek",
-          model: "deepseek-chat",
+          provider: "openai",
+          model: "gpt-5-mini",
           feature: "format",
           tokensIn: Math.ceil(input.selectedText.length / 4),
           tokensOut: Math.ceil(JSON.stringify(result).length / 4),
@@ -205,7 +205,7 @@ export const rewriteRouter = createTRPCRouter({
       } catch (error) {
         handleAIError(error, "Format", {
           userId: ctx.user.id, projectId: document.project.id,
-          provider: "deepseek", model: "deepseek-chat", feature: "format",
+          provider: "openai", model: "gpt-5-mini", feature: "format",
         });
       }
     }),
