@@ -91,7 +91,10 @@ export async function callAIWithSchema<T>(
     providerId,
     async (pid, cfg) => {
       const systemPrompt = composePrompt(pid, taskName, variables);
-      const completion = await completeAI(pid, systemPrompt, userPrompt, cfg, { jsonMode: true });
+      const completion = await completeAI(pid, systemPrompt, userPrompt, cfg, {
+        jsonMode: true,
+        jsonSchema: pid === "openai" ? { schema, name: taskName } : undefined,
+      });
       const parsed = schema.parse(JSON.parse(extractJson(completion.text)));
       return {
         result: parsed,

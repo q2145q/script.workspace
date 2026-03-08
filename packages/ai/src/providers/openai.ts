@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { zodResponseFormat } from "openai/helpers/zod";
 import type { AIProvider, RewriteInput, FormatInput, ProviderConfig, AIRewriteResponse, AIFormatResponse } from "../types";
 import { aiRewriteResponseSchema, aiFormatResponseSchema } from "../types";
 import { buildRewritePrompt, buildFormatPrompt } from "./base";
@@ -12,7 +13,7 @@ export class OpenAIProvider implements AIProvider {
     const client = new OpenAI({ apiKey: config.apiKey });
     const systemPrompt = composePrompt(this.id, "rewrite", { USER_LANGUAGE: input.language || "en" });
 
-    const modelId = config.model || "gpt-5";
+    const modelId = config.model || "gpt-4o";
     const response = await client.chat.completions.create({
       model: modelId,
       messages: [
@@ -20,7 +21,7 @@ export class OpenAIProvider implements AIProvider {
         { role: "user", content: buildRewritePrompt(input) },
       ],
       ...(isFixedTemperatureModel(modelId) ? {} : { temperature: 0.7 }),
-      response_format: { type: "json_object" },
+      response_format: zodResponseFormat(aiRewriteResponseSchema, "rewrite_response"),
     });
 
     const text = response.choices[0]?.message?.content;
@@ -35,7 +36,7 @@ export class OpenAIProvider implements AIProvider {
     const client = new OpenAI({ apiKey: config.apiKey });
     const systemPrompt = composePrompt(this.id, "format", { USER_LANGUAGE: input.language || "en" });
 
-    const fmtModelId = config.model || "gpt-5";
+    const fmtModelId = config.model || "gpt-4o";
     const response = await client.chat.completions.create({
       model: fmtModelId,
       messages: [
@@ -43,7 +44,7 @@ export class OpenAIProvider implements AIProvider {
         { role: "user", content: buildFormatPrompt(input) },
       ],
       ...(isFixedTemperatureModel(fmtModelId) ? {} : { temperature: 0.3 }),
-      response_format: { type: "json_object" },
+      response_format: zodResponseFormat(aiFormatResponseSchema, "format_response"),
     });
 
     const text = response.choices[0]?.message?.content;

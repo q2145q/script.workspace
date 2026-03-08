@@ -17,8 +17,8 @@ export const PROVIDER_CONFIGS: Array<{
 }> = [
   {
     id: "openai",
-    label: "OpenAI (GPT-5)",
-    config: { apiKey: process.env.OPENAI_API_KEY || "", model: "gpt-5-mini" },
+    label: "OpenAI (GPT-4o)",
+    config: { apiKey: process.env.OPENAI_API_KEY || "", model: "gpt-4o-mini" },
     available: !!process.env.OPENAI_API_KEY,
   },
   {

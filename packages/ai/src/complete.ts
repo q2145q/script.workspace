@@ -1,5 +1,7 @@
 import OpenAI from "openai";
+import { zodResponseFormat } from "openai/helpers/zod";
 import Anthropic from "@anthropic-ai/sdk";
+import type { ZodType } from "zod";
 import type { ProviderConfig, ProviderId, StreamUsageResult } from "./types";
 import { estimateTokens, isFixedTemperatureModel } from "./utils";
 
@@ -7,6 +9,8 @@ import { estimateTokens, isFixedTemperatureModel } from "./utils";
 export interface CompleteOptions {
   /** When true, enforce JSON output (response_format for OpenAI, prefill for Anthropic) */
   jsonMode?: boolean;
+  /** When provided (OpenAI only), use Structured Outputs with strict JSON schema enforcement */
+  jsonSchema?: { schema: ZodType; name: string };
 }
 
 /** Result from a non-streaming AI completion */
@@ -23,7 +27,7 @@ const OPENAI_COMPATIBLE_BASE_URLS: Partial<Record<ProviderId, string>> = {
 };
 
 const OPENAI_COMPATIBLE_DEFAULTS: Partial<Record<ProviderId, string>> = {
-  openai: "gpt-5",
+  openai: "gpt-4o",
   deepseek: "deepseek-chat",
   grok: "grok-3",
   gemini: "gemini-2.5-flash",
@@ -39,7 +43,20 @@ async function completeOpenAI(
 ): Promise<CompleteResult> {
   const startTime = Date.now();
   const client = new OpenAI({ apiKey: config.apiKey, ...(baseURL ? { baseURL } : {}) });
-  const modelId = config.model || defaultModel || "gpt-5";
+  const modelId = config.model || defaultModel || "gpt-4o";
+
+  // Determine response format:
+  // 1. Structured Outputs (strict schema) — only for native OpenAI (no baseURL)
+  // 2. JSON mode — for OpenAI-compatible providers (DeepSeek, Grok, Gemini)
+  // 3. No format constraint
+  let responseFormat: OpenAI.ChatCompletionCreateParams["response_format"] | undefined;
+  if (options?.jsonSchema && !baseURL) {
+    // Use Structured Outputs for native OpenAI
+    responseFormat = zodResponseFormat(options.jsonSchema.schema, options.jsonSchema.name);
+  } else if (options?.jsonMode) {
+    responseFormat = { type: "json_object" as const };
+  }
+
   const response = await client.chat.completions.create(
     {
       model: modelId,
@@ -48,7 +65,7 @@ async function completeOpenAI(
         { role: "user", content: userPrompt },
       ],
       ...(isFixedTemperatureModel(modelId) ? {} : { temperature: 0.7 }),
-      ...(options?.jsonMode ? { response_format: { type: "json_object" as const } } : {}),
+      ...(responseFormat ? { response_format: responseFormat } : {}),
     },
     { signal: AbortSignal.timeout(120_000) },
   );
@@ -166,6 +183,7 @@ async function completeYandex(
  * Unified non-streaming completion — sends system + user prompt, returns text.
  * Used by analysis, logline, synopsis, and other non-streaming AI features.
  * Pass options.jsonMode = true to enforce JSON output across all providers.
+ * Pass options.jsonSchema for OpenAI Structured Outputs (strict schema enforcement).
  */
 export async function completeAI(
   providerId: ProviderId,

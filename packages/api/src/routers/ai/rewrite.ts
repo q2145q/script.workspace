@@ -166,10 +166,10 @@ export const rewriteRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Document not found or no editor access" });
       }
 
-      // Format uses OpenAI gpt-5-mini for reliable screenplay block classification
+      // Format uses OpenAI gpt-4o-mini with Structured Outputs for reliable block classification
       let resolved;
       try {
-        resolved = await resolveApiKey(getSecret(), "openai", "gpt-5-mini");
+        resolved = await resolveApiKey(getSecret(), "openai", "gpt-4o-mini");
       } catch {
         throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No OpenAI key configured for formatting." });
       }
@@ -184,14 +184,14 @@ export const rewriteRouter = createTRPCRouter({
             contextAfter: input.contextAfter,
             language: document.project.language,
           },
-          { apiKey: resolved.apiKey, model: "gpt-5-mini" }
+          { apiKey: resolved.apiKey, model: "gpt-4o-mini" }
         );
 
         await logApiUsage({
           userId: ctx.user.id,
           projectId: document.project.id,
           provider: "openai",
-          model: "gpt-5-mini",
+          model: "gpt-4o-mini",
           feature: "format",
           tokensIn: Math.ceil(input.selectedText.length / 4),
           tokensOut: Math.ceil(JSON.stringify(result).length / 4),
@@ -205,7 +205,7 @@ export const rewriteRouter = createTRPCRouter({
       } catch (error) {
         handleAIError(error, "Format", {
           userId: ctx.user.id, projectId: document.project.id,
-          provider: "openai", model: "gpt-5-mini", feature: "format",
+          provider: "openai", model: "gpt-4o-mini", feature: "format",
         });
       }
     }),
