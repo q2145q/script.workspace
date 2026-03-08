@@ -20,13 +20,13 @@ const ibmPlex = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Script Workspace — AI-редактор сценариев",
+  title: "Script Workspace — Редактор сценариев для российских авторов",
   description:
-    "Профессиональный редактор сценариев с AI-соавтором. Форматирование screenplay, AI Rewrite, комментарии, версии. Получите бета-доступ бесплатно.",
+    "Профессиональный браузерный редактор screenplay с AI-помощником. Форматирование, версии, командная работа. Бесплатная бета. Без Final Draft.",
   openGraph: {
-    title: "Script Workspace — AI-редактор сценариев",
+    title: "Script Workspace — Редактор сценариев для российских авторов",
     description:
-      "Профессиональный редактор сценариев с AI-соавтором. Форматирование screenplay, AI Rewrite, комментарии, версии.",
+      "Профессиональный браузерный редактор screenplay с AI-помощником. Форматирование, версии, командная работа. Бесплатная бета.",
     url: "https://script.yomimovie.art",
     siteName: "Script Workspace",
     type: "website",
@@ -51,12 +51,12 @@ export default async function Home() {
     operatingSystem: "Web",
     url: "https://script.yomimovie.art",
     description:
-      "Профессиональный редактор сценариев с AI-соавтором. Форматирование screenplay, AI Rewrite, комментарии, версии.",
+      "Профессиональный браузерный редактор screenplay с AI-помощником. Форматирование, версии, командная работа. Сделан для российской индустрии.",
     offers: {
       "@type": "Offer",
       price: "0",
-      priceCurrency: "USD",
-      description: "Бесплатный бета-доступ",
+      priceCurrency: "RUB",
+      description: "Бесплатная открытая бета до 1 мая 2026",
     },
     featureList: [
       "AI Rewrite & Format",

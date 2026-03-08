@@ -291,99 +291,17 @@
   50% { opacity: 0; }
 }
 
-/* ---------- Editor showcase tabs ---------- */
-.showcase-tabs {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+/* ---------- Pain points ---------- */
+.pain-card {
+  background: var(--l-card);
+  border: 1px solid var(--l-border);
+  border-radius: 14px;
+  padding: 1.75rem;
+  transition: transform 0.3s ease, border-color 0.3s ease;
 }
-
-.showcase-tab {
-  padding: 0.6rem 1.1rem;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--l-text-muted);
-  border: 1px solid transparent;
-  cursor: pointer;
-  font-size: 0.8rem;
-  transition: all 0.25s ease;
-  white-space: nowrap;
-}
-.showcase-tab:hover {
-  color: var(--l-text-dim);
-  background: rgba(245, 240, 232, 0.03);
-}
-.showcase-tab.active {
-  color: var(--l-accent);
-  background: var(--l-accent-dim);
-  border-color: rgba(232, 201, 122, 0.2);
-}
-
-.showcase-panel {
-  background: #0a0a0f;
-  border: 1px solid #1e1e28;
-  border-radius: 12px;
-  min-height: 380px;
-  overflow: hidden;
-  position: relative;
-}
-
-/* Diff lines */
-.diff-add {
-  background: rgba(74, 222, 128, 0.1);
-  border-left: 3px solid rgba(74, 222, 128, 0.5);
-  padding: 4px 12px;
-  color: #4ade80;
-}
-.diff-remove {
-  background: rgba(248, 113, 113, 0.1);
-  border-left: 3px solid rgba(248, 113, 113, 0.5);
-  padding: 4px 12px;
-  text-decoration: line-through;
-  opacity: 0.6;
-  color: #f87171;
-}
-
-/* AI command bar mockup */
-.mock-cmd-bar {
-  background: rgba(14, 14, 20, 0.95);
-  backdrop-filter: blur(20px);
-  border: 1px solid #2e2e3a;
-  border-radius: 10px;
-  padding: 12px 16px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-}
-
-/* Chat message styles */
-.mock-chat-user {
-  background: #1a1a24;
-  border-radius: 12px 12px 4px 12px;
-  padding: 10px 14px;
-  font-size: 12px;
-  color: #d4d4d8;
-  align-self: flex-end;
-  max-width: 85%;
-}
-.mock-chat-ai {
-  background: rgba(129, 140, 248, 0.08);
-  border-left: 2px solid #818cf8;
-  border-radius: 12px 12px 12px 4px;
-  padding: 10px 14px;
-  font-size: 12px;
-  color: #d4d4d8;
-  max-width: 85%;
-}
-
-/* Scene card for corkboard */
-.mock-scene-card {
-  background: #111116;
-  border: 1px solid #23232e;
-  border-radius: 8px;
-  padding: 14px;
-  transition: border-color 0.2s;
-}
-.mock-scene-card:hover {
-  border-color: #818cf8;
+.pain-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(248, 113, 113, 0.3);
 }
 
 /* ---------- Feature cards ---------- */
@@ -412,24 +330,98 @@
   margin-bottom: 1rem;
 }
 
-/* ---------- AI Providers ---------- */
-.provider-logo {
+/* ---------- Comparison table ---------- */
+.comparison-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--l-border);
+}
+
+.comparison-table th {
+  font-weight: 600;
+  color: var(--l-text);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.comparison-table td {
+  color: var(--l-text-dim);
+}
+
+.comparison-table .row-label {
+  color: var(--l-text);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.comparison-table .highlight-col {
+  background: rgba(232, 201, 122, 0.05);
+  color: var(--l-text);
+}
+
+.comparison-table th.highlight-col {
+  color: var(--l-accent);
+}
+
+.comparison-table .check-mark {
+  color: var(--l-green);
+  font-weight: 700;
+}
+
+.comparison-table tr:last-child td,
+.comparison-table tr:last-child th {
+  border-bottom: none;
+}
+
+/* ---------- Provider badges ---------- */
+.provider-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: var(--l-card);
+  border: 1px solid var(--l-border);
+  border-radius: 100px;
+  font-size: 0.8rem;
+  color: var(--l-text-dim);
+  transition: border-color 0.2s;
+}
+.provider-badge:hover {
+  border-color: var(--l-accent);
+  color: var(--l-text);
+}
+
+/* ---------- Audience ---------- */
+.audience-card {
+  text-align: center;
+  padding: 2rem;
+}
+.audience-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 1.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100px;
-  height: 80px;
-  border-radius: 16px;
+  border-radius: 14px;
+  background: var(--l-accent-dim);
+  color: var(--l-accent);
+}
+
+/* ---------- Beta story ---------- */
+.beta-story-card {
   background: var(--l-card);
   border: 1px solid var(--l-border);
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--l-text-dim);
-  letter-spacing: 0.03em;
-  transition: border-color 0.2s;
-}
-.provider-logo:hover {
-  border-color: var(--l-accent);
+  border-radius: 14px;
+  padding: 1.75rem;
 }
 
 /* ---------- Pricing ---------- */
@@ -496,36 +488,61 @@
   margin-top: 2px;
 }
 
-/* ---------- Audience ---------- */
-.audience-card {
-  text-align: center;
-  padding: 2rem;
-}
-.audience-icon {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 14px;
-  background: var(--l-accent-dim);
-  color: var(--l-accent);
-}
-
-/* ---------- Testimonials ---------- */
-.testimonial-card {
+/* Pricing toggle */
+.pricing-toggle {
+  display: inline-flex;
   background: var(--l-card);
   border: 1px solid var(--l-border);
-  border-radius: 14px;
-  padding: 1.75rem;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s ease, border-color 0.3s ease;
+  border-radius: 100px;
+  padding: 3px;
 }
-.testimonial-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(232, 201, 122, 0.25);
+
+.pricing-toggle button {
+  padding: 0.5rem 1.25rem;
+  border-radius: 100px;
+  border: none;
+  background: transparent;
+  color: var(--l-text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pricing-toggle button.active {
+  background: var(--l-accent);
+  color: #0d0d0d;
+  font-weight: 600;
+}
+
+.toggle-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--l-green);
+  background: rgba(74, 222, 128, 0.15);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.pricing-toggle button.active .toggle-badge {
+  color: #0d0d0d;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* Beta offer banner */
+.beta-offer-banner {
+  text-align: center;
+  padding: 0.75rem 1.5rem;
+  background: rgba(232, 201, 122, 0.1);
+  border: 1px solid rgba(232, 201, 122, 0.25);
+  border-radius: 10px;
+  color: var(--l-accent);
+  font-size: 0.9rem;
+  font-weight: 500;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
 /* ---------- FAQ ---------- */
@@ -582,24 +599,6 @@
   pointer-events: none;
 }
 
-/* ---------- Language flags ---------- */
-.lang-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 1rem;
-  background: var(--l-card);
-  border: 1px solid var(--l-border);
-  border-radius: 100px;
-  font-size: 0.8rem;
-  color: var(--l-text-dim);
-  transition: border-color 0.2s;
-}
-.lang-chip:hover {
-  border-color: var(--l-accent);
-  color: var(--l-text);
-}
-
 /* ---------- Scroll reveal animations ---------- */
 .reveal {
   opacity: 0;
@@ -651,7 +650,6 @@
 @media (max-width: 767px) {
   .editor-mockup-sidebar { display: none; }
   .editor-mockup-body { min-height: 250px; }
-  .showcase-panel { min-height: 300px; }
   .landing-section { padding: 4rem 0; }
 }
 

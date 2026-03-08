@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, FileText, X, Loader2, AlertCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { parseFountain, decodeFountainFile, type JSONContent, type Editor } from "@script/editor";
+import { parseFountain, decodeFountainFile, parseDocx, type JSONContent, type Editor } from "@script/editor";
 
 interface ImportDialogProps {
   editor: Editor | null;
@@ -25,8 +25,16 @@ export function ImportDialog({ editor }: ImportDialogProps) {
     setLoading(true);
     try {
       const buffer = await file.arrayBuffer();
-      const text = decodeFountainFile(buffer);
-      const content = parseFountain(text);
+      const ext = file.name.split(".").pop()?.toLowerCase();
+
+      let content: JSONContent;
+      if (ext === "docx") {
+        content = await parseDocx(buffer);
+      } else {
+        const text = decodeFountainFile(buffer);
+        content = parseFountain(text);
+      }
+
       setPreview(content);
       setFileName(file.name);
     } catch (err) {
@@ -147,7 +155,7 @@ export function ImportDialog({ editor }: ImportDialogProps) {
                       <input
                         ref={fileInputRef}
                         type="file"
-                        accept=".fountain,.txt"
+                        accept=".fountain,.txt,.docx"
                         onChange={handleFileChange}
                         className="hidden"
                       />

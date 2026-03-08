@@ -7,8 +7,18 @@ export default async function ProjectPage({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
-  const api = await serverApi();
-  const project = await api.project.getById({ id: projectId });
+
+  let project;
+  try {
+    const api = await serverApi();
+    project = await api.project.getById({ id: projectId });
+  } catch {
+    redirect("/dashboard");
+  }
+
+  if (!project) {
+    redirect("/dashboard");
+  }
 
   // For TV_SERIES, redirect to first episode's document
   if (project.type === "TV_SERIES" && project.episodes.length > 0) {

@@ -49,6 +49,8 @@ export function ScriptEditor({
   plainText = false,
 }: ScriptEditorProps) {
   const providerRef = useRef<HocuspocusProvider | null>(null);
+  const onUpdateRef = useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
 
   // Create Yjs doc and Hocuspocus provider when collaboration is enabled
   const collabState = useMemo(() => {
@@ -163,7 +165,7 @@ export function ScriptEditor({
     content: collaboration ? undefined : content,
     editable,
     onUpdate: ({ editor }) => {
-      onUpdate?.(editor.getJSON());
+      onUpdateRef.current?.(editor.getJSON());
     },
     editorProps: {
       attributes: {

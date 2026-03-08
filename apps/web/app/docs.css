@@ -1,0 +1,504 @@
+/* ============================================================
+   DOCS & TUTORIAL PAGES — Script Workspace
+   Extends landing.css dark editorial aesthetic
+   ============================================================ */
+
+/* ---------- Docs layout ---------- */
+.docs-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .docs-container { padding: 0 3rem; }
+}
+
+.docs-content {
+  max-width: 48rem;
+  width: 100%;
+}
+
+.docs-main {
+  display: flex;
+  gap: 3rem;
+  padding-top: 6rem;
+  padding-bottom: 4rem;
+  min-height: 100vh;
+}
+
+/* ---------- Sidebar navigation ---------- */
+.docs-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 5rem;
+  align-self: flex-start;
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
+  padding-right: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--l-border) transparent;
+}
+
+.docs-sidebar-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--l-text-muted);
+  margin-bottom: 1rem;
+  padding-left: 0.75rem;
+}
+
+.docs-sidebar-link {
+  display: block;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--l-text-muted);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 1px;
+}
+.docs-sidebar-link:hover {
+  color: var(--l-text-dim);
+  background: rgba(245, 240, 232, 0.03);
+}
+.docs-sidebar-link.active {
+  color: var(--l-accent);
+  border-left-color: var(--l-accent);
+  background: rgba(232, 201, 122, 0.06);
+}
+
+@media (max-width: 1023px) {
+  .docs-sidebar { display: none; }
+  .docs-main { padding-top: 5rem; }
+}
+
+/* ---------- Step cards (tutorial) ---------- */
+.step-card {
+  background: var(--l-card);
+  border: 1px solid var(--l-border);
+  border-radius: 14px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(232, 201, 122, 0.12);
+  color: var(--l-accent);
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--l-text);
+}
+
+/* ---------- Prose styling ---------- */
+.docs-prose h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--l-text);
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--l-border);
+}
+
+.docs-prose h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--l-text);
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.docs-prose p {
+  color: var(--l-text-dim);
+  line-height: 1.75;
+  margin-bottom: 1rem;
+}
+
+.docs-prose ul,
+.docs-prose ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.docs-prose li {
+  color: var(--l-text-dim);
+  line-height: 1.7;
+  margin-bottom: 0.35rem;
+}
+
+.docs-prose strong {
+  color: var(--l-text);
+  font-weight: 600;
+}
+
+.docs-prose a {
+  color: var(--l-accent);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.docs-prose a:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.docs-prose a.btn-primary {
+  color: #0d0d0d;
+  text-decoration: none;
+  opacity: 1;
+}
+.docs-prose a.btn-secondary {
+  color: var(--l-text);
+  text-decoration: none;
+  opacity: 1;
+}
+
+/* ---------- Reference tables ---------- */
+.docs-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.docs-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: var(--l-text);
+  border-bottom: 2px solid var(--l-border);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+}
+
+.docs-table td {
+  padding: 0.65rem 1rem;
+  color: var(--l-text-dim);
+  border-bottom: 1px solid var(--l-border);
+}
+
+.docs-table tr:hover td {
+  background: rgba(245, 240, 232, 0.02);
+}
+
+/* ---------- Keyboard shortcut badge ---------- */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 5px;
+  background: var(--l-card);
+  border: 1px solid var(--l-border-light);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  font-size: 0.7rem;
+  font-family: inherit;
+  color: var(--l-text-dim);
+  white-space: nowrap;
+}
+
+/* ---------- Mockup annotations ---------- */
+.mockup-wrapper {
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+.mockup-label {
+  position: absolute;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--l-accent);
+  background: rgba(232, 201, 122, 0.1);
+  border: 1px solid rgba(232, 201, 122, 0.25);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 5;
+}
+
+/* Mockup floating toolbar */
+.mock-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(14, 14, 20, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid #2e2e3a;
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.mock-toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  color: #a1a1aa;
+  background: none;
+  border: none;
+  white-space: nowrap;
+}
+.mock-toolbar-btn.active {
+  background: rgba(129, 140, 248, 0.12);
+  color: #818cf8;
+}
+
+/* Right panel mockup */
+.mock-right-panel {
+  background: #0a0a0f;
+  border: 1px solid #1e1e28;
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 300px;
+}
+
+.mock-panel-tabs {
+  display: flex;
+  border-bottom: 1px solid #1e1e28;
+  padding: 0 8px;
+}
+
+.mock-panel-tab {
+  padding: 10px 14px;
+  font-size: 0.7rem;
+  color: #71717a;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+.mock-panel-tab.active {
+  color: #818cf8;
+  border-bottom-color: #818cf8;
+}
+
+.mock-panel-content {
+  padding: 16px;
+}
+
+/* Comment mockup */
+.mock-comment {
+  background: #111116;
+  border: 1px solid #23232e;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.mock-comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.mock-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #818cf8, #6366f1);
+  flex-shrink: 0;
+}
+
+.mock-avatar.secondary {
+  background: linear-gradient(135deg, #34d399, #10b981);
+}
+
+/* Info/tip boxes */
+.docs-tip {
+  background: rgba(232, 201, 122, 0.06);
+  border-left: 3px solid var(--l-accent);
+  border-radius: 0 8px 8px 0;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+  color: var(--l-text-dim);
+}
+
+.docs-tip strong {
+  color: var(--l-accent);
+}
+
+/* Mockup: workspace 3-column layout */
+.mock-workspace {
+  display: flex;
+  background: #0a0a0f;
+  border: 1px solid #1e1e28;
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 340px;
+}
+
+.mock-ws-sidebar {
+  width: 56px;
+  border-right: 1px solid #1e1e28;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 4px;
+}
+
+.mock-ws-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #71717a;
+  font-size: 10px;
+}
+.mock-ws-icon.active {
+  background: rgba(129, 140, 248, 0.1);
+  color: #818cf8;
+}
+
+.mock-ws-editor {
+  flex: 1;
+  padding: 20px 28px;
+  font-family: "Courier Prime", "Courier New", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #e4e4e7;
+  border-right: 1px solid #1e1e28;
+}
+
+.mock-ws-panel {
+  width: 260px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .mock-ws-sidebar { display: none; }
+  .mock-ws-panel { display: none; }
+  .mock-workspace { min-height: 240px; }
+}
+
+/* Scene board mockup grid */
+.mock-board-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  padding: 16px;
+}
+
+/* Tutorial hero */
+.tutorial-hero {
+  padding: 8rem 0 3rem;
+  text-align: center;
+}
+
+.tutorial-hero h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--l-text);
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .tutorial-hero h1 { font-size: 3rem; }
+}
+
+.tutorial-hero p {
+  font-size: 1.1rem;
+  color: var(--l-text-dim);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Section link (anchor) */
+.section-anchor {
+  scroll-margin-top: 5rem;
+}
+
+/* Inline code */
+.docs-prose code {
+  background: var(--l-card);
+  border: 1px solid var(--l-border);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  color: var(--l-accent);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+/* Docs header offset */
+.docs-hero {
+  padding: 7rem 0 2rem;
+}
+
+.docs-hero h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--l-text);
+  margin-bottom: 0.5rem;
+}
+
+.docs-hero p {
+  font-size: 1rem;
+  color: var(--l-text-dim);
+}
+
+/* Feature list items in docs */
+.docs-feature-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--l-border);
+}
+
+.docs-feature-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(232, 201, 122, 0.08);
+  color: var(--l-accent);
+  flex-shrink: 0;
+}
+
+.docs-feature-text h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--l-text);
+  margin-bottom: 0.25rem;
+}
+
+.docs-feature-text p {
+  font-size: 0.85rem;
+  color: var(--l-text-muted);
+  line-height: 1.5;
+  margin: 0;
+}

@@ -12,7 +12,8 @@
     "./usage-logger": "./src/usage-logger.ts",
     "./global-key-resolver": "./src/global-key-resolver.ts",
     "./rate-limit": "./src/rate-limit.ts",
-    "./redis": "./src/redis.ts"
+    "./redis": "./src/redis.ts",
+    "./telegram": "./src/telegram.ts"
   },
   "dependencies": {
     "@better-auth/prisma-adapter": "^1.5.3",
@@ -25,6 +26,7 @@
     "ioredis": "^5.10.0",
     "pdfkit": "^0.17.2",
     "pino": "^10.3.1",
+    "resend": "^6.9.3",
     "superjson": "^2.2.0",
     "zod": "^3.24.0"
   },

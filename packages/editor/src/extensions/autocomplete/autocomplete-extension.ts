@@ -179,18 +179,25 @@ export const AutocompleteExtension = Extension.create({
           // Skip autocomplete during initial editor mount / Yjs sync
           // to prevent the dropdown from appearing immediately on open
           const mountTime = Date.now();
-          const MOUNT_GRACE_MS = 500;
+          const MOUNT_GRACE_MS = 1500;
 
           return {
             update(view, prevState) {
               if (Date.now() - mountTime < MOUNT_GRACE_MS) return;
 
+              // Only show autocomplete when user is actively typing
+              // (doc content changed), not on cursor placement alone
+              const docChanged = !prevState.doc.eq(view.state.doc);
               const prev = autocompletePluginKey.getState(prevState);
+
+              // If doc didn't change and autocomplete is not already active, skip
+              if (!docChanged && !prev?.active) return;
+
               // Reset dismissed flag when the cursor moves or text changes
               const prevDismissed =
                 prev?.dismissed &&
                 prevState.selection.eq(view.state.selection) &&
-                prevState.doc.eq(view.state.doc)
+                !docChanged
                   ? true
                   : false;
 

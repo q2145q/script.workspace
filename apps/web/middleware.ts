@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const publicPaths = ["/sign-in", "/sign-up", "/api/auth", "/privacy", "/terms", "/robots.txt", "/sitemap.xml"];
+const publicPaths = ["/sign-in", "/sign-up", "/verify-email", "/forgot-password", "/reset-password", "/api/auth", "/api/telegram", "/privacy", "/terms", "/tutorial", "/docs", "/robots.txt", "/sitemap.xml"];
 
 function addSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set("X-Frame-Options", "DENY");

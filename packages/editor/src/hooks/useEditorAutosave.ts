@@ -48,8 +48,16 @@ export function useEditorAutosave(
 
   useEffect(() => {
     return () => {
+      // Cancel debounce timer
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+
+      // Flush any pending unsaved content on unmount (fire-and-forget)
+      if (latestContent.current) {
+        const contentToSave = latestContent.current;
+        latestContent.current = null;
+        saveFnRef.current(contentToSave).catch(() => {});
+      }
     };
   }, []);
 

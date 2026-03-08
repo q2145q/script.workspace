@@ -14,6 +14,7 @@ export type { AutocompleteState } from "./extensions/autocomplete/autocomplete-e
 export { autocompletePluginKey } from "./extensions/autocomplete/autocomplete-extension";
 export { searchReplacePluginKey } from "./extensions/search-replace";
 export { parseFountain, decodeFountainFile } from "./import/fountain-parser";
+export { parseDocx } from "./import/docx-parser";
 export { getScreenplaySchema } from "./schema";
 export type { CollaborationConfig } from "./components/Editor";
 export { HocuspocusProvider } from "@hocuspocus/provider";

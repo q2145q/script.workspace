@@ -1,6 +1,12 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "@better-auth/prisma-adapter";
 import { prisma } from "@script/db";
+import {
+  sendEmail,
+  verificationEmailTemplate,
+  resetPasswordTemplate,
+} from "./email";
+import { notifyTelegramNewUser } from "./telegram";
 
 const defaultOrigins =
   process.env.NODE_ENV === "production"
@@ -17,6 +23,29 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: "Script Workspace — Сброс пароля",
+        html: resetPasswordTemplate(user.name, url),
+      });
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmail({
+        to: user.email,
+        subject: "Script Workspace — Подтвердите email",
+        html: verificationEmailTemplate(user.name, url),
+      });
+      // Notify admin via Telegram about new registration
+      notifyTelegramNewUser(user).catch((err) =>
+        console.error("[telegram] Failed to notify:", err)
+      );
+    },
   },
   trustedOrigins,
 });

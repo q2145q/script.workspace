@@ -1,28 +1,15 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ScriptEditor, useEditorAutosave, type JSONContent, type CollaborationConfig, type HocuspocusProvider, type ConnectionStatus } from "@script/editor";
-import { StickyNote, Plus, Trash2, Pencil, Check, X, Save } from "lucide-react";
-import { CollabStatus } from "./collab-status";
-import { OnlineUsers } from "./online-users";
+import { ScriptEditor, useEditorAutosave, type JSONContent } from "@script/editor";
+import { StickyNote, Plus, Trash2, Pencil, Check, X, Save, History, RotateCcw, Camera } from "lucide-react";
+import { useAutoNoteRevision } from "@/hooks/use-auto-note-revision";
+import type { Editor } from "@script/editor";
 import type { CurrentUser } from "./workspace-shell";
-
-function hashToColor(str: string): string {
-  const colors = [
-    "#E57373", "#F06292", "#BA68C8", "#9575CD",
-    "#7986CB", "#64B5F6", "#4FC3F7", "#4DD0E1",
-    "#4DB6AC", "#81C784", "#AED581", "#FFD54F",
-  ];
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
-}
 
 interface NotesPanelProps {
   projectId: string;
@@ -219,12 +206,9 @@ function NoteListItem({
   );
 }
 
-const FALLBACK_TIMEOUT_MS = 10_000;
-
 function NoteEditor({
   noteId,
   projectId,
-  currentUser,
 }: {
   noteId: string;
   projectId: string;
@@ -233,82 +217,22 @@ function NoteEditor({
   const t = useTranslations("Notes");
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const [collabProvider, setCollabProvider] = useState<HocuspocusProvider | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("connecting");
-  const [fallbackActive, setFallbackActive] = useState(false);
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const noteIdRef = useRef(noteId);
   noteIdRef.current = noteId;
-  const disconnectedAtRef = useRef<number | null>(null);
-  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Only use collab if explicitly configured
-  const collabWsUrl = process.env.NEXT_PUBLIC_COLLAB_WS_URL || "";
-  const useCollab = !!collabWsUrl;
+  // Auto-snapshot every 30 minutes
+  useAutoNoteRevision(editorInstance, noteId);
 
-  // Handle connection status changes — activate fallback after 10s disconnect
-  const handleConnectionStatus = useCallback(
-    (status: ConnectionStatus) => {
-      setConnectionStatus(status);
-
-      if (status === "disconnected") {
-        if (!disconnectedAtRef.current) {
-          disconnectedAtRef.current = Date.now();
-        }
-        // Start fallback timer
-        if (!fallbackTimerRef.current) {
-          fallbackTimerRef.current = setTimeout(() => {
-            setFallbackActive(true);
-            toast.warning(t("fallbackSave"));
-          }, FALLBACK_TIMEOUT_MS);
-        }
-      } else if (status === "connected") {
-        // Clear fallback
-        if (disconnectedAtRef.current) {
-          disconnectedAtRef.current = null;
-        }
-        if (fallbackTimerRef.current) {
-          clearTimeout(fallbackTimerRef.current);
-          fallbackTimerRef.current = null;
-        }
-        if (fallbackActive) {
-          setFallbackActive(false);
-          toast.success(t("reconnected"));
-        }
-      }
-    },
-    [fallbackActive, t],
-  );
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (fallbackTimerRef.current) {
-        clearTimeout(fallbackTimerRef.current);
-      }
-    };
-  }, []);
-
-  const collabConfig: CollaborationConfig | undefined = useMemo(() => {
-    if (!useCollab) return undefined;
-
-    return {
-      documentName: `note:${noteId}`,
-      wsUrl: collabWsUrl,
-      user: {
-        id: currentUser.id,
-        name: currentUser.name,
-        color: hashToColor(currentUser.id),
-      },
-    };
-  }, [noteId, currentUser, useCollab, collabWsUrl]);
-
-  // Load note content when not using collab
+  // Always load note content via tRPC (no collab for notes — they're simple text)
+  // staleTime: 0 ensures fresh data when re-mounting (e.g. switching tabs and back)
   const { data: noteData, isLoading: noteLoading } = useQuery({
     ...trpc.note.getById.queryOptions({ id: noteId }),
-    enabled: !useCollab,
+    staleTime: 0,
   });
 
-  // Direct-save for notes (used as fallback when collab is disconnected)
+  // Direct-save for notes via autosave
   const saveMutation = useMutation(
     trpc.note.updateContent.mutationOptions({
       onSuccess: () => {
@@ -324,7 +248,7 @@ function NoteEditor({
   const saveFnRef = useRef(saveMutation.mutateAsync);
   saveFnRef.current = saveMutation.mutateAsync;
 
-  const { handleUpdate: handleAutosave } = useEditorAutosave(
+  const { handleUpdate: handleAutosave, saveState } = useEditorAutosave(
     useCallback(async (content: JSONContent) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await saveFnRef.current({ id: noteIdRef.current, content: content as any });
@@ -332,18 +256,7 @@ function NoteEditor({
     2000
   );
 
-  const handleUpdate = useCallback(
-    (content: JSONContent) => {
-      // Save directly when collab is off OR when fallback is active (disconnected >10s)
-      if (!useCollab || fallbackActive) {
-        handleAutosave(content);
-      }
-    },
-    [useCollab, fallbackActive, handleAutosave]
-  );
-
-  // Wait for note data to load before rendering editor (content is only read on mount)
-  if (!useCollab && noteLoading) {
+  if (noteLoading) {
     return (
       <div className="flex h-full items-center justify-center font-mono">
         <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
@@ -351,42 +264,154 @@ function NoteEditor({
     );
   }
 
-  // Use noteId + data availability as key to force remount when switching notes
-  const editorKey = useCollab ? noteId : `${noteId}-${noteData?.id ?? "new"}`;
+  const editorKey = `${noteId}-${noteData?.id ?? "new"}`;
 
   return (
     <div className="flex h-full flex-col font-mono">
       <div className="flex items-center justify-end gap-2 border-b border-border px-3 py-1">
-        {useCollab ? (
-          <>
-            <OnlineUsers provider={collabProvider} />
-            <CollabStatus provider={collabProvider} />
-            {fallbackActive && (
-              <span className="flex items-center gap-1 text-[10px] text-yellow-500">
-                <Save className="h-3 w-3" />
-                {t("autoSave")}
-              </span>
-            )}
-          </>
-        ) : (
-          <span className="flex items-center gap-1 text-[10px] text-emerald-500">
-            <Save className="h-3 w-3" />
-            {t("autoSave")}
-          </span>
+        <span className={`flex items-center gap-1 text-[10px] ${
+          saveState === "saving" ? "text-yellow-500" :
+          saveState === "saved" ? "text-emerald-500" :
+          saveState === "error" ? "text-red-500" :
+          "text-muted-foreground"
+        }`}>
+          <Save className="h-3 w-3" />
+          {saveState === "saving" ? t("autoSave") + "..." :
+           saveState === "saved" ? t("autoSave") + " ✓" :
+           saveState === "error" ? t("failedSave") :
+           t("autoSave")}
+        </span>
+        <button
+          onClick={() => setShowHistory((v) => !v)}
+          className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] transition-colors ${
+            showHistory
+              ? "bg-accent text-accent-foreground"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+          title={t("history")}
+        >
+          <History className="h-3 w-3" />
+          {t("history")}
+        </button>
+      </div>
+      <div className="flex flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto">
+          <ScriptEditor
+            key={editorKey}
+            content={noteData?.content as JSONContent ?? undefined}
+            onUpdate={handleAutosave}
+            onEditorReady={setEditorInstance}
+            hideToolbar
+            plainText
+          />
+        </div>
+        {showHistory && (
+          <NoteHistoryPanel noteId={noteId} />
         )}
       </div>
-      <div className="flex-1 overflow-y-auto">
-        <ScriptEditor
-          key={editorKey}
-          content={!useCollab ? (noteData?.content as JSONContent ?? undefined) : undefined}
-          collaboration={collabConfig}
-          onUpdate={handleUpdate}
-          onCollabProvider={useCollab ? setCollabProvider : undefined}
-          onConnectionStatus={useCollab ? handleConnectionStatus : undefined}
-          hideToolbar
-          plainText
-        />
+    </div>
+  );
+}
+
+function NoteHistoryPanel({ noteId }: { noteId: string }) {
+  const t = useTranslations("Notes");
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+
+  const { data, isLoading } = useQuery(
+    trpc.noteRevision.list.queryOptions({ noteId })
+  );
+
+  const createSnapshotMutation = useMutation(
+    trpc.noteRevision.create.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: trpc.noteRevision.list.queryKey({ noteId }) });
+        toast.success(t("snapshotCreated"));
+      },
+      onError: () => toast.error(t("snapshotFailed")),
+    })
+  );
+
+  const restoreMutation = useMutation(
+    trpc.noteRevision.restore.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: trpc.noteRevision.list.queryKey({ noteId }) });
+        queryClient.invalidateQueries({ queryKey: trpc.note.getById.queryKey({ id: noteId }) });
+        toast.success(t("restored"));
+      },
+      onError: () => toast.error(t("restoreFailed")),
+    })
+  );
+
+  return (
+    <div className="w-56 shrink-0 overflow-y-auto border-l border-border bg-muted/20">
+      <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
+        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+          {t("revisions")}
+        </span>
+        <button
+          onClick={() => createSnapshotMutation.mutate({ noteId })}
+          disabled={createSnapshotMutation.isPending}
+          className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          title={t("createSnapshot")}
+        >
+          <Camera className="h-3 w-3" />
+        </button>
       </div>
+
+      {isLoading ? (
+        <div className="flex h-20 items-center justify-center">
+          <div className="h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+        </div>
+      ) : data?.items && data.items.length > 0 ? (
+        <div className="space-y-0.5 p-1">
+          {data.items.map((rev) => (
+            <div
+              key={rev.id}
+              className="group rounded-md px-2 py-1.5 text-xs hover:bg-accent/50"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-foreground">
+                  #{rev.number}
+                </span>
+                <button
+                  onClick={() => {
+                    if (confirm(t("restoreConfirm"))) {
+                      restoreMutation.mutate({ id: rev.id });
+                    }
+                  }}
+                  disabled={restoreMutation.isPending}
+                  className="rounded p-0.5 opacity-0 group-hover:opacity-100 hover:bg-muted transition-all"
+                  title={t("restore")}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                </button>
+              </div>
+              <p className="text-[10px] text-muted-foreground truncate">
+                {rev.summary || t("autoSnapshot")}
+              </p>
+              <div className="flex items-center gap-2 text-[10px] text-muted-foreground/70">
+                <span>
+                  {new Date(rev.createdAt).toLocaleDateString("ru-RU", {
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+                {rev.wordCount != null && (
+                  <span>{rev.wordCount} w</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-1 p-4 text-center">
+          <History className="h-5 w-5 text-muted-foreground/30" />
+          <p className="text-[10px] text-muted-foreground">{t("noRevisions")}</p>
+        </div>
+      )}
     </div>
   );
 }

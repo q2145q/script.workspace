@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
@@ -965,6 +965,11 @@ function EmptyState({ icon: Icon, label }: { icon: typeof Users; label: string }
 export function EntitiesPanel({ projectId, defaultTab = "characters", editor }: EntitiesPanelProps) {
   const t = useTranslations("Entities");
   const [activeTab, setActiveTab] = useState<EntityTab>(defaultTab);
+
+  // Sync activeTab when defaultTab changes (e.g. switching workspace mode characters ↔ locations)
+  useEffect(() => {
+    setActiveTab(defaultTab);
+  }, [defaultTab]);
 
   return (
     <div className="flex h-full flex-col bg-background">

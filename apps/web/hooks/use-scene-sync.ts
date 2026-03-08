@@ -90,8 +90,8 @@ export function useSceneSync(
       scenes[scenes.length - 1].characters = Array.from(currentSceneChars);
     }
 
-    // Simple hash to avoid unnecessary syncs
-    const hash = JSON.stringify(scenes.map((s) => s.heading));
+    // Simple hash to avoid unnecessary syncs (include characters for count accuracy)
+    const hash = JSON.stringify(scenes.map((s) => ({ h: s.heading, c: s.characters })));
     if (hash === lastHashRef.current) return;
     lastHashRef.current = hash;
 

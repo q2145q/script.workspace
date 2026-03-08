@@ -135,7 +135,7 @@ model Project {
   description String?
   type        ProjectType   @default(FEATURE_FILM)
   status      ProjectStatus @default(DRAFT)
-  language    String        @default("en")
+  language    String        @default("ru")
   ownerId     String
   isPrivate   Boolean       @default(true)
   preferredProvider String?
@@ -476,10 +476,30 @@ model ProjectNote {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project   Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  revisions NoteRevision[]
 
   @@index([projectId])
   @@map("project_note")
+}
+
+model NoteRevision {
+  id          String   @id @default(cuid())
+  noteId      String
+  content     Json
+  number      Int
+  createdBy   String
+  summary     String?
+  wordCount   Int?
+  contentHash String?
+  createdAt   DateTime @default(now())
+
+  note ProjectNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@unique([noteId, number])
+  @@index([noteId, createdAt])
+  @@index([createdBy])
+  @@map("note_revision")
 }
 
 // ============================================================

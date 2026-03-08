@@ -16,6 +16,7 @@ import { entityRouter } from "./routers/entity";
 import { memberRouter } from "./routers/member";
 import { activityRouter } from "./routers/activity";
 import { noteRouter } from "./routers/note";
+import { noteRevisionRouter } from "./routers/note-revision";
 import { sceneMetadataRouter } from "./routers/scene-metadata";
 import { revisionRouter } from "./routers/revision";
 import { searchRouter } from "./routers/search";
@@ -40,6 +41,7 @@ export const appRouter = createTRPCRouter({
   member: memberRouter,
   activity: activityRouter,
   note: noteRouter,
+  noteRevision: noteRevisionRouter,
   sceneMetadata: sceneMetadataRouter,
   revision: revisionRouter,
   search: searchRouter,
