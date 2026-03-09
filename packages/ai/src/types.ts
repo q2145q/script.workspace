@@ -27,7 +27,7 @@ export const aiRewriteResponseSchema = z.object({
     type: z.string(),
     text: z.string(),
   })),
-  explanation: z.string().nullable().optional(),
+  explanation: z.string().nullable(),
 });
 export type AIRewriteResponse = z.infer<typeof aiRewriteResponseSchema>;
 
@@ -60,7 +60,7 @@ export type FormatBlock = z.infer<typeof formatBlockSchema>;
 /** AI format response — structured screenplay blocks */
 export const aiFormatResponseSchema = z.object({
   blocks: z.array(formatBlockSchema),
-  explanation: z.string().nullable().optional(),
+  explanation: z.string().nullable(),
 });
 export type AIFormatResponse = z.infer<typeof aiFormatResponseSchema>;
 

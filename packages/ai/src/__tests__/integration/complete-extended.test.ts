@@ -75,8 +75,7 @@ describe("Pacing Analysis: all providers return valid JSON", () => {
         systemPrompt,
         TEST_SCENE,
         provider.config,
-        // Note: jsonMode omitted — GPT-5 returns inconsistent structure with response_format
-        // and some providers occasionally return text instead of JSON (handled by extractJson)
+        { jsonMode: true, jsonSchema: { schema: pacingResultSchema, name: "pacing-analysis" } },
       );
 
       expect(result.text.length).toBeGreaterThan(10);

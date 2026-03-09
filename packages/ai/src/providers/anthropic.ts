@@ -1,9 +1,21 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import type { AIProvider, RewriteInput, FormatInput, ProviderConfig, AIRewriteResponse, AIFormatResponse } from "../types";
 import { aiRewriteResponseSchema, aiFormatResponseSchema } from "../types";
 import { buildRewritePrompt, buildFormatPrompt } from "./base";
 import { composePrompt } from "../prompts/compose";
-import { stripCodeFences } from "../utils";
+import type { ZodType } from "zod";
+
+/** Convert Zod schema to Anthropic output_config.format */
+function makeOutputConfig(schema: ZodType): Anthropic.Messages.OutputConfig {
+  const jsonSchema = zodToJsonSchema(schema, { target: "openApi3" });
+  return {
+    format: {
+      type: "json_schema",
+      schema: jsonSchema as Record<string, unknown>,
+    },
+  };
+}
 
 export class AnthropicProvider implements AIProvider {
   readonly id = "anthropic" as const;
@@ -26,6 +38,7 @@ export class AnthropicProvider implements AIProvider {
         messages: [
           { role: "user", content: buildRewritePrompt(input) },
         ],
+        output_config: makeOutputConfig(aiRewriteResponseSchema),
       },
       { signal: AbortSignal.timeout(120_000) },
     );
@@ -34,7 +47,7 @@ export class AnthropicProvider implements AIProvider {
     if (!textBlock || textBlock.type !== "text") throw new Error("Empty response from Anthropic");
 
     let parsed: unknown;
-    try { parsed = JSON.parse(stripCodeFences(textBlock.text)); } catch { throw new Error("Anthropic returned invalid JSON for rewrite"); }
+    try { parsed = JSON.parse(textBlock.text); } catch { throw new Error("Anthropic returned invalid JSON for rewrite"); }
     return aiRewriteResponseSchema.parse(parsed);
   }
 
@@ -56,6 +69,7 @@ export class AnthropicProvider implements AIProvider {
         messages: [
           { role: "user", content: buildFormatPrompt(input) },
         ],
+        output_config: makeOutputConfig(aiFormatResponseSchema),
       },
       { signal: AbortSignal.timeout(120_000) },
     );
@@ -64,7 +78,7 @@ export class AnthropicProvider implements AIProvider {
     if (!textBlock || textBlock.type !== "text") throw new Error("Empty response from Anthropic");
 
     let parsed: unknown;
-    try { parsed = JSON.parse(stripCodeFences(textBlock.text)); } catch { throw new Error("Anthropic returned invalid JSON for format"); }
+    try { parsed = JSON.parse(textBlock.text); } catch { throw new Error("Anthropic returned invalid JSON for format"); }
     return aiFormatResponseSchema.parse(parsed);
   }
 }

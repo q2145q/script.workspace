@@ -38,8 +38,8 @@ interface GraphNode extends SimulationNodeDatum {
 
 // d3 link type
 interface GraphLink extends SimulationLinkDatum<GraphNode> {
-  type?: string;
-  description?: string;
+  type?: string | null;
+  description?: string | null;
 }
 
 const TYPE_COLORS: Record<string, string> = {

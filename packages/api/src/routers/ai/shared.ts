@@ -113,6 +113,9 @@ export async function resolveProjectAIForTask(projectId: string, userId: string,
   return { project, resolved };
 }
 
+/** Providers that support json_schema structured outputs */
+const SCHEMA_CAPABLE_PROVIDERS = new Set<ProviderId>(["openai", "anthropic", "grok", "gemini"]);
+
 /** Call AI with composed prompt, parse JSON response with Zod schema.
  *  Automatically falls back to another provider on retryable errors. */
 export async function callAIWithSchema<T>(
@@ -129,7 +132,7 @@ export async function callAIWithSchema<T>(
       const systemPrompt = composePrompt(pid, taskName, variables);
       const completion = await completeAI(pid, systemPrompt, userPrompt, cfg, {
         jsonMode: true,
-        jsonSchema: pid === "openai" ? { schema, name: taskName } : undefined,
+        jsonSchema: SCHEMA_CAPABLE_PROVIDERS.has(pid) ? { schema, name: taskName } : undefined,
       });
       const parsed = schema.parse(JSON.parse(extractJson(completion.text)));
       return {

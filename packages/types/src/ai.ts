@@ -174,13 +174,13 @@ export const knowledgeGraphSchema = z.object({
   relationships: z.array(z.object({
     from: z.string(),
     to: z.string(),
-    type: z.string().optional(),
-    description: z.string().optional(),
+    type: z.string().nullable(),
+    description: z.string().nullable(),
   })),
   events: z.array(z.object({
     id: z.string(),
     name: z.string(),
-    description: z.string().optional(),
+    description: z.string().nullable(),
     participants: z.array(z.string()),
     location: z.string().nullish(),
     importance: z.string(),
@@ -297,7 +297,7 @@ export const beatSchema = z.object({
 });
 export const beatSheetResultSchema = z.object({
   beats: z.array(beatSchema),
-  notes: z.string().optional(),
+  notes: z.string().nullable(),
 });
 export type BeatSheetResult = z.infer<typeof beatSheetResultSchema>;
 

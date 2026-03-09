@@ -1,15 +1,16 @@
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import Anthropic from "@anthropic-ai/sdk";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import type { ZodType } from "zod";
 import type { ProviderConfig, ProviderId, StreamUsageResult } from "./types";
 import { estimateTokens, isFixedTemperatureModel } from "./utils";
 
 /** Options for AI completion */
 export interface CompleteOptions {
-  /** When true, enforce JSON output (response_format for OpenAI, prefill for Anthropic) */
+  /** When true, enforce JSON output (response_format for OpenAI, output_config for Anthropic) */
   jsonMode?: boolean;
-  /** When provided (OpenAI only), use Structured Outputs with strict JSON schema enforcement */
+  /** When provided, use Structured Outputs with strict JSON schema enforcement */
   jsonSchema?: { schema: ZodType; name: string };
 }
 
@@ -33,7 +34,11 @@ const OPENAI_COMPATIBLE_DEFAULTS: Partial<Record<ProviderId, string>> = {
   gemini: "gemini-2.5-flash",
 };
 
+/** Providers that support json_schema structured outputs via OpenAI-compatible API */
+const SCHEMA_CAPABLE_OPENAI_COMPAT = new Set<ProviderId>(["openai", "grok", "gemini"]);
+
 async function completeOpenAI(
+  providerId: ProviderId,
   systemPrompt: string,
   userPrompt: string,
   config: ProviderConfig,
@@ -46,12 +51,11 @@ async function completeOpenAI(
   const modelId = config.model || defaultModel || "gpt-4o";
 
   // Determine response format:
-  // 1. Structured Outputs (strict schema) — only for native OpenAI (no baseURL)
-  // 2. JSON mode — for OpenAI-compatible providers (DeepSeek, Grok, Gemini)
+  // 1. Structured Outputs (strict schema) — for OpenAI, Grok, Gemini
+  // 2. JSON mode — for DeepSeek (no schema support)
   // 3. No format constraint
   let responseFormat: OpenAI.ChatCompletionCreateParams["response_format"] | undefined;
-  if (options?.jsonSchema && !baseURL) {
-    // Use Structured Outputs for native OpenAI
+  if (options?.jsonSchema && SCHEMA_CAPABLE_OPENAI_COMPAT.has(providerId)) {
     responseFormat = zodResponseFormat(options.jsonSchema.schema, options.jsonSchema.name);
   } else if (options?.jsonMode) {
     responseFormat = { type: "json_object" as const };
@@ -90,8 +94,20 @@ async function completeAnthropic(
   const client = new Anthropic({ apiKey: config.apiKey });
 
   const messages: Anthropic.MessageParam[] = [{ role: "user", content: userPrompt }];
-  // JSON prefill: start assistant response with "{" to force JSON output
-  if (options?.jsonMode) {
+
+  // Build output_config for structured JSON output
+  let outputConfig: Anthropic.Messages.OutputConfig | undefined;
+  if (options?.jsonSchema) {
+    // Use native structured output with JSON schema enforcement
+    const jsonSchema = zodToJsonSchema(options.jsonSchema.schema, { target: "openApi3" });
+    outputConfig = {
+      format: {
+        type: "json_schema",
+        schema: jsonSchema as Record<string, unknown>,
+      },
+    };
+  } else if (options?.jsonMode) {
+    // Fallback: prefill assistant with "{" to force JSON output
     messages.push({ role: "assistant", content: "{" });
   }
 
@@ -107,14 +123,15 @@ async function completeAnthropic(
         } as Anthropic.TextBlockParam,
       ],
       messages,
+      ...(outputConfig ? { output_config: outputConfig } : {}),
     },
     { signal: AbortSignal.timeout(120_000) },
   );
 
   const textBlock = response.content.find((b) => b.type === "text");
   let text = textBlock && textBlock.type === "text" ? textBlock.text : "";
-  // Prepend the prefilled "{" back to complete the JSON
-  if (options?.jsonMode) {
+  // Prepend the prefilled "{" back to complete the JSON (only when using prefill, not output_config)
+  if (options?.jsonMode && !options?.jsonSchema) {
     text = "{" + text;
   }
 
@@ -183,7 +200,7 @@ async function completeYandex(
  * Unified non-streaming completion — sends system + user prompt, returns text.
  * Used by analysis, logline, synopsis, and other non-streaming AI features.
  * Pass options.jsonMode = true to enforce JSON output across all providers.
- * Pass options.jsonSchema for OpenAI Structured Outputs (strict schema enforcement).
+ * Pass options.jsonSchema for Structured Outputs (OpenAI, Grok, Gemini, Anthropic).
  */
 export async function completeAI(
   providerId: ProviderId,
@@ -203,5 +220,5 @@ export async function completeAI(
   // OpenAI-compatible: openai, deepseek, grok, gemini
   const baseURL = OPENAI_COMPATIBLE_BASE_URLS[providerId];
   const defaultModel = OPENAI_COMPATIBLE_DEFAULTS[providerId];
-  return completeOpenAI(systemPrompt, userPrompt, config, baseURL, defaultModel, options);
+  return completeOpenAI(providerId, systemPrompt, userPrompt, config, baseURL, defaultModel, options);
 }

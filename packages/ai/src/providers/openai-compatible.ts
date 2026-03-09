@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { zodResponseFormat } from "openai/helpers/zod";
 import type { AIProvider, RewriteInput, FormatInput, ProviderConfig, AIRewriteResponse, AIFormatResponse, ProviderId } from "../types";
 import { aiRewriteResponseSchema, aiFormatResponseSchema } from "../types";
 import { buildRewritePrompt, buildFormatPrompt } from "./base";
@@ -10,6 +11,7 @@ export class OpenAICompatibleProvider implements AIProvider {
     public readonly id: ProviderId,
     private readonly baseURL: string,
     private readonly defaultModel: string,
+    private readonly supportsJsonSchema: boolean = false,
   ) {}
 
   async rewrite(input: RewriteInput, config: ProviderConfig): Promise<AIRewriteResponse> {
@@ -24,7 +26,9 @@ export class OpenAICompatibleProvider implements AIProvider {
         { role: "user", content: buildRewritePrompt(input) },
       ],
       ...(isFixedTemperatureModel(modelId) ? {} : { temperature: 0.7 }),
-      response_format: { type: "json_object" },
+      response_format: this.supportsJsonSchema
+        ? zodResponseFormat(aiRewriteResponseSchema, "rewrite_response")
+        : { type: "json_object" },
     });
 
     const text = response.choices[0]?.message?.content;
@@ -47,7 +51,9 @@ export class OpenAICompatibleProvider implements AIProvider {
         { role: "user", content: buildFormatPrompt(input) },
       ],
       ...(isFixedTemperatureModel(modelId) ? {} : { temperature: 0.3 }),
-      response_format: { type: "json_object" },
+      response_format: this.supportsJsonSchema
+        ? zodResponseFormat(aiFormatResponseSchema, "format_response")
+        : { type: "json_object" },
     });
 
     const text = response.choices[0]?.message?.content;
