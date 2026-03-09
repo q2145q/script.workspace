@@ -46,6 +46,10 @@ export { getThinkingConfig } from "./thinking-config";
 // Pricing & cost estimation
 export { TOKEN_PRICES, estimateCost, formatCost, formatTokens } from "./pricing";
 
+// Task-specific model configuration
+export { TASK_MODEL_CONFIG, getTaskModel, getTaskModels } from "./task-models";
+export type { ModelTier, TaskModelEntry } from "./task-models";
+
 // Circuit breaker & provider fallback
 export {
   isCircuitOpen,

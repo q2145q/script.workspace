@@ -11,12 +11,20 @@ const CONTEXT_WINDOWS: Record<string, number> = {
   // Anthropic
   "anthropic:claude-sonnet-4-6": 200_000,
   "anthropic:claude-haiku-4-5-20251001": 200_000,
+  "anthropic:claude-sonnet-4-5-20250929": 200_000,
+  "anthropic:claude-opus-4-20250514": 200_000,
+  "anthropic:claude-sonnet-4-20250514": 200_000,
   "anthropic:default": 200_000,
 
   // OpenAI
   "openai:gpt-5": 1_000_000,
   "openai:gpt-5-mini": 1_000_000,
   "openai:gpt-5-nano": 1_000_000,
+  "openai:gpt-4.1": 1_000_000,
+  "openai:gpt-4.1-mini": 1_000_000,
+  "openai:gpt-4.1-nano": 1_000_000,
+  "openai:gpt-4o": 128_000,
+  "openai:gpt-4o-mini": 128_000,
   "openai:default": 1_000_000,
 
   // DeepSeek

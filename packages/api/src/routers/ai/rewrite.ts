@@ -14,6 +14,7 @@ import {
   getSecret,
   callAIWithSchema,
   handleAIError,
+  resolveTaskModel,
   type ProviderId,
 } from "./shared";
 
@@ -61,11 +62,7 @@ export const rewriteRouter = createTRPCRouter({
 
       let resolved;
       try {
-        resolved = await resolveApiKey(
-          getSecret(),
-          document.project.preferredProvider,
-          document.project.preferredModel,
-        );
+        resolved = await resolveTaskModel(getSecret(), "rewrite");
       } catch {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
@@ -166,15 +163,14 @@ export const rewriteRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Document not found or no editor access" });
       }
 
-      // Format uses OpenAI gpt-4o-mini with Structured Outputs for reliable block classification
       let resolved;
       try {
-        resolved = await resolveApiKey(getSecret(), "openai", "gpt-4o-mini");
+        resolved = await resolveTaskModel(getSecret(), "format");
       } catch {
-        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No OpenAI key configured for formatting." });
+        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No AI provider configured for formatting." });
       }
 
-      const provider = getProvider("openai" as ProviderId);
+      const provider = getProvider(resolved.provider as ProviderId);
 
       try {
         const result = await provider.format(
@@ -184,14 +180,14 @@ export const rewriteRouter = createTRPCRouter({
             contextAfter: input.contextAfter,
             language: document.project.language,
           },
-          { apiKey: resolved.apiKey, model: "gpt-4o-mini" }
+          { apiKey: resolved.apiKey, model: resolved.model }
         );
 
         await logApiUsage({
           userId: ctx.user.id,
           projectId: document.project.id,
-          provider: "openai",
-          model: "gpt-4o-mini",
+          provider: resolved.provider,
+          model: resolved.model,
           feature: "format",
           tokensIn: Math.ceil(input.selectedText.length / 4),
           tokensOut: Math.ceil(JSON.stringify(result).length / 4),
@@ -205,7 +201,7 @@ export const rewriteRouter = createTRPCRouter({
       } catch (error) {
         handleAIError(error, "Format", {
           userId: ctx.user.id, projectId: document.project.id,
-          provider: "openai", model: "gpt-4o-mini", feature: "format",
+          provider: resolved.provider, model: resolved.model, feature: "format",
         });
       }
     }),
@@ -236,7 +232,7 @@ export const rewriteRouter = createTRPCRouter({
 
       let resolved;
       try {
-        resolved = await resolveApiKey(getSecret(), document.project.preferredProvider, document.project.preferredModel);
+        resolved = await resolveTaskModel(getSecret(), "dialogue-pass");
       } catch {
         throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No AI provider configured." });
       }

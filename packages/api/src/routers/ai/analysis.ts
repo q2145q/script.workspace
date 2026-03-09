@@ -16,7 +16,7 @@ import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { logApiUsage } from "../../usage-logger";
 import { logger } from "../../logger";
 import {
-  resolveProjectAI,
+  resolveProjectAIForTask,
   callAIWithSchema,
   callAIWithMapReduce,
   handleAIError,
@@ -28,7 +28,7 @@ export const analysisRouter = createTRPCRouter({
   analyzeScene: protectedProcedure
     .input(analyzeSceneSchema)
     .mutation(async ({ ctx, input }) => {
-      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "analysis");
       const providerId = resolved.provider as ProviderId;
 
       try {
@@ -66,7 +66,7 @@ export const analysisRouter = createTRPCRouter({
   analyzeCharacters: protectedProcedure
     .input(analyzeCharactersSchema)
     .mutation(async ({ ctx, input }) => {
-      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "character-analysis");
       const providerId = resolved.provider as ProviderId;
 
       try {
@@ -104,7 +104,7 @@ export const analysisRouter = createTRPCRouter({
   analyzeStructure: protectedProcedure
     .input(analyzeStructureSchema)
     .mutation(async ({ ctx, input }) => {
-      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "structure-analysis");
       const providerId = resolved.provider as ProviderId;
 
       try {
@@ -142,7 +142,7 @@ export const analysisRouter = createTRPCRouter({
   checkConsistency: protectedProcedure
     .input(checkConsistencySchema)
     .mutation(async ({ ctx, input }) => {
-      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "consistency-check");
       const providerId = resolved.provider as ProviderId;
 
       try {
@@ -180,7 +180,7 @@ export const analysisRouter = createTRPCRouter({
   generateBeatSheet: protectedProcedure
     .input(generateBeatSheetSchema)
     .mutation(async ({ ctx, input }) => {
-      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "beat-sheet");
       const providerId = resolved.provider as ProviderId;
 
       try {
@@ -218,7 +218,7 @@ export const analysisRouter = createTRPCRouter({
   analyzePacing: protectedProcedure
     .input(analyzePacingSchema)
     .mutation(async ({ ctx, input }) => {
-      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "pacing-analysis");
       const providerId = resolved.provider as ProviderId;
 
       try {

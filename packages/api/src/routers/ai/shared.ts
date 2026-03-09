@@ -12,11 +12,12 @@ import {
   mapReduce,
 } from "@script/ai";
 import type { ProviderId, FallbackKeyResolver } from "@script/ai";
-import { resolveApiKey } from "../../global-key-resolver";
+import { resolveApiKey, resolveTaskModel } from "../../global-key-resolver";
 import { logAiResponse } from "../../usage-logger";
 import { logger } from "../../logger";
 
 export { getProvider, composePrompt, completeAI, extractJson, stripCodeFences };
+export { resolveTaskModel };
 export type { ProviderId };
 
 export function getSecret(): string {
@@ -70,6 +71,41 @@ export async function resolveProjectAI(projectId: string, userId: string) {
       project.preferredProvider,
       project.preferredModel,
     );
+  } catch {
+    throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No AI provider configured." });
+  }
+
+  return { project, resolved };
+}
+
+/**
+ * Verify user has access to project and resolve the optimal AI model for a specific task.
+ * Uses benchmark-determined defaults instead of user's project preference.
+ */
+export async function resolveProjectAIForTask(projectId: string, userId: string, taskName: string) {
+  const project = await prisma.project.findFirst({
+    where: {
+      id: projectId,
+      OR: [
+        { ownerId: userId },
+        { members: { some: { userId } } },
+      ],
+    },
+    select: {
+      id: true,
+      language: true,
+      preferredProvider: true,
+      preferredModel: true,
+    },
+  });
+
+  if (!project) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Project not found or no access" });
+  }
+
+  let resolved;
+  try {
+    resolved = await resolveTaskModel(getSecret(), taskName);
   } catch {
     throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No AI provider configured." });
   }

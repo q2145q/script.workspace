@@ -16,7 +16,7 @@ import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { logApiUsage } from "../../usage-logger";
 import { logger } from "../../logger";
 import {
-  resolveProjectAI,
+  resolveProjectAIForTask,
   callAIWithMapReduce,
   completeAIWithMapReduce,
   composePrompt,
@@ -25,15 +25,13 @@ import {
   handleAIError,
   type ProviderId,
 } from "./shared";
-import { resolveApiKey } from "../../global-key-resolver";
-import { getSecret } from "./shared";
 
 export const generationRouter = createTRPCRouter({
   /** Generate logline from project context */
   generateLogline: protectedProcedure
     .input(generateLoglineSchema)
     .mutation(async ({ ctx, input }) => {
-      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "logline");
       const providerId = resolved.provider as ProviderId;
 
       const [documents, bible] = await Promise.all([
@@ -104,7 +102,7 @@ export const generationRouter = createTRPCRouter({
   generateSynopsis: protectedProcedure
     .input(generateSynopsisSchema)
     .mutation(async ({ ctx, input }) => {
-      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "synopsis");
       const providerId = resolved.provider as ProviderId;
 
       const [documents, bible] = await Promise.all([
@@ -170,7 +168,7 @@ export const generationRouter = createTRPCRouter({
   describeCharacter: protectedProcedure
     .input(describeCharacterSchema)
     .mutation(async ({ ctx, input }) => {
-      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "describe-character");
       const providerId = resolved.provider as ProviderId;
 
       const systemPrompt = composePrompt(providerId, "describe-character", {
@@ -214,7 +212,7 @@ export const generationRouter = createTRPCRouter({
   describeLocation: protectedProcedure
     .input(describeLocationSchema)
     .mutation(async ({ ctx, input }) => {
-      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "describe-location");
       const providerId = resolved.provider as ProviderId;
 
       const systemPrompt = composePrompt(providerId, "describe-location", {
@@ -258,7 +256,7 @@ export const generationRouter = createTRPCRouter({
   extractKnowledgeGraph: protectedProcedure
     .input(extractKnowledgeGraphSchema)
     .mutation(async ({ ctx, input }) => {
-      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "knowledge-graph");
       const providerId = resolved.provider as ProviderId;
 
       try {
@@ -302,7 +300,7 @@ export const generationRouter = createTRPCRouter({
   generateSceneSynopsis: protectedProcedure
     .input(generateSceneSynopsisSchema)
     .mutation(async ({ ctx, input }) => {
-      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "scene-synopsis");
       const providerId = resolved.provider as ProviderId;
 
       const systemPrompt = composePrompt(providerId, "scene-synopsis", {
@@ -342,7 +340,7 @@ export const generationRouter = createTRPCRouter({
   generateAllSceneSynopses: protectedProcedure
     .input(generateAllSceneSynopsesSchema)
     .mutation(async ({ ctx, input }) => {
-      const { project, resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "scene-synopsis");
       const providerId = resolved.provider as ProviderId;
 
       const results: Record<string, string> = {};
@@ -398,7 +396,7 @@ export const generationRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { resolved } = await resolveProjectAI(input.projectId, ctx.user.id);
+      const { resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "act-assignment");
       const providerId = resolved.provider as ProviderId;
 
       const sceneList = input.scenes
