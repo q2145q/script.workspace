@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
         className="glass-panel rounded-xl border border-border p-8 shadow-lg"
       >
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-ai-accent/10">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-cinema/10">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="28"
@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-ai-accent"
+              className="text-cinema"
             >
               <rect width="20" height="16" x="2" y="4" rx="2" />
               <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
           <p className="mt-4">
             <Link
               href="/sign-in"
-              className="text-sm text-ai-accent transition-colors hover:underline"
+              className="text-sm text-cinema transition-colors hover:underline"
             >
               {t("backToSignIn")}
             </Link>
@@ -129,7 +129,7 @@ export default function ForgotPasswordPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-ai-accent px-3 py-2.5 text-sm font-medium text-ai-accent-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-50"
+          className="w-full rounded-lg bg-cinema px-3 py-2.5 text-sm font-medium text-cinema-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-50"
         >
           {loading ? "..." : t("resetPassword")}
         </button>
@@ -138,7 +138,7 @@ export default function ForgotPasswordPage() {
       <p className="mt-4 text-center text-sm text-muted-foreground">
         <Link
           href="/sign-in"
-          className="text-ai-accent transition-colors hover:underline"
+          className="text-cinema transition-colors hover:underline"
         >
           {t("backToSignIn")}
         </Link>

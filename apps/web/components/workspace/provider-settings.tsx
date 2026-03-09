@@ -160,7 +160,7 @@ function ModelSelector({
           })
         }
         disabled={updateMutation.isPending}
-        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-ai-accent px-3 py-2 text-sm font-medium text-ai-accent-foreground transition-all hover:opacity-90 disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-cinema px-3 py-2 text-sm font-medium text-cinema-foreground transition-all hover:opacity-90 disabled:opacity-50"
       >
         {updateMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         Save

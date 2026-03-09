@@ -324,7 +324,7 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
           <button
             onClick={handleGenerateAll}
             disabled={isGeneratingAll}
-            className="flex items-center gap-1 rounded-md bg-ai-accent px-2 py-1 text-[10px] font-medium text-white hover:bg-ai-accent/80 disabled:opacity-50"
+            className="flex items-center gap-1 rounded-md bg-cinema px-2 py-1 text-[10px] font-medium text-white hover:bg-cinema/80 disabled:opacity-50"
           >
             {isGeneratingAll ? (
               <Loader2 className="h-3 w-3 animate-spin" />
@@ -359,10 +359,10 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
                 onClick={() => handleSceneClick(scene.pos)}
                 className={`group cursor-pointer rounded-lg border p-3 transition-all duration-200 select-none ${
                   dragIndex === i
-                    ? "border-ai-accent/50 opacity-50"
+                    ? "border-cinema/50 opacity-50"
                     : dragOverIndex === i
-                    ? "border-ai-accent bg-ai-accent/5 scale-[1.02]"
-                    : "border-border hover:border-ai-accent/30 hover:bg-accent/50"
+                    ? "border-cinema bg-cinema/5 scale-[1.02]"
+                    : "border-border hover:border-cinema/30 hover:bg-accent/50"
                 }`}
               >
                 <div className="flex items-start gap-2">
@@ -381,11 +381,11 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
                           handleGenerateSynopsis(scene);
                         }}
                         disabled={generatingScene === scene.heading || isGeneratingAll}
-                        className="flex-shrink-0 rounded p-0.5 text-muted-foreground/30 opacity-0 transition-opacity hover:text-ai-accent group-hover:opacity-100 disabled:opacity-50"
+                        className="flex-shrink-0 rounded p-0.5 text-muted-foreground/30 opacity-0 transition-opacity hover:text-cinema group-hover:opacity-100 disabled:opacity-50"
                         title={t("generateSynopsis")}
                       >
                         {generatingScene === scene.heading ? (
-                          <Loader2 className="h-3 w-3 animate-spin text-ai-accent" />
+                          <Loader2 className="h-3 w-3 animate-spin text-cinema" />
                         ) : (
                           <Sparkles className="h-3 w-3" />
                         )}
@@ -438,7 +438,7 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
                       </p>
                     )}
                     {savedSynopses[scene.heading] && (
-                      <p className="mt-1 line-clamp-2 text-[10px] italic leading-relaxed text-ai-accent/70">
+                      <p className="mt-1 line-clamp-2 text-[10px] italic leading-relaxed text-cinema/70">
                         {savedSynopses[scene.heading]}
                       </p>
                     )}

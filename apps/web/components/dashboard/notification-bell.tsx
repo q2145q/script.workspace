@@ -143,14 +143,14 @@ export function NotificationBell() {
                 <div
                   key={n.id}
                   className={`group flex cursor-pointer items-start gap-2 border-b border-border/50 px-3 py-2.5 transition-colors hover:bg-muted/50 ${
-                    !n.read ? "bg-ai-accent/5" : ""
+                    !n.read ? "bg-cinema/5" : ""
                   }`}
                   onClick={() => handleNotificationClick(n)}
                 >
                   {/* Unread dot */}
                   <div className="mt-1.5 shrink-0">
                     {!n.read ? (
-                      <div className="h-2 w-2 rounded-full bg-ai-accent" />
+                      <div className="h-2 w-2 rounded-full bg-cinema" />
                     ) : (
                       <div className="h-2 w-2" />
                     )}

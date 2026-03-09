@@ -112,7 +112,7 @@ export function ProjectListView({ projects, selectedIds, onToggleSelect }: Proje
               <td className="px-3 py-2.5">
                 <Link
                   href={`/project/${project.id}`}
-                  className="font-medium text-foreground hover:text-ai-accent transition-colors"
+                  className="font-medium text-foreground hover:text-cinema transition-colors"
                 >
                   {project.title}
                 </Link>

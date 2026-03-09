@@ -119,7 +119,7 @@ export function ContextPinsPanel({ projectId }: ContextPinsPanelProps) {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-ai-accent border-t-transparent" />
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-cinema border-t-transparent" />
       </div>
     );
   }
@@ -133,7 +133,7 @@ export function ContextPinsPanel({ projectId }: ContextPinsPanelProps) {
             {t("title")}
           </span>
           {pins.length > 0 && (
-            <span className="rounded-full bg-ai-accent/10 px-1.5 py-0.5 text-[9px] font-medium text-ai-accent">
+            <span className="rounded-full bg-cinema/10 px-1.5 py-0.5 text-[9px] font-medium text-cinema">
               {pins.length}
             </span>
           )}
@@ -213,7 +213,7 @@ export function ContextPinsPanel({ projectId }: ContextPinsPanelProps) {
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden"
               >
-                <div className="rounded-md border border-ai-accent/30 p-2">
+                <div className="rounded-md border border-cinema/30 p-2">
                   <textarea
                     ref={textareaRef}
                     value={newPinContent}
@@ -235,7 +235,7 @@ export function ContextPinsPanel({ projectId }: ContextPinsPanelProps) {
                     <button
                       onClick={handleAddPin}
                       disabled={!newPinContent.trim() || createMutation.isPending}
-                      className="rounded bg-ai-accent/10 px-2 py-1 text-[10px] font-medium text-ai-accent hover:bg-ai-accent/20 disabled:opacity-30"
+                      className="rounded bg-cinema/10 px-2 py-1 text-[10px] font-medium text-cinema hover:bg-cinema/20 disabled:opacity-30"
                     >
                       {tCommon("add")}
                     </button>

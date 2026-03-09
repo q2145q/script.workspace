@@ -236,7 +236,7 @@ export function WorkspaceShell({ project, document, currentUser }: WorkspaceShel
           {sidebarContent}
         </ResizablePanel>
 
-        <ResizableHandle className="w-px bg-border/50 transition-colors hover:bg-ai-accent/30 max-md:hidden" />
+        <ResizableHandle className="w-px bg-border/50 transition-colors hover:bg-cinema/30 max-md:hidden" />
 
         <ResizablePanel defaultSize={rightPanelOpen ? 60 : 85} minSize={40}>
           <div className="relative h-full">
@@ -262,7 +262,7 @@ export function WorkspaceShell({ project, document, currentUser }: WorkspaceShel
           </div>
         </ResizablePanel>
 
-        <ResizableHandle className="w-px bg-border/50 transition-colors hover:bg-ai-accent/30 max-md:hidden" />
+        <ResizableHandle className="w-px bg-border/50 transition-colors hover:bg-cinema/30 max-md:hidden" />
 
         <ResizablePanel
           ref={rightPanelRef}

@@ -128,7 +128,7 @@ export function GlobalSearchDialog({ open, onClose, projectId }: GlobalSearchDia
                       <p className="truncate text-[10px] text-muted-foreground">
                         {result.projectTitle}
                         {result.matchType === "content" && (
-                          <span className="ml-1 text-ai-accent">
+                          <span className="ml-1 text-cinema">
                             · {t("contentMatch")}
                           </span>
                         )}

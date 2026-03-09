@@ -104,7 +104,7 @@ export default function SignInPage() {
             <label htmlFor="password" className="block text-sm font-medium text-foreground">
               {t("password")}
             </label>
-            <Link href="/forgot-password" className="text-xs text-ai-accent transition-colors hover:underline">
+            <Link href="/forgot-password" className="text-xs text-cinema transition-colors hover:underline">
               {t("forgotPassword")}
             </Link>
           </div>
@@ -124,7 +124,7 @@ export default function SignInPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-ai-accent px-3 py-2.5 text-sm font-medium text-ai-accent-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-50"
+          className="w-full rounded-lg bg-cinema px-3 py-2.5 text-sm font-medium text-cinema-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-50"
         >
           {loading ? t("signingIn") : t("signIn")}
         </button>
@@ -132,7 +132,7 @@ export default function SignInPage() {
 
       <p className="mt-4 text-center text-sm text-muted-foreground">
         {t("noAccount")}{" "}
-        <Link href="/sign-up" className="text-ai-accent transition-colors hover:underline">
+        <Link href="/sign-up" className="text-cinema transition-colors hover:underline">
           {t("signUp")}
         </Link>
       </p>

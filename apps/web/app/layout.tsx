@@ -3,9 +3,16 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "next-themes";
+import { Geist } from "next/font/google";
 import { TRPCReactProvider } from "@/lib/trpc/client";
 import { MotionConfigProvider } from "@/components/motion-config-provider";
 import "./globals.css";
+
+const geist = Geist({
+  subsets: ["cyrillic", "latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -59,11 +66,11 @@ export default async function RootLayout({
   const tCommon = await getTranslations("Common");
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} className={geist.variable} suppressHydrationWarning>
       <body className="antialiased">
         <a
           href="#main-content"
-          className="fixed left-2 top-2 z-[100] -translate-y-16 rounded-md bg-ai-accent px-4 py-2 text-sm font-medium text-white transition-transform focus:translate-y-0"
+          className="fixed left-2 top-2 z-[100] -translate-y-16 rounded-md bg-cinema px-4 py-2 text-sm font-medium text-white transition-transform focus:translate-y-0"
         >
           {tCommon("skipToContent")}
         </a>

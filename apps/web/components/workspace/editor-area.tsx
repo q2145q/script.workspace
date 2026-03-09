@@ -67,7 +67,7 @@ function SaveDraftButton({ documentId }: { documentId: string }) {
     <button
       onClick={() => draftMutation.mutate({ documentId })}
       disabled={draftMutation.isPending}
-      className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-ai-accent/10 hover:text-ai-accent disabled:opacity-50"
+      className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-cinema/10 hover:text-cinema disabled:opacity-50"
       title={t("saveDraft")}
     >
       <Save className="h-3 w-3" />
@@ -258,7 +258,7 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
       )}
 
       {/* Editor content — focused writing area */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-muted/30">
         <ScriptEditor
           content={!useCollab ? (document.content as JSONContent) : undefined}
           collaboration={collabConfig}

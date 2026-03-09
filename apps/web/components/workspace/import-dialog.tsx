@@ -83,7 +83,7 @@ export function ImportDialog({ editor }: ImportDialogProps) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-ai-accent/10 hover:text-ai-accent"
+        className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-cinema/10 hover:text-cinema"
         title={t("importFountain")}
       >
         <Upload className="h-3 w-3" />
@@ -125,7 +125,7 @@ export function ImportDialog({ editor }: ImportDialogProps) {
                 <div
                   className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors ${
                     dragging
-                      ? "border-ai-accent bg-ai-accent/5"
+                      ? "border-cinema bg-cinema/5"
                       : "border-border"
                   }`}
                   onDragOver={(e) => {
@@ -173,7 +173,7 @@ export function ImportDialog({ editor }: ImportDialogProps) {
                 <div className="space-y-4">
                   <div className="rounded-lg bg-muted/50 p-3">
                     <div className="flex items-center gap-2 text-sm text-foreground">
-                      <FileText className="h-4 w-4 text-ai-accent" />
+                      <FileText className="h-4 w-4 text-cinema" />
                       {fileName}
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -197,7 +197,7 @@ export function ImportDialog({ editor }: ImportDialogProps) {
                     </button>
                     <button
                       onClick={handleImport}
-                      className="flex-1 rounded-lg bg-ai-accent px-4 py-2 text-sm font-medium text-ai-accent-foreground transition-all hover:opacity-90"
+                      className="flex-1 rounded-lg bg-cinema px-4 py-2 text-sm font-medium text-cinema-foreground transition-all hover:opacity-90"
                     >
                       {t("importButton")}
                     </button>

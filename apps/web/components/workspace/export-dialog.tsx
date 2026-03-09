@@ -126,8 +126,8 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
                       onClick={() => setFormat("pdf")}
                       className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-all ${
                         format === "pdf"
-                          ? "border-ai-accent bg-ai-accent/10 text-ai-accent"
-                          : "border-border text-muted-foreground hover:border-ai-accent/30"
+                          ? "border-cinema bg-cinema/10 text-cinema"
+                          : "border-border text-muted-foreground hover:border-cinema/30"
                       }`}
                     >
                       <FileText className="h-4 w-4" />
@@ -137,8 +137,8 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
                       onClick={() => setFormat("docx")}
                       className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-all ${
                         format === "docx"
-                          ? "border-ai-accent bg-ai-accent/10 text-ai-accent"
-                          : "border-border text-muted-foreground hover:border-ai-accent/30"
+                          ? "border-cinema bg-cinema/10 text-cinema"
+                          : "border-border text-muted-foreground hover:border-cinema/30"
                       }`}
                     >
                       <FileIcon className="h-4 w-4" />
@@ -148,8 +148,8 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
                       onClick={() => setFormat("fdx")}
                       className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-all ${
                         format === "fdx"
-                          ? "border-ai-accent bg-ai-accent/10 text-ai-accent"
-                          : "border-border text-muted-foreground hover:border-ai-accent/30"
+                          ? "border-cinema bg-cinema/10 text-cinema"
+                          : "border-border text-muted-foreground hover:border-cinema/30"
                       }`}
                     >
                       <FileCode2 className="h-4 w-4" />
@@ -233,7 +233,7 @@ export function ExportDialog({ documentId, projectTitle }: ExportDialogProps) {
                 <button
                   onClick={handleExport}
                   disabled={exportMutation.isPending}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-ai-accent px-4 py-2.5 text-sm font-medium text-ai-accent-foreground transition-all hover:opacity-90 disabled:opacity-50"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-cinema px-4 py-2.5 text-sm font-medium text-cinema-foreground transition-all hover:opacity-90 disabled:opacity-50"
                 >
                   {exportMutation.isPending ? (
                     <>
@@ -278,7 +278,7 @@ function ToggleOption({
       <div className="pt-0.5">
         <div
           className={`flex h-5 w-9 items-center rounded-full transition-colors ${
-            checked && !disabled ? "bg-ai-accent" : "bg-muted"
+            checked && !disabled ? "bg-cinema" : "bg-muted"
           }`}
           onClick={(e) => {
             if (disabled) {

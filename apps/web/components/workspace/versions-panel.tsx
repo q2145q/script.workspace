@@ -229,7 +229,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
       if (draftId === diffFromId) return "border-red-400/50 bg-red-500/5";
       if (draftId === diffToId) return "border-emerald-400/50 bg-emerald-500/5";
     }
-    if (previewId === draftId) return "border-ai-accent/50 bg-ai-accent/5";
+    if (previewId === draftId) return "border-cinema/50 bg-cinema/5";
     return "border-transparent hover:bg-accent";
   };
 
@@ -251,7 +251,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
             }}
             className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
               diffMode
-                ? "bg-ai-accent/10 text-ai-accent"
+                ? "bg-cinema/10 text-cinema"
                 : "text-muted-foreground hover:bg-accent hover:text-foreground"
             }`}
           >
@@ -281,7 +281,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
           onClick={() => { setActiveTab("drafts"); setPreviewId(null); }}
           className={`flex-1 py-1.5 text-center text-xs font-medium transition-colors ${
             activeTab === "drafts"
-              ? "border-b-2 border-ai-accent text-foreground"
+              ? "border-b-2 border-cinema text-foreground"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -291,7 +291,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
           onClick={() => { setActiveTab("revisions"); setPreviewId(null); }}
           className={`flex-1 py-1.5 text-center text-xs font-medium transition-colors ${
             activeTab === "revisions"
-              ? "border-b-2 border-ai-accent text-foreground"
+              ? "border-b-2 border-cinema text-foreground"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -325,7 +325,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
                 value={draftName}
                 onChange={(e) => setDraftName(e.target.value)}
                 placeholder={t("draftNamePlaceholder")}
-                className="flex-1 rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent"
+                className="flex-1 rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-cinema"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleCreate();
                 }}
@@ -333,7 +333,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
               <button
                 onClick={handleCreate}
                 disabled={createMutation.isPending}
-                className="rounded-md bg-ai-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-ai-accent/80 disabled:opacity-50"
+                className="rounded-md bg-cinema px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-cinema/80 disabled:opacity-50"
               >
                 {tc("save")}
               </button>
@@ -440,7 +440,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
                 transition={{ delay: i * 0.03 }}
                 className={`group cursor-pointer rounded-md border px-3 py-2.5 transition-colors ${
                   previewId === rev.id
-                    ? "border-ai-accent/50 bg-ai-accent/5"
+                    ? "border-cinema/50 bg-cinema/5"
                     : "border-transparent hover:bg-accent"
                 }`}
                 onClick={() => setPreviewId(previewId === rev.id ? null : rev.id)}
@@ -505,7 +505,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
                     }
                   }}
                   disabled={restoreRevisionMutation.isPending}
-                  className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-ai-accent hover:bg-ai-accent/10"
+                  className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-cinema hover:bg-cinema/10"
                 >
                   <RotateCcw className="h-3 w-3" />
                   {tc("restore")}
@@ -593,7 +593,7 @@ export function VersionsPanel({ documentId }: VersionsPanelProps) {
                     }
                   }}
                   disabled={restoreMutation.isPending}
-                  className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-ai-accent hover:bg-ai-accent/10"
+                  className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-cinema hover:bg-cinema/10"
                 >
                   <RotateCcw className="h-3 w-3" />
                   {tc("restore")}

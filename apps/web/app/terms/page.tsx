@@ -99,7 +99,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-foreground">9. Контакты</h2>
             <p>
-              По вопросам: <a href="mailto:support@yomimovie.art" className="text-ai-accent hover:underline">support@yomimovie.art</a>
+              По вопросам: <a href="mailto:support@yomimovie.art" className="text-cinema hover:underline">support@yomimovie.art</a>
             </p>
           </section>
         </div>

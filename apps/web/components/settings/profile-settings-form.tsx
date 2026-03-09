@@ -180,7 +180,7 @@ export function ProfileSettingsForm() {
             <button
               onClick={handleSave}
               disabled={updateMutation.isPending}
-              className="flex items-center gap-2 rounded-lg bg-ai-accent px-4 py-2 text-sm font-medium text-ai-accent-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg bg-cinema px-4 py-2 text-sm font-medium text-cinema-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-50"
             >
               {updateMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

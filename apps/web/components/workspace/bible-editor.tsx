@@ -104,7 +104,7 @@ export function BibleEditor({ projectId, currentUser }: BibleEditorProps) {
       {/* Header bar */}
       <div className="glass-panel flex items-center justify-between border-b border-border px-4 py-2">
         <div className="flex items-center gap-2">
-          <BookOpen className="h-4 w-4 text-ai-accent" />
+          <BookOpen className="h-4 w-4 text-cinema" />
           <span className="text-sm font-medium text-foreground">
             {t("title")}
           </span>

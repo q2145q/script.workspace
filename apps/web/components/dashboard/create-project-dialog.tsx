@@ -84,7 +84,7 @@ export function CreateProjectDialog() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg bg-ai-accent px-4 py-2 text-sm font-medium text-ai-accent-foreground transition-all duration-200 hover:opacity-90"
+        className="rounded-lg bg-cinema px-4 py-2 text-sm font-medium text-cinema-foreground transition-all duration-200 hover:opacity-90"
       >
         {t("newProject")}
       </button>
@@ -208,7 +208,7 @@ export function CreateProjectDialog() {
                   <button
                     type="submit"
                     disabled={createMutation.isPending}
-                    className="rounded-lg bg-ai-accent px-4 py-2 text-sm font-medium text-ai-accent-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-50"
+                    className="rounded-lg bg-cinema px-4 py-2 text-sm font-medium text-cinema-foreground transition-all duration-200 hover:opacity-90 disabled:opacity-50"
                   >
                     {createMutation.isPending ? t("creating") : tCommon("create")}
                   </button>
@@ -231,8 +231,8 @@ export function CreateProjectDialog() {
                       disabled={createMutation.isPending}
                       className="flex w-full items-center gap-3 rounded-lg border border-border p-3 text-left transition-colors hover:bg-muted/50 disabled:opacity-50"
                     >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-ai-accent/10">
-                        <Icon className="h-5 w-5 text-ai-accent" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cinema/10">
+                        <Icon className="h-5 w-5 text-cinema" />
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground">{t(tpl.titleKey)}</p>

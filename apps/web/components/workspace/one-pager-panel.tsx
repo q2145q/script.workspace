@@ -69,7 +69,7 @@ export function OnePagerPanel({ projectId }: OnePagerPanelProps) {
       {/* Header */}
       <div className="glass-panel flex items-center justify-between border-b border-border px-4 py-2">
         <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-ai-accent" />
+          <FileText className="h-4 w-4 text-cinema" />
           <span className="text-sm font-medium text-foreground">{t("title")}</span>
         </div>
         <ExportButton projectId={projectId} />
@@ -293,7 +293,7 @@ function LoglineBlock({ projectId, savedLogline }: { projectId: string; savedLog
         <button
           onClick={() => mutation.mutate({ projectId, userRequest })}
           disabled={mutation.isPending}
-          className="flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-ai-accent px-3 py-1.5 text-sm font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
+          className="flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-cinema px-3 py-1.5 text-sm font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
         >
           {mutation.isPending ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -410,7 +410,7 @@ function SynopsisBlock({ projectId, savedSynopsis }: { projectId: string; savedS
         <button
           onClick={() => mutation.mutate({ projectId })}
           disabled={mutation.isPending}
-          className="flex items-center gap-1.5 rounded-lg bg-ai-accent/10 px-3 py-1.5 text-sm font-medium text-ai-accent transition-all hover:bg-ai-accent/20 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg bg-cinema/10 px-3 py-1.5 text-sm font-medium text-cinema transition-all hover:bg-cinema/20 disabled:opacity-50"
         >
           {mutation.isPending ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />

@@ -113,7 +113,7 @@ export function EpisodeNavigator({ projectId, activeDocumentId }: EpisodeNavigat
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 placeholder="Episode title"
-                className="flex-1 rounded border border-border bg-background px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent"
+                className="flex-1 rounded border border-border bg-background px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-cinema"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleCreate();
                   if (e.key === "Escape") setShowCreate(false);
@@ -123,7 +123,7 @@ export function EpisodeNavigator({ projectId, activeDocumentId }: EpisodeNavigat
               <button
                 onClick={handleCreate}
                 disabled={createMutation.isPending || !newTitle.trim()}
-                className="rounded bg-ai-accent px-2 py-1 text-[10px] font-medium text-white hover:bg-ai-accent/80 disabled:opacity-50"
+                className="rounded bg-cinema px-2 py-1 text-[10px] font-medium text-white hover:bg-cinema/80 disabled:opacity-50"
               >
                 Add
               </button>
@@ -148,7 +148,7 @@ export function EpisodeNavigator({ projectId, activeDocumentId }: EpisodeNavigat
                   if (e.key === "Escape") setEditingId(null);
                 }}
                 onBlur={() => handleRename(ep.id)}
-                className="flex-1 rounded border border-border bg-background px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent"
+                className="flex-1 rounded border border-border bg-background px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-cinema"
                 autoFocus
               />
             ) : (

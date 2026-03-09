@@ -172,7 +172,7 @@ export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSett
       {/* AI Model */}
       <section className="mb-8">
         <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Cpu className="h-4 w-4 text-ai-accent" />
+          <Cpu className="h-4 w-4 text-cinema" />
           {t("aiModel")}
         </h2>
         <div className="space-y-4 rounded-xl border border-border bg-muted/10 p-4">
@@ -222,7 +222,7 @@ export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSett
       {/* AI Tools */}
       <section className="mb-8">
         <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Sparkles className="h-4 w-4 text-ai-accent" />
+          <Sparkles className="h-4 w-4 text-cinema" />
           {t("aiTools")}
         </h2>
         <div className="space-y-4 rounded-xl border border-border bg-muted/10 p-4">
@@ -237,7 +237,7 @@ export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSett
         <button
           onClick={handleSave}
           disabled={updateMutation.isPending}
-          className="flex items-center gap-2 rounded-lg bg-ai-accent px-4 py-2 text-sm font-medium text-ai-accent-foreground transition-all hover:opacity-90 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg bg-cinema px-4 py-2 text-sm font-medium text-cinema-foreground transition-all hover:opacity-90 disabled:opacity-50"
         >
           {updateMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {t("saveChanges")}
@@ -300,7 +300,7 @@ function LoglineGenerator({ projectId, savedLogline }: { projectId: string; save
         <button
           onClick={() => mutation.mutate({ projectId, userRequest })}
           disabled={mutation.isPending}
-          className="flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-ai-accent px-3 py-2 text-sm font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
+          className="flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-cinema px-3 py-2 text-sm font-medium text-white transition-all hover:opacity-90 disabled:opacity-50"
         >
           {mutation.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -360,7 +360,7 @@ function SynopsisGenerator({ projectId, savedSynopsis }: { projectId: string; sa
       <button
         onClick={() => mutation.mutate({ projectId })}
         disabled={mutation.isPending}
-        className="flex items-center gap-1.5 rounded-lg bg-ai-accent/10 px-3 py-2 text-sm font-medium text-ai-accent transition-all hover:bg-ai-accent/20 disabled:opacity-50"
+        className="flex items-center gap-1.5 rounded-lg bg-cinema/10 px-3 py-2 text-sm font-medium text-cinema transition-all hover:bg-cinema/20 disabled:opacity-50"
       >
         {mutation.isPending ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -520,7 +520,7 @@ function MembersSection({ projectId }: { projectId: string }) {
             inviteMutation.mutate({ projectId, email: inviteEmail, role: inviteRole })
           }
           disabled={!inviteEmail.trim() || inviteMutation.isPending}
-          className="flex items-center gap-1.5 rounded-lg bg-ai-accent px-3 py-2 text-sm font-medium text-ai-accent-foreground transition-all hover:opacity-90 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg bg-cinema px-3 py-2 text-sm font-medium text-cinema-foreground transition-all hover:opacity-90 disabled:opacity-50"
         >
           {inviteMutation.isPending ? (
             <Loader2 className="h-4 w-4 animate-spin" />

@@ -1,27 +1,32 @@
 @import "tailwindcss";
 
 @theme {
-  /* === Light defaults (Raycast-inspired clean light) === */
-  --color-background: #fafafa;
+  /* === Light defaults (warm editorial light) === */
+  --color-background: #faf9f6;
   --color-foreground: #09090b;
-  --color-muted: #f4f4f5;
+  --color-muted: #f5f3ef;
   --color-muted-foreground: #71717a;
-  --color-border: #e4e4e7;
-  --color-input: #e4e4e7;
+  --color-border: #e8e5df;
+  --color-input: #e8e5df;
   --color-ring: #6366f1;
   --color-primary: #18181b;
-  --color-primary-foreground: #fafafa;
-  --color-secondary: #f4f4f5;
+  --color-primary-foreground: #faf9f6;
+  --color-secondary: #f5f3ef;
   --color-secondary-foreground: #18181b;
   --color-destructive: #ef4444;
-  --color-destructive-foreground: #fafafa;
-  --color-accent: #ecedf2;
+  --color-destructive-foreground: #faf9f6;
+  --color-accent: #edeae4;
   --color-accent-foreground: #18181b;
-  --color-card: #ffffff;
+  --color-card: #fffffe;
   --color-card-foreground: #09090b;
-  --color-sidebar: #f0f0f4;
+  --color-sidebar: #f2f0eb;
   --color-sidebar-foreground: #09090b;
-  --color-sidebar-border: #d4d4d8;
+  --color-sidebar-border: #d8d4cc;
+
+  /* === Brand accent (cinema red) === */
+  --color-cinema: #b91c1c;
+  --color-cinema-foreground: #ffffff;
+  --color-cinema-glow: rgba(185, 28, 28, 0.08);
 
   /* === AI accent colors === */
   --color-ai-accent: #6366f1;
@@ -38,7 +43,7 @@
   --glass-blur: 16px;
 
   /* === Fonts === */
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Courier Prime", "Courier New", monospace;
 
   /* === Radii === */
@@ -72,6 +77,10 @@
   --color-sidebar: #0e0e14;
   --color-sidebar-foreground: #a1a1aa;
   --color-sidebar-border: #1e1e28;
+
+  --color-cinema: #dc2626;
+  --color-cinema-foreground: #ffffff;
+  --color-cinema-glow: rgba(220, 38, 38, 0.1);
 
   --color-ai-accent: #818cf8;
   --color-ai-accent-foreground: #ffffff;
@@ -132,7 +141,19 @@ body {
   line-height: 1;
   max-width: 8.5in;
   margin: 0 auto;
+  padding: 1in 0;
   color: var(--color-foreground);
+  background: var(--color-card);
+  border-radius: 2px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.dark .screenplay-editor {
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .screenplay-scene-heading {
@@ -142,6 +163,8 @@ body {
   padding-right: 1in;
   margin-top: 1.5em;
   margin-bottom: 0.5em;
+  border-left: 3px solid var(--color-cinema);
+  padding-left: calc(1.5in - 3px);
 }
 
 .screenplay-action {
@@ -232,6 +255,10 @@ body {
 
 @media print {
   .page-break-indicator { display: none; }
+  .screenplay-scene-heading {
+    border-left: none;
+    padding-left: 1.5in;
+  }
 }
 
 /* ============================================================

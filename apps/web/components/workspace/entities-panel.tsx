@@ -243,14 +243,14 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("characterName")}
-                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent"
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-cinema"
               />
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={t("description")}
                 rows={3}
-                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent resize-none"
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-cinema resize-none"
               />
               {/* Traits */}
               <div>
@@ -258,7 +258,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
                   {traits.map((tr) => (
                     <span
                       key={tr}
-                      className="flex items-center gap-0.5 rounded-full bg-ai-accent/10 px-2 py-0.5 text-[10px] font-medium text-ai-accent"
+                      className="flex items-center gap-0.5 rounded-full bg-cinema/10 px-2 py-0.5 text-[10px] font-medium text-cinema"
                     >
                       {tr}
                       <button
@@ -276,7 +276,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
                     value={traitInput}
                     onChange={(e) => setTraitInput(e.target.value)}
                     placeholder={t("addTrait")}
-                    className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent"
+                    className="flex-1 rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-cinema"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -296,7 +296,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
                 <button
                   onClick={handleSubmit}
                   disabled={!name.trim() || createMutation.isPending || updateMutation.isPending}
-                  className="rounded-md bg-ai-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-ai-accent/80 disabled:opacity-50"
+                  className="rounded-md bg-cinema px-3 py-1.5 text-xs font-medium text-white hover:bg-cinema/80 disabled:opacity-50"
                 >
                   {editId ? tc("update") : tc("create")}
                 </button>
@@ -336,11 +336,11 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
                       handleAIDescribe(char.id, char.name);
                     }}
                     disabled={aiDescribingId === char.id}
-                    className="rounded p-0.5 text-muted-foreground hover:text-ai-accent disabled:opacity-50"
+                    className="rounded p-0.5 text-muted-foreground hover:text-cinema disabled:opacity-50"
                     title={t("aiDescribe")}
                   >
                     {aiDescribingId === char.id ? (
-                      <Loader2 className="h-3 w-3 animate-spin text-ai-accent" />
+                      <Loader2 className="h-3 w-3 animate-spin text-cinema" />
                     ) : (
                       <Sparkles className="h-3 w-3" />
                     )}
@@ -382,7 +382,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
                           {char.traits.map((trait) => (
                             <span
                               key={trait}
-                              className="rounded-full bg-ai-accent/10 px-1.5 py-0.5 text-[9px] font-medium text-ai-accent"
+                              className="rounded-full bg-cinema/10 px-1.5 py-0.5 text-[9px] font-medium text-cinema"
                             >
                               {trait}
                             </span>
@@ -421,7 +421,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
                       name: detectedName,
                     });
                   }}
-                  className="flex-shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium text-ai-accent hover:bg-ai-accent/10"
+                  className="flex-shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium text-cinema hover:bg-cinema/10"
                 >
                   + {tc("add")}
                 </button>
@@ -591,14 +591,14 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("locationName")}
-                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent"
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-cinema"
               />
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={t("description")}
                 rows={3}
-                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent resize-none"
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-cinema resize-none"
               />
               <div className="flex justify-end gap-2">
                 <button onClick={resetForm} className="rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">
@@ -607,7 +607,7 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
                 <button
                   onClick={handleSubmit}
                   disabled={!name.trim() || createMutation.isPending || updateMutation.isPending}
-                  className="rounded-md bg-ai-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-ai-accent/80 disabled:opacity-50"
+                  className="rounded-md bg-cinema px-3 py-1.5 text-xs font-medium text-white hover:bg-cinema/80 disabled:opacity-50"
                 >
                   {editId ? tc("update") : tc("create")}
                 </button>
@@ -646,11 +646,11 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
                       handleAIDescribe(loc.id, loc.name);
                     }}
                     disabled={aiDescribingId === loc.id}
-                    className="rounded p-0.5 text-muted-foreground hover:text-ai-accent disabled:opacity-50"
+                    className="rounded p-0.5 text-muted-foreground hover:text-cinema disabled:opacity-50"
                     title={t("aiDescribe")}
                   >
                     {aiDescribingId === loc.id ? (
-                      <Loader2 className="h-3 w-3 animate-spin text-ai-accent" />
+                      <Loader2 className="h-3 w-3 animate-spin text-cinema" />
                     ) : (
                       <Sparkles className="h-3 w-3" />
                     )}
@@ -718,7 +718,7 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
                       name: detectedName,
                     });
                   }}
-                  className="flex-shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium text-ai-accent hover:bg-ai-accent/10"
+                  className="flex-shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium text-cinema hover:bg-cinema/10"
                 >
                   + {tc("add")}
                 </button>
@@ -850,14 +850,14 @@ function TermsTab({ projectId }: { projectId: string }) {
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
                 placeholder={t("term")}
-                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent"
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-cinema"
               />
               <textarea
                 value={definition}
                 onChange={(e) => setDefinition(e.target.value)}
                 placeholder={t("definition")}
                 rows={3}
-                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ai-accent resize-none"
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-cinema resize-none"
               />
               <div className="flex justify-end gap-2">
                 <button onClick={resetForm} className="rounded-md px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">
@@ -866,7 +866,7 @@ function TermsTab({ projectId }: { projectId: string }) {
                 <button
                   onClick={handleSubmit}
                   disabled={!term.trim() || createMutation.isPending || updateMutation.isPending}
-                  className="rounded-md bg-ai-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-ai-accent/80 disabled:opacity-50"
+                  className="rounded-md bg-cinema px-3 py-1.5 text-xs font-medium text-white hover:bg-cinema/80 disabled:opacity-50"
                 >
                   {editId ? tc("update") : tc("create")}
                 </button>
@@ -981,7 +981,7 @@ export function EntitiesPanel({ projectId, defaultTab = "characters", editor }: 
             onClick={() => setActiveTab(tab.key)}
             className={`flex flex-1 items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors ${
               activeTab === tab.key
-                ? "border-b-2 border-ai-accent text-foreground"
+                ? "border-b-2 border-cinema text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >

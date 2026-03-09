@@ -381,7 +381,7 @@ export function KnowledgeGraphPanel({ projectId, editor }: KnowledgeGraphPanelPr
         <button
           onClick={handleExtract}
           disabled={mutation.isPending || !editor}
-          className="flex items-center gap-1.5 rounded-md bg-ai-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-ai-accent/80 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-md bg-cinema px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-cinema/80 disabled:opacity-50"
         >
           {mutation.isPending ? (
             <>

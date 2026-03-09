@@ -60,7 +60,7 @@ function DroppableColumn({
     <div
       ref={setNodeRef}
       className={`flex min-h-[200px] flex-1 flex-col rounded-lg border border-border/50 bg-muted/10 transition-colors ${
-        isOver ? "border-ai-accent/50 bg-ai-accent/5" : ""
+        isOver ? "border-cinema/50 bg-cinema/5" : ""
       }`}
     >
       <div className="flex items-center gap-2 border-b border-border/50 px-3 py-2">

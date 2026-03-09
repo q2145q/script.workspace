@@ -128,7 +128,7 @@ export function PrintPreviewModal({ open, onOpenChange, editor }: PrintPreviewMo
             <div className="flex items-center gap-2">
               <button
                 onClick={handlePrint}
-                className="flex items-center gap-1.5 rounded-lg bg-ai-accent px-3 py-1.5 text-xs font-medium text-ai-accent-foreground transition-all hover:opacity-90"
+                className="flex items-center gap-1.5 rounded-lg bg-cinema px-3 py-1.5 text-xs font-medium text-cinema-foreground transition-all hover:opacity-90"
               >
                 <Printer className="h-3.5 w-3.5" />
                 {t("print")}

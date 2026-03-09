@@ -183,7 +183,7 @@ export function BibleSections({ projectId }: BibleSectionsProps) {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-3 py-2">
           <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-ai-accent" />
+            <BookOpen className="h-4 w-4 text-cinema" />
             <span className="text-sm font-medium">{t("title")}</span>
           </div>
           <button
@@ -205,7 +205,7 @@ export function BibleSections({ projectId }: BibleSectionsProps) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t("searchSections")}
-                className="w-full rounded-md border border-border bg-background py-1 pl-7 pr-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-ai-accent focus:outline-none"
+                className="w-full rounded-md border border-border bg-background py-1 pl-7 pr-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-cinema focus:outline-none"
               />
             </div>
           </div>
@@ -227,12 +227,12 @@ export function BibleSections({ projectId }: BibleSectionsProps) {
                 }
               }}
               placeholder={t("sectionTitlePlaceholder")}
-              className="w-full rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:border-ai-accent focus:outline-none"
+              className="w-full rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground placeholder:text-muted-foreground focus:border-cinema focus:outline-none"
             />
             <select
               value={newSectionType}
               onChange={(e) => setNewSectionType(e.target.value)}
-              className="w-full rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-ai-accent focus:outline-none"
+              className="w-full rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground focus:border-cinema focus:outline-none"
             >
               <option value="CHARACTERS">{t("typeCharacters")}</option>
               <option value="LOCATIONS">{t("typeLocations")}</option>
@@ -244,7 +244,7 @@ export function BibleSections({ projectId }: BibleSectionsProps) {
               <button
                 onClick={handleCreateSection}
                 disabled={!newSectionTitle.trim() || createMutation.isPending}
-                className="flex-1 rounded-md bg-ai-accent px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-ai-accent/90 disabled:opacity-50"
+                className="flex-1 rounded-md bg-cinema px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-cinema/90 disabled:opacity-50"
               >
                 {t("create")}
               </button>
@@ -278,7 +278,7 @@ export function BibleSections({ projectId }: BibleSectionsProps) {
                 key={section.id}
                 className={`group flex items-center gap-2 border-b border-border/50 px-3 py-2 transition-colors cursor-pointer ${
                   isActive
-                    ? "bg-ai-accent/10 text-foreground"
+                    ? "bg-cinema/10 text-foreground"
                     : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                 }`}
                 onClick={() => {
@@ -299,7 +299,7 @@ export function BibleSections({ projectId }: BibleSectionsProps) {
                       if (e.key === "Escape") setEditingTitle(null);
                     }}
                     onBlur={() => handleRenameSection(section.id)}
-                    className="flex-1 rounded border border-ai-accent bg-background px-1 py-0.5 text-xs text-foreground focus:outline-none"
+                    className="flex-1 rounded border border-cinema bg-background px-1 py-0.5 text-xs text-foreground focus:outline-none"
                     onClick={(e) => e.stopPropagation()}
                   />
                 ) : (
@@ -361,7 +361,7 @@ export function BibleSections({ projectId }: BibleSectionsProps) {
             <div className="flex items-center gap-2 border-b border-border px-4 py-2">
               {(() => {
                 const Icon = SECTION_TYPE_ICONS[activeSection.type] || FileText;
-                return <Icon className="h-4 w-4 text-ai-accent" />;
+                return <Icon className="h-4 w-4 text-cinema" />;
               })()}
               <span className="text-sm font-medium text-foreground">
                 {activeSection.title}

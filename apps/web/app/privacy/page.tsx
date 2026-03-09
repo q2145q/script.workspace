@@ -36,7 +36,7 @@ export default function PrivacyPage() {
             <p>
               Настоящая Политика конфиденциальности описывает, как YOMI Film (далее — «мы», «наш», «Компания»)
               собирает, использует и защищает персональные данные пользователей сервиса Script Workspace
-              (далее — «Сервис»), доступного по адресу <a href="https://script.yomimovie.art" className="text-ai-accent hover:underline">script.yomimovie.art</a>.
+              (далее — «Сервис»), доступного по адресу <a href="https://script.yomimovie.art" className="text-cinema hover:underline">script.yomimovie.art</a>.
               Используя Сервис, вы соглашаетесь с условиями данной политики.
             </p>
           </section>
@@ -151,7 +151,7 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3">
               Для реализации своих прав направьте запрос на{" "}
-              <a href="mailto:support@yomimovie.art" className="text-ai-accent hover:underline">support@yomimovie.art</a>.
+              <a href="mailto:support@yomimovie.art" className="text-cinema hover:underline">support@yomimovie.art</a>.
               Мы ответим в течение 30 дней.
             </p>
           </section>
@@ -194,11 +194,11 @@ export default function PrivacyPage() {
             <ul className="list-none space-y-2 mt-3">
               <li>
                 <strong>Email:</strong>{" "}
-                <a href="mailto:support@yomimovie.art" className="text-ai-accent hover:underline">support@yomimovie.art</a>
+                <a href="mailto:support@yomimovie.art" className="text-cinema hover:underline">support@yomimovie.art</a>
               </li>
               <li>
                 <strong>Telegram:</strong>{" "}
-                <a href="https://t.me/yaborovkov" target="_blank" rel="noopener noreferrer" className="text-ai-accent hover:underline">@yaborovkov</a>
+                <a href="https://t.me/yaborovkov" target="_blank" rel="noopener noreferrer" className="text-cinema hover:underline">@yaborovkov</a>
               </li>
               <li>
                 <strong>Компания:</strong> YOMI Film

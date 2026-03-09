@@ -100,7 +100,7 @@ export function ScriptStatsFooter({ stats }: ScriptStatsFooterProps) {
                       <span className="w-20 truncate text-foreground font-medium">{name}</span>
                       <div className="flex-1 h-2 rounded-full bg-muted/50 overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-ai-accent/60"
+                          className="h-full rounded-full bg-cinema/60"
                           style={{ width: `${(words / maxDialogueWords) * 100}%` }}
                         />
                       </div>

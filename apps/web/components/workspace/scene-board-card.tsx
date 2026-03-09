@@ -49,7 +49,7 @@ export const SceneBoardCard = memo(function SceneBoardCard({ scene, onClick, onD
       {...listeners}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
-      className="cursor-pointer rounded-lg border border-border bg-card p-2.5 shadow-sm transition-all hover:border-ai-accent/30 hover:shadow-md"
+      className="cursor-pointer rounded-lg border border-border bg-card p-2.5 shadow-sm transition-all hover:border-cinema/30 hover:shadow-md"
     >
       {/* Color tag strip */}
       {scene.colorTag && (

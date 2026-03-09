@@ -68,9 +68,9 @@ export function ProjectList({ projects, selectedIds, onToggleSelect }: ProjectLi
         <motion.div
           key={project.id}
           variants={item}
-          className={`group relative rounded-xl border bg-card p-5 transition-all duration-200 hover:border-ai-accent/30 hover:shadow-md hover:shadow-ai-glow ${
+          className={`group relative rounded-xl border bg-card p-5 transition-all duration-200 hover:border-cinema/30 hover:shadow-md hover:shadow-cinema-glow ${
             selectedIds.has(project.id)
-              ? "border-ai-accent ring-1 ring-ai-accent/30"
+              ? "border-cinema ring-1 ring-cinema/30"
               : "border-border"
           }`}
         >
@@ -94,7 +94,7 @@ export function ProjectList({ projects, selectedIds, onToggleSelect }: ProjectLi
           </div>
 
           <div className="mb-3 flex items-start justify-between">
-            <h3 className="font-medium text-foreground">{project.title}</h3>
+            <h3 className="text-base font-semibold text-foreground">{project.title}</h3>
             <div className="flex items-center gap-1.5">
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${PROJECT_STATUS_COLORS[project.status as ProjectStatus] ?? "bg-zinc-500/20 text-zinc-400"}`}>
                 {tStatus(project.status as ProjectStatus)}
