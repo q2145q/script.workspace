@@ -105,17 +105,9 @@ export function ClosingSection() {
       >
         <div className="landing-container">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <span
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: "1.1rem",
-                  fontWeight: 700,
-                  color: "var(--l-text)",
-                }}
-              >
-                Script
-              </span>
+            <div className="flex items-center gap-2.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/yomi-light.svg" alt="YOMI" className="h-6 w-auto" />
               <span
                 style={{
                   fontSize: "0.6rem",
@@ -124,7 +116,7 @@ export function ClosingSection() {
                   color: "var(--l-text-muted)",
                 }}
               >
-                Workspace
+                Script
               </span>
             </div>
 

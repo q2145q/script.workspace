@@ -1,10 +1,21 @@
 "use client";
 
-import { useInView } from "../hooks";
-import { FEATURES } from "../data";
+import { useState, useEffect } from "react";
+import { useInView, useTypewriter } from "../hooks";
+import { FEATURES, SCREENPLAY, SIDEBAR_SCENES } from "../data";
 
 export function FeaturesSection() {
   const [ref, visible] = useInView();
+  const [started, setStarted] = useState(false);
+  const tw = useTypewriter(SCREENPLAY, 28);
+
+  useEffect(() => {
+    if (visible && !started) {
+      setStarted(true);
+      tw.start();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
 
   return (
     <section ref={ref} id="features" className="landing-section">
@@ -26,6 +37,58 @@ export function FeaturesSection() {
           </h2>
         </div>
 
+        {/* Editor mockup with typewriter */}
+        <div
+          className={`reveal ${visible ? "visible" : ""} mt-10`}
+          style={{ maxWidth: 900, margin: "0 auto" }}
+        >
+          <div className="editor-mockup">
+            <div className="editor-mockup-titlebar">
+              <div className="editor-dot" style={{ background: "#ff5f57" }} />
+              <div className="editor-dot" style={{ background: "#febc2e" }} />
+              <div className="editor-dot" style={{ background: "#28c840" }} />
+              <span className="ml-3 text-xs" style={{ color: "#52525b" }}>
+                Без названия — Script Workspace
+              </span>
+            </div>
+
+            <div className="editor-mockup-body">
+              <div className="editor-mockup-sidebar">
+                <div
+                  className="px-3 pb-2 mb-1 text-[10px] uppercase tracking-wider"
+                  style={{
+                    color: "#52525b",
+                    borderBottom: "1px solid #1a1a22",
+                  }}
+                >
+                  Сцены
+                </div>
+                {SIDEBAR_SCENES.map((s) => (
+                  <div
+                    key={s.num}
+                    className={`editor-mockup-sidebar-item ${s.active ? "active" : ""}`}
+                  >
+                    <span style={{ opacity: 0.4, fontSize: 10 }}>
+                      {s.num}
+                    </span>
+                    {s.text}
+                  </div>
+                ))}
+              </div>
+
+              <div className="editor-mockup-content">
+                {tw.visible.map((line, i) => (
+                  <div key={i} className={`mock-${line.type}`}>
+                    {line.display}
+                    {line.cursor && <span className="tw-cursor" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Feature cards grid */}
         <div
           className={`stagger ${visible ? "visible" : ""} mt-12`}
           style={{

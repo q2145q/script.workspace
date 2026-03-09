@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Header } from "./sections/header";
 import { HeroSection } from "./sections/hero-section";
 import { FeaturesSection } from "./sections/features-section";
-import { EditorShowcaseSection } from "./sections/editor-showcase-section";
 import { AISection } from "./sections/ai-section";
 import { ComparisonSection } from "./sections/comparison-section";
 import { PricingSection } from "./sections/pricing-section";
@@ -25,7 +24,6 @@ export default function LandingPage() {
       <main>
         <HeroSection />
         <FeaturesSection />
-        <EditorShowcaseSection />
         <AISection />
         <ComparisonSection />
         <PricingSection />

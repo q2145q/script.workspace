@@ -18,20 +18,11 @@ export function Header({ scrolled }: { scrolled: boolean }) {
         <div className="landing-container flex items-center justify-between h-16">
           <Link
             href="/"
-            className="flex items-center gap-3"
+            className="flex items-center gap-2.5"
             style={{ textDecoration: "none" }}
           >
-            <span
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "1.35rem",
-                fontWeight: 700,
-                color: "var(--l-text)",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Script
-            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/yomi-light.svg" alt="YOMI" className="h-7 w-auto" />
             <span
               style={{
                 fontSize: "0.65rem",
@@ -41,7 +32,7 @@ export function Header({ scrolled }: { scrolled: boolean }) {
                 fontWeight: 400,
               }}
             >
-              Workspace
+              Script
             </span>
           </Link>
 
