@@ -10,22 +10,26 @@ export function PricingSection() {
   const [ref, visible] = useInView();
   const [period, setPeriod] = useState<"month" | "year">("month");
 
+  // Only show first 3 tiers (КОМАНДА merged into PRO)
+  const tiers = PRICING.slice(0, 3);
+
   return (
     <section ref={ref} id="pricing" className="landing-section">
       <div className="landing-container">
         <div className={`reveal ${visible ? "visible" : ""}`}>
+          <hr className="editorial-rule" style={{ marginBottom: "2rem" }} />
           <h2
-            className="text-3xl sm:text-4xl mb-4 text-center"
+            className="text-3xl sm:text-4xl lg:text-5xl mb-4"
             style={{
               fontFamily: "var(--font-display)",
               fontWeight: 700,
               letterSpacing: "-0.02em",
+              lineHeight: 1.1,
+              maxWidth: 500,
             }}
           >
-            Начните бесплатно.{" "}
-            <span style={{ color: "var(--l-accent)" }}>
-              Платите когда будете готовы.
-            </span>
+            Начните{" "}
+            <span style={{ color: "var(--l-accent)" }}>бесплатно</span>
           </h2>
 
           {/* Beta offer */}
@@ -34,7 +38,7 @@ export function PricingSection() {
           </div>
 
           {/* Period toggle */}
-          <div className="flex justify-center mt-8">
+          <div className="flex mt-8">
             <div className="pricing-toggle">
               <button
                 className={period === "month" ? "active" : ""}
@@ -54,9 +58,9 @@ export function PricingSection() {
         </div>
 
         <div
-          className={`stagger ${visible ? "visible" : ""} grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mt-12`}
+          className={`stagger ${visible ? "visible" : ""} grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-12`}
         >
-          {PRICING.map((tier) => (
+          {tiers.map((tier) => (
             <div
               key={tier.name}
               className={`reveal pricing-card ${tier.featured ? "featured" : ""}`}
@@ -109,7 +113,7 @@ export function PricingSection() {
                 {tier.projects} · AI: {tier.aiRequests}
               </p>
 
-              <div className="section-divider my-4" />
+              <hr className="editorial-rule wide my-4" />
 
               <ul className="space-y-2.5 flex-1">
                 {tier.features.map((f) => (
@@ -134,10 +138,17 @@ export function PricingSection() {
 
         <div className={`reveal ${visible ? "visible" : ""}`}>
           <p
-            className="text-center mt-8 text-sm"
+            className="mt-8 text-sm"
             style={{ color: "var(--l-text-muted)" }}
           >
-            Оплата картами РФ · СБП · Счёт для ООО/ИП
+            Нужен командный тариф?{" "}
+            <Link
+              href="/sign-up"
+              style={{ color: "var(--l-accent)", textDecoration: "underline" }}
+            >
+              Связаться
+            </Link>
+            {" "}· Оплата картами РФ · СБП · Счёт для ООО/ИП
           </p>
         </div>
       </div>

@@ -8,66 +8,52 @@ export function AISection() {
 
   return (
     <section ref={ref} className="landing-section">
-      <div className="landing-container max-w-3xl mx-auto">
+      <div className="landing-container" style={{ maxWidth: 800 }}>
         <div className={`reveal ${visible ? "visible" : ""}`}>
-          <h2
-            className="text-3xl sm:text-4xl mb-6 text-center"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 700,
-              letterSpacing: "-0.02em",
-            }}
-          >
-            Умный помощник.{" "}
-            <span style={{ color: "var(--l-accent)" }}>Не замена автору.</span>
-          </h2>
-        </div>
+          <hr className="editorial-rule" style={{ marginBottom: "3rem" }} />
 
-        <div className={`reveal ${visible ? "visible" : ""}`}>
-          <div
-            className="text-base leading-relaxed space-y-4 text-center"
-            style={{ color: "var(--l-text-dim)" }}
-          >
-            <p>
-              В кино давно привыкли работать с командой. Редактор, режиссёр,
-              продюсер — каждый помогает истории стать лучше. AI в Script
-              Workspace — такой же участник процесса.
-            </p>
-            <p style={{ color: "var(--l-text)" }}>
-              Застряли на сцене? Попросите переписать.
-              <br />
-              Диалог звучит деревянно? Покажите — получите варианты.
-              <br />
-              Не можете выбрать структуру? AI объяснит что работает и почему.
-            </p>
-            <p
-              style={{
-                fontFamily: "var(--font-display)",
-                color: "var(--l-accent)",
-                fontSize: "1.1rem",
-              }}
-            >
-              Ваша история. Ваш голос. Наш инструмент.
-            </p>
-          </div>
-        </div>
-
-        <div className={`reveal ${visible ? "visible" : ""}`}>
-          <div className="flex flex-wrap justify-center gap-3 mt-10">
-            {PROVIDERS.map((p) => (
-              <span key={p} className="provider-badge">
-                {p}
-              </span>
-            ))}
-          </div>
+          <blockquote className="pull-quote">
+            Застряли на сцене? Попросите переписать.
+            Диалог звучит деревянно? Покажите — получите варианты.
+            AI объяснит что работает и почему.
+          </blockquote>
 
           <p
-            className="text-center mt-6 text-xs"
-            style={{ color: "var(--l-text-muted)" }}
+            className="mt-8 text-base leading-relaxed"
+            style={{ color: "var(--l-text-dim)", maxWidth: 600 }}
           >
-            Данные в безопасности · Шифрование AES-256 · Мы не обучаем модели на
-            вашем тексте
+            В кино давно привыкли работать с командой. Редактор, режиссёр,
+            продюсер — каждый помогает истории стать лучше. AI в Script
+            Workspace — такой же участник процесса. Не замена автору.
           </p>
+
+          <div className="mt-10">
+            <p
+              className="text-xs mb-3"
+              style={{
+                color: "var(--l-text-muted)",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+              }}
+            >
+              Доступные модели
+            </p>
+            <p
+              className="text-sm"
+              style={{ color: "var(--l-text-dim)" }}
+            >
+              {PROVIDERS.map((p, i) => (
+                <span key={p} className="provider-badge">
+                  {p}
+                  {i < PROVIDERS.length - 1 && (
+                    <span style={{ color: "var(--l-text-muted)", margin: "0 0.5rem" }}>
+                      ·
+                    </span>
+                  )}
+                </span>
+              ))}
+            </p>
+          </div>
         </div>
       </div>
     </section>

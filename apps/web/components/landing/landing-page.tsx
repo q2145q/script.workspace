@@ -3,17 +3,12 @@
 import { useState, useEffect } from "react";
 import { Header } from "./sections/header";
 import { HeroSection } from "./sections/hero-section";
-import { PainPointsSection } from "./sections/pain-points-section";
 import { FeaturesSection } from "./sections/features-section";
-import { ComparisonSection } from "./sections/comparison-section";
+import { EditorShowcaseSection } from "./sections/editor-showcase-section";
 import { AISection } from "./sections/ai-section";
-import { YomiSection } from "./sections/yomi-section";
-import { AudienceSection } from "./sections/audience-section";
-import { BetaStorySection } from "./sections/beta-story-section";
+import { ComparisonSection } from "./sections/comparison-section";
 import { PricingSection } from "./sections/pricing-section";
-import { FAQSection } from "./sections/faq-section";
-import { FinalCTASection } from "./sections/final-cta-section";
-import { LandingFooter } from "./sections/footer";
+import { ClosingSection } from "./sections/closing-section";
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
@@ -29,27 +24,13 @@ export default function LandingPage() {
       <Header scrolled={scrolled} />
       <main>
         <HeroSection />
-        <div className="section-divider" />
-        <PainPointsSection />
-        <div className="section-divider" />
         <FeaturesSection />
-        <div className="section-divider" />
-        <ComparisonSection />
-        <div className="section-divider" />
+        <EditorShowcaseSection />
         <AISection />
-        <div className="section-divider" />
-        <YomiSection />
-        <div className="section-divider" />
-        <AudienceSection />
-        <div className="section-divider" />
-        <BetaStorySection />
-        <div className="section-divider" />
+        <ComparisonSection />
         <PricingSection />
-        <div className="section-divider" />
-        <FAQSection />
-        <FinalCTASection />
+        <ClosingSection />
       </main>
-      <LandingFooter />
     </div>
   );
 }

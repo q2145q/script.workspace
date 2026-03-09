@@ -1,18 +1,19 @@
 import { redirect } from "next/navigation";
 import { auth } from "@script/api/auth";
 import { headers } from "next/headers";
-import { Playfair_Display, IBM_Plex_Mono } from "next/font/google";
+import { Cormorant_Garamond, IBM_Plex_Sans } from "next/font/google";
 import type { Metadata } from "next";
 import LandingPage from "@/components/landing/landing-page";
 import "./landing.css";
 
-const playfair = Playfair_Display({
+const cormorant = Cormorant_Garamond({
+  weight: ["400", "600", "700"],
   subsets: ["cyrillic", "latin"],
   variable: "--font-display",
   display: "swap",
 });
 
-const ibmPlex = IBM_Plex_Mono({
+const ibmPlexSans = IBM_Plex_Sans({
   weight: ["300", "400", "500"],
   subsets: ["cyrillic", "latin"],
   variable: "--font-body",
@@ -69,7 +70,7 @@ export default async function Home() {
   };
 
   return (
-    <div className={`${playfair.variable} ${ibmPlex.variable}`}>
+    <div className={`${cormorant.variable} ${ibmPlexSans.variable}`}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
