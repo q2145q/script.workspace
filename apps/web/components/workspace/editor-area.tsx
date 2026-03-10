@@ -191,7 +191,7 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
     [useCollab, handleAutosave]
   );
 
-  // Cmd+/ to toggle shortcuts modal
+  // Keyboard shortcuts: Cmd+/ shortcuts, Cmd+F search, Escape deselect
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "/") {
@@ -202,10 +202,18 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
         e.preventDefault();
         setSearchOpen((v) => !v);
       }
+      // Escape to collapse text selection
+      if (e.key === "Escape" && !e.metaKey && !e.ctrlKey && !e.shiftKey && editor) {
+        const { from, to } = editor.state.selection;
+        if (from !== to) {
+          e.preventDefault();
+          editor.commands.setTextSelection(to);
+        }
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, []);
+  }, [editor]);
 
   return (
     <div className="flex h-full flex-col bg-background">

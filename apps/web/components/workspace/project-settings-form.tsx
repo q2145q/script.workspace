@@ -219,19 +219,6 @@ export function ProjectSettingsForm({ project, projectId, isOwner }: ProjectSett
         </div>
       </section>
 
-      {/* AI Tools */}
-      <section className="mb-8">
-        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Sparkles className="h-4 w-4 text-cinema" />
-          {t("aiTools")}
-        </h2>
-        <div className="space-y-4 rounded-xl border border-border bg-muted/10 p-4">
-          <LoglineGenerator projectId={projectId} savedLogline={project.logline} />
-          <div className="border-t border-border" />
-          <SynopsisGenerator projectId={projectId} savedSynopsis={project.synopsis} />
-        </div>
-      </section>
-
       {/* Save button */}
       <section className="mb-8">
         <button

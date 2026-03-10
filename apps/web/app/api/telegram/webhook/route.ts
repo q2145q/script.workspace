@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@script/db";
-import { answerCallbackQuery, editMessageReplyMarkup } from "@script/api/telegram";
+import {
+  telegramApi,
+  handleTelegramVerification,
+  answerCallbackQuery,
+  editMessageReplyMarkup,
+} from "@script/api/telegram";
 
 export async function POST(req: NextRequest) {
   // Validate webhook secret
@@ -11,15 +16,35 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
+
+    // Handle /start messages (Telegram verification deep links)
+    const message = body.message;
+    if (message?.text?.startsWith("/start v_")) {
+      const token = message.text.replace("/start v_", "").trim();
+      const chatId = message.chat.id;
+
+      const result = await handleTelegramVerification(token, chatId);
+
+      await telegramApi("sendMessage", {
+        chat_id: chatId,
+        text: result.success
+          ? `✅ ${result.userName}, ваш аккаунт подтверждён! Вернитесь на сайт для входа.`
+          : "❌ Ссылка для подтверждения недействительна или устарела. Запросите новую на сайте.",
+      });
+
+      return NextResponse.json({ ok: true });
+    }
+
+    // Handle callback queries (admin approve/reject)
     const callbackQuery = body.callback_query;
 
     if (!callbackQuery?.data) {
       return NextResponse.json({ ok: true });
     }
 
-    const { data, id: callbackQueryId, message } = callbackQuery;
-    const chatId = message?.chat?.id;
-    const messageId = message?.message_id;
+    const { data, id: callbackQueryId, message: cbMessage } = callbackQuery;
+    const chatId = cbMessage?.chat?.id;
+    const messageId = cbMessage?.message_id;
 
     const [action, userId] = data.split(":");
 
@@ -50,7 +75,7 @@ export async function POST(req: NextRequest) {
         await editMessageReplyMarkup(
           chatId,
           messageId,
-          `✅ *Одобрен*\n\n👤 ${user.name}\n📧 ${user.email}`
+          `✅ *Одобрен*\n\n👤 ${user.name}\n📧 ${user.email}`,
         );
       }
     } else {
@@ -60,7 +85,7 @@ export async function POST(req: NextRequest) {
         await editMessageReplyMarkup(
           chatId,
           messageId,
-          `❌ *Отклонён*\n\n👤 ${user.name}\n📧 ${user.email}`
+          `❌ *Отклонён*\n\n👤 ${user.name}\n📧 ${user.email}`,
         );
       }
     }

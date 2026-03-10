@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import {
   FileText, LayoutList, Users, MapPin, BookOpen, History,
-  Settings, Network, Presentation, StickyNote, Plus, Check, X, Kanban,
+  Settings, Network, Presentation, StickyNote, Plus, Check, X, Kanban, PanelLeftClose,
 } from "lucide-react";
 import type { Editor } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
@@ -37,9 +37,10 @@ interface WorkspaceSidebarProps {
   editor: Editor | null;
   workspaceMode: WorkspaceMode;
   onModeChange: (mode: WorkspaceMode) => void;
+  onCollapse?: () => void;
 }
 
-const navItemsConfig: Array<{
+export const navItemsConfig: Array<{
   tKey: string;
   key: string;
   icon: typeof FileText;
@@ -76,6 +77,7 @@ export function WorkspaceSidebar({
   editor,
   workspaceMode,
   onModeChange,
+  onCollapse,
 }: WorkspaceSidebarProps) {
   const t = useTranslations("Sidebar");
   const tDoc = useTranslations("Document");
@@ -180,18 +182,34 @@ export function WorkspaceSidebar({
         : documents)
     : [];
 
+  // For TV series, hide "script" mode nav item (use episode navigator instead)
+  const visibleNavItems = isSeries
+    ? navItemsConfig.filter((item) => item.mode !== "script")
+    : navItemsConfig;
+
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-sidebar-border px-4 py-3">
-        <Link
-          href="/dashboard"
-          className="text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground"
-        >
-          &larr; {tCommon("back")}
-        </Link>
-        <h2 className="mt-1 truncate text-sm font-semibold text-sidebar-foreground">
-          {project.title}
-        </h2>
+      <div className="flex items-center justify-between border-b border-sidebar-border px-4 py-3">
+        <div className="min-w-0 flex-1">
+          <Link
+            href="/dashboard"
+            className="text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground"
+          >
+            &larr; {tCommon("back")}
+          </Link>
+          <h2 className="mt-1 truncate text-sm font-semibold text-sidebar-foreground">
+            {project.title}
+          </h2>
+        </div>
+        {onCollapse && (
+          <button
+            onClick={onCollapse}
+            className="ml-2 shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground max-md:hidden"
+            title="Hide sidebar"
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Scrollable middle section */}
@@ -202,7 +220,7 @@ export function WorkspaceSidebar({
           initial="hidden"
           animate="show"
         >
-          {navItemsConfig.map((navItem) => (
+          {visibleNavItems.map((navItem) => (
             <motion.div key={navItem.key} variants={itemVariant}>
               <button
                 onClick={() => onModeChange(navItem.mode)}
@@ -229,6 +247,7 @@ export function WorkspaceSidebar({
           <EpisodeNavigator
             projectId={project.id}
             activeDocumentId={activeDocumentId}
+            onModeChange={onModeChange}
           />
         )}
 

@@ -117,7 +117,7 @@ export const sceneAnalysisSchema = z.object({
   summary: z.string(),
   scene_function: z.string(),
   characters_present: z.array(z.string()),
-  character_goals: z.record(z.string(), z.string()),
+  character_goals: z.array(z.object({ character: z.string(), goal: z.string() })),
   conflict: z.string(),
   stakes: z.string(),
   emotional_tone: z.string(),

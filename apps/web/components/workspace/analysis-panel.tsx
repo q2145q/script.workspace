@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   ListMusic,
   Gauge,
+  History,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { Editor } from "@script/editor";
@@ -105,9 +106,9 @@ function SceneAnalysisView({ data }: { data: SceneAnalysis }) {
               <span className="rounded bg-ai-accent/10 px-1.5 py-0.5 text-[10px] font-medium text-ai-accent">
                 {name}
               </span>
-              {data.character_goals[name] && (
+              {data.character_goals.find((g) => g.character === name)?.goal && (
                 <span className="text-xs text-muted-foreground">
-                  {data.character_goals[name]}
+                  {data.character_goals.find((g) => g.character === name)?.goal}
                 </span>
               )}
             </div>
@@ -657,58 +658,61 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
   const [activeTab, setActiveTab] = useState<AnalysisTab>("scene");
 
   // Scene analysis
-  const [sceneResult, setSceneResult] = useState<SceneAnalysis | null>(null);
+  const [sceneResults, setSceneResults] = useState<SceneAnalysis[]>([]);
   const sceneMutation = useMutation(
     trpc.ai.analyzeScene.mutationOptions({
-      onSuccess: (data) => setSceneResult(data),
+      onSuccess: (data) => setSceneResults((prev) => [data, ...prev].slice(0, 10)),
       onError: (err) => toast.error(err.message),
     })
   );
 
   // Character analysis
-  const [charResult, setCharResult] = useState<CharacterAnalysis | null>(null);
+  const [charResults, setCharResults] = useState<CharacterAnalysis[]>([]);
   const charMutation = useMutation(
     trpc.ai.analyzeCharacters.mutationOptions({
-      onSuccess: (data) => setCharResult(data),
+      onSuccess: (data) => setCharResults((prev) => [data, ...prev].slice(0, 10)),
       onError: (err) => toast.error(err.message),
     })
   );
 
   // Structure analysis
-  const [structResult, setStructResult] = useState<StructureAnalysis | null>(null);
+  const [structResults, setStructResults] = useState<StructureAnalysis[]>([]);
   const structMutation = useMutation(
     trpc.ai.analyzeStructure.mutationOptions({
-      onSuccess: (data) => setStructResult(data),
+      onSuccess: (data) => setStructResults((prev) => [data, ...prev].slice(0, 10)),
       onError: (err) => toast.error(err.message),
     })
   );
 
   // Consistency check
-  const [consistencyResult, setConsistencyResult] = useState<ConsistencyResult | null>(null);
+  const [consistencyResults, setConsistencyResults] = useState<ConsistencyResult[]>([]);
   const consistencyMutation = useMutation(
     trpc.ai.checkConsistency.mutationOptions({
-      onSuccess: (data) => setConsistencyResult(data),
+      onSuccess: (data) => setConsistencyResults((prev) => [data, ...prev].slice(0, 10)),
       onError: (err) => toast.error(err.message),
     })
   );
 
   // Beat sheet
-  const [beatSheetResult, setBeatSheetResult] = useState<BeatSheetResult | null>(null);
+  const [beatSheetResults, setBeatSheetResults] = useState<BeatSheetResult[]>([]);
   const beatSheetMutation = useMutation(
     trpc.ai.generateBeatSheet.mutationOptions({
-      onSuccess: (data) => setBeatSheetResult(data),
+      onSuccess: (data) => setBeatSheetResults((prev) => [data, ...prev].slice(0, 10)),
       onError: (err) => toast.error(err.message),
     })
   );
 
   // Pacing analysis
-  const [pacingResult, setPacingResult] = useState<PacingResult | null>(null);
+  const [pacingResults, setPacingResults] = useState<PacingResult[]>([]);
   const pacingMutation = useMutation(
     trpc.ai.analyzePacing.mutationOptions({
-      onSuccess: (data) => setPacingResult(data),
+      onSuccess: (data) => setPacingResults((prev) => [data, ...prev].slice(0, 10)),
       onError: (err) => toast.error(err.message),
     })
   );
+
+  // Current result index (0 = latest)
+  const [historyIndex, setHistoryIndex] = useState(0);
 
   const handleAnalyze = () => {
     if (!editor) {
@@ -725,6 +729,7 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
       return;
     }
 
+    setHistoryIndex(0); // reset to latest on new run
     switch (activeTab) {
       case "scene":
         sceneMutation.mutate({ projectId, sceneText: text });
@@ -751,6 +756,18 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
     sceneMutation.isPending || charMutation.isPending || structMutation.isPending ||
     consistencyMutation.isPending || beatSheetMutation.isPending || pacingMutation.isPending;
 
+  // Get current results arrays by tab
+  const currentResults = {
+    scene: sceneResults,
+    characters: charResults,
+    structure: structResults,
+    consistency: consistencyResults,
+    beatSheet: beatSheetResults,
+    pacing: pacingResults,
+  }[activeTab];
+  const historyCount = currentResults.length;
+  const clampedIndex = Math.min(historyIndex, historyCount - 1);
+
   return (
     <div className="flex h-full flex-col">
       {/* Tab bar */}
@@ -758,7 +775,7 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
         {TABS.map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => { setActiveTab(tab.key); setHistoryIndex(0); }}
             className={`flex flex-1 items-center justify-center gap-1.5 px-2 py-2 text-[11px] font-medium transition-colors ${
               activeTab === tab.key
                 ? "border-b-2 border-ai-accent text-foreground"
@@ -798,56 +815,79 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
         <p className="mt-1.5 text-center text-[10px] text-muted-foreground">
           {t(`${activeTab}Description`)}
         </p>
+        {/* History navigation */}
+        {historyCount > 1 && (
+          <div className="mt-2 flex items-center justify-center gap-2">
+            <button
+              onClick={() => setHistoryIndex((i) => Math.min(i + 1, historyCount - 1))}
+              disabled={clampedIndex >= historyCount - 1}
+              className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30"
+            >
+              ‹
+            </button>
+            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <History className="h-2.5 w-2.5" />
+              {historyCount - clampedIndex}/{historyCount}
+            </span>
+            <button
+              onClick={() => setHistoryIndex((i) => Math.max(i - 1, 0))}
+              disabled={clampedIndex <= 0}
+              className="rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30"
+            >
+              ›
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Results */}
       <div className="flex-1 overflow-y-auto">
         <AnimatePresence mode="wait">
           <motion.div
-            key={activeTab}
+            key={`${activeTab}-${clampedIndex}`}
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
           >
             {activeTab === "scene" &&
-              (sceneResult ? (
-                <SceneAnalysisView data={sceneResult} />
+              (sceneResults[clampedIndex] ? (
+                <SceneAnalysisView data={sceneResults[clampedIndex]!} />
               ) : (
                 <EmptyAnalysis label={t("runScene")} />
               ))}
 
             {activeTab === "characters" &&
-              (charResult ? (
-                <CharacterAnalysisView data={charResult} />
+              (charResults[clampedIndex] ? (
+                <CharacterAnalysisView data={charResults[clampedIndex]!} />
               ) : (
                 <EmptyAnalysis label={t("runCharacters")} />
               ))}
 
             {activeTab === "structure" &&
-              (structResult ? (
-                <StructureAnalysisView data={structResult} />
+              (structResults[clampedIndex] ? (
+                <StructureAnalysisView data={structResults[clampedIndex]!} />
               ) : (
                 <EmptyAnalysis label={t("runStructure")} />
               ))}
 
             {activeTab === "consistency" &&
-              (consistencyResult ? (
-                <ConsistencyView data={consistencyResult} />
+              (consistencyResults[clampedIndex] ? (
+                <ConsistencyView data={consistencyResults[clampedIndex]!} />
               ) : (
                 <EmptyAnalysis label={t("runConsistency")} />
               ))}
 
             {activeTab === "beatSheet" &&
-              (beatSheetResult ? (
-                <BeatSheetView data={beatSheetResult} />
+              (beatSheetResults[clampedIndex] ? (
+                <BeatSheetView data={beatSheetResults[clampedIndex]!} />
               ) : (
                 <EmptyAnalysis label={t("runBeatSheet")} />
               ))}
 
             {activeTab === "pacing" &&
-              (pacingResult ? (
-                <PacingView data={pacingResult} />
+              (pacingResults[clampedIndex] ? (
+                <PacingView data={pacingResults[clampedIndex]!} />
               ) : (
                 <EmptyAnalysis label={t("runPacing")} />
               ))}

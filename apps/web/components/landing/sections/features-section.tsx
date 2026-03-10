@@ -88,78 +88,63 @@ export function FeaturesSection() {
           </div>
         </div>
 
-        {/* Feature cards grid */}
+        {/* Feature cards grid — all cards are direct children for stagger animation */}
         <div
           className={`stagger ${visible ? "visible" : ""} mt-12`}
           style={{
             display: "grid",
             gap: "1px",
             background: "var(--l-border)",
-            gridTemplateColumns: "1fr",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
           }}
         >
-          {/* First feature — large hero card */}
-          {FEATURES.slice(0, 1).map((feat) => (
+          {FEATURES.map((feat, i) => (
             <div
               key={feat.title}
-              className="reveal feature-card large"
+              className={`reveal feature-card${i === 0 ? " large" : ""}`}
               style={{ background: "var(--l-bg)" }}
             >
-              <div className="flex flex-col sm:flex-row gap-6 items-start">
-                <div className="feature-icon">
-                  <feat.icon size={22} />
+              {i === 0 ? (
+                <div className="flex flex-col sm:flex-row gap-6 items-start">
+                  <div className="feature-icon">
+                    <feat.icon size={22} />
+                  </div>
+                  <div>
+                    <h3
+                      className="text-lg sm:text-xl font-semibold mb-2"
+                      style={{ color: "var(--l-text)" }}
+                    >
+                      {feat.title}
+                    </h3>
+                    <p
+                      className="text-sm sm:text-base leading-relaxed"
+                      style={{ color: "var(--l-text-dim)", maxWidth: 560 }}
+                    >
+                      {feat.desc}
+                    </p>
+                  </div>
                 </div>
-                <div>
+              ) : (
+                <>
+                  <div className="feature-icon">
+                    <feat.icon size={20} />
+                  </div>
                   <h3
-                    className="text-lg sm:text-xl font-semibold mb-2"
+                    className="text-base font-semibold mb-2"
                     style={{ color: "var(--l-text)" }}
                   >
                     {feat.title}
                   </h3>
                   <p
-                    className="text-sm sm:text-base leading-relaxed"
-                    style={{ color: "var(--l-text-dim)", maxWidth: 560 }}
+                    className="text-sm leading-relaxed"
+                    style={{ color: "var(--l-text-dim)" }}
                   >
                     {feat.desc}
                   </p>
-                </div>
-              </div>
+                </>
+              )}
             </div>
           ))}
-
-          {/* Remaining features — 2-column grid */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: "1px",
-              background: "var(--l-border)",
-            }}
-          >
-            {FEATURES.slice(1).map((feat) => (
-              <div
-                key={feat.title}
-                className="reveal feature-card"
-                style={{ background: "var(--l-bg)" }}
-              >
-                <div className="feature-icon">
-                  <feat.icon size={20} />
-                </div>
-                <h3
-                  className="text-base font-semibold mb-2"
-                  style={{ color: "var(--l-text)" }}
-                >
-                  {feat.title}
-                </h3>
-                <p
-                  className="text-sm leading-relaxed"
-                  style={{ color: "var(--l-text-dim)" }}
-                >
-                  {feat.desc}
-                </p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </section>

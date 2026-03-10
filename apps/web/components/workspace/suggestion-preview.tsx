@@ -134,6 +134,8 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
         }
 
         editor.view.dispatch(tr);
+        // Collapse selection after applying
+        editor.commands.setTextSelection(editor.state.selection.to);
 
         // Track for undo — store blocks and positions
         setRecentlyApplied((prev) => {
@@ -186,6 +188,8 @@ export function SuggestionPreview({ editor, documentId }: SuggestionPreviewProps
         }
 
         editor.view.dispatch(tr);
+        // Collapse selection after applying
+        editor.commands.setTextSelection(editor.state.selection.to);
 
         setRecentlyApplied((prev) => {
           const next = new Map(prev);

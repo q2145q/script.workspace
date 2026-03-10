@@ -19,7 +19,8 @@ model User {
   image         String?
   createdAt     DateTime
   updatedAt     DateTime
-  betaApproved  Boolean   @default(false)
+  betaApproved    Boolean   @default(false)
+  telegramChatId  String?
 
   sessions Session[]
   accounts Account[]

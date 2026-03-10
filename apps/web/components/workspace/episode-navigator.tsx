@@ -11,9 +11,10 @@ import { toast } from "sonner";
 interface EpisodeNavigatorProps {
   projectId: string;
   activeDocumentId: string;
+  onModeChange?: (mode: "script") => void;
 }
 
-export function EpisodeNavigator({ projectId, activeDocumentId }: EpisodeNavigatorProps) {
+export function EpisodeNavigator({ projectId, activeDocumentId, onModeChange }: EpisodeNavigatorProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
@@ -154,6 +155,7 @@ export function EpisodeNavigator({ projectId, activeDocumentId }: EpisodeNavigat
             ) : (
               <Link
                 href={`/project/${projectId}/script/${ep.document.id}`}
+                onClick={() => onModeChange?.("script")}
                 onDoubleClick={() => {
                   setEditingId(ep.id);
                   setEditTitle(ep.title);

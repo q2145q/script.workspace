@@ -21,6 +21,7 @@ import { useTRPC } from "@/lib/trpc/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { parseSceneHeading } from "@/lib/scene-parser";
 
 type EntityTab = "characters" | "locations" | "terms";
 
@@ -28,6 +29,8 @@ interface EntitiesPanelProps {
   projectId: string;
   defaultTab?: EntityTab;
   editor?: Editor | null;
+  /** When true, hides the tab bar (navigation done via sidebar) */
+  hideTabs?: boolean;
 }
 
 // Extract unique character names from editor document
@@ -44,19 +47,11 @@ function extractCharacterNames(editor: Editor): string[] {
 // Extract unique location names from scene headings
 function extractLocationNames(editor: Editor): string[] {
   const locations = new Set<string>();
-  const prefixPattern = /^(?:INT\.|EXT\.|INT\.\/EXT\.|EXT\.\/INT\.|ИНТ\.|НАТ\.|ИНТ\.\/НАТ\.|НАТ\.\/ИНТ\.)\s*/i;
-  const timeSuffixPattern = /\s*[-—]\s*(?:DAY|NIGHT|MORNING|EVENING|DUSK|DAWN|ДЕНЬ|НОЧЬ|УТРО|ВЕЧЕР)\s*$/i;
-
   editor.state.doc.descendants((node) => {
     if (node.type.name === "sceneHeading" && node.textContent.trim()) {
-      let text = node.textContent.trim();
-      // Remove prefix (INT./EXT./etc.)
-      text = text.replace(prefixPattern, "");
-      // Remove time of day suffix
-      text = text.replace(timeSuffixPattern, "");
-      text = text.trim();
-      if (text) {
-        locations.add(text);
+      const parsed = parseSceneHeading(node.textContent.trim());
+      if (parsed.location) {
+        locations.add(parsed.location);
       }
     }
   });
@@ -129,6 +124,7 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
   );
 
   const [aiDescribingId, setAiDescribingId] = useState<string | null>(null);
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
   const describeMutation = useMutation(
     trpc.ai.describeCharacter.mutationOptions({
       onError: (err) => {
@@ -152,6 +148,35 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
       updateMutation.mutate({ id: charId, description: result.description });
     } finally {
       setAiDescribingId(null);
+    }
+  };
+
+  const handleGenerateAllDescriptions = async () => {
+    if (characters.length === 0) return;
+    setIsGeneratingAll(true);
+    const context = editor
+      ? editor.state.doc.textBetween(0, Math.min(editor.state.doc.content.size, 10000), "\n")
+      : "";
+    try {
+      for (const char of characters) {
+        if (char.description) continue; // skip already described
+        const result = await describeMutation.mutateAsync({
+          projectId,
+          characterName: char.name,
+          characterContext: context,
+        });
+        updateMutation.mutate({ id: char.id, description: result.description });
+      }
+      toast.success(t("allDescriptionsGenerated"));
+    } finally {
+      setIsGeneratingAll(false);
+    }
+  };
+
+  const handleAddAllSuggested = () => {
+    if (unsavedDetected.length === 0) return;
+    for (const name of unsavedDetected) {
+      createMutation.mutate({ projectId, name });
     }
   };
 
@@ -214,8 +239,22 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
 
   return (
     <div>
-      {/* Add button */}
-      <div className="flex justify-end px-3 py-2">
+      {/* Action buttons */}
+      <div className="flex flex-wrap items-center justify-end gap-1 px-3 py-2">
+        {characters.length > 0 && (
+          <button
+            onClick={handleGenerateAllDescriptions}
+            disabled={isGeneratingAll || describeMutation.isPending}
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-cinema disabled:opacity-50"
+          >
+            {isGeneratingAll ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Sparkles className="h-3 w-3" />
+            )}
+            {t("generateAllDescriptions")}
+          </button>
+        )}
         <button
           onClick={() => {
             resetForm();
@@ -404,9 +443,19 @@ function CharactersTab({ projectId, editor }: { projectId: string; editor?: Edit
       {/* Detected from Script */}
       {editor && unsavedDetected.length > 0 && (
         <div className="border-t border-border p-2">
-          <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            {t("detectedInScript")}
-          </p>
+          <div className="flex items-center justify-between px-3 py-1">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {t("detectedInScript")}
+            </p>
+            <button
+              onClick={handleAddAllSuggested}
+              disabled={createMutation.isPending}
+              className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-cinema hover:bg-cinema/10 disabled:opacity-50"
+            >
+              <Plus className="h-2.5 w-2.5" />
+              {t("addAll")}
+            </button>
+          </div>
           <div className="space-y-0.5">
             {unsavedDetected.map((detectedName) => (
               <div
@@ -962,7 +1011,7 @@ function EmptyState({ icon: Icon, label }: { icon: typeof Users; label: string }
 // Main Panel
 // ============================================================
 
-export function EntitiesPanel({ projectId, defaultTab = "characters", editor }: EntitiesPanelProps) {
+export function EntitiesPanel({ projectId, defaultTab = "characters", editor, hideTabs = false }: EntitiesPanelProps) {
   const t = useTranslations("Entities");
   const [activeTab, setActiveTab] = useState<EntityTab>(defaultTab);
 
@@ -973,23 +1022,25 @@ export function EntitiesPanel({ projectId, defaultTab = "characters", editor }: 
 
   return (
     <div className="flex h-full flex-col bg-background">
-      {/* Tab bar */}
-      <div className="glass-panel flex border-b border-border">
-        {TABS.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`flex flex-1 items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors ${
-              activeTab === tab.key
-                ? "border-b-2 border-cinema text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <tab.icon className="h-3.5 w-3.5" />
-            {t(tab.labelKey)}
-          </button>
-        ))}
-      </div>
+      {/* Tab bar — hidden when accessed from sidebar mode (characters/locations) */}
+      {!hideTabs && (
+        <div className="glass-panel flex border-b border-border">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex flex-1 items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors ${
+                activeTab === tab.key
+                  ? "border-b-2 border-cinema text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <tab.icon className="h-3.5 w-3.5" />
+              {t(tab.labelKey)}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">

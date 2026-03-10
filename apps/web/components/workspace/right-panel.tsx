@@ -11,21 +11,25 @@ import { ContextPinsPanel } from "./context-pins-panel";
 import { AnalysisPanel } from "./analysis-panel";
 import { ActivityPanel } from "./activity-panel";
 
-type Tab = "comments" | "chat" | "context" | "analysis" | "activity";
+export type RightPanelTab = "comments" | "chat" | "context" | "analysis" | "activity";
 
 interface RightPanelProps {
   editor: Editor | null;
   documentId: string;
   projectId: string;
   onToggle?: () => void;
+  activeTab?: RightPanelTab;
+  onTabChange?: (tab: RightPanelTab) => void;
 }
 
-export function RightPanel({ editor, documentId, projectId, onToggle }: RightPanelProps) {
-  const [activeTab, setActiveTab] = useState<Tab>("comments");
+export function RightPanel({ editor, documentId, projectId, onToggle, activeTab: controlledTab, onTabChange }: RightPanelProps) {
+  const [internalTab, setInternalTab] = useState<RightPanelTab>("comments");
+  const activeTab = controlledTab ?? internalTab;
+  const setActiveTab = onTabChange ?? setInternalTab;
   const t = useTranslations("RightPanel");
   const tEditor = useTranslations("Editor");
 
-  const tabs: { id: Tab; tKey: string }[] = [
+  const tabs: { id: RightPanelTab; tKey: string }[] = [
     { id: "comments", tKey: "comments" },
     { id: "chat", tKey: "chat" },
     { id: "context", tKey: "context" },

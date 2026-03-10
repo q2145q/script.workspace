@@ -8,9 +8,9 @@ Response structure:
   "summary": "brief description of the scene, 2–4 sentences",
   "scene_function": "dramaturgical function of the scene",
   "characters_present": ["character 1", "character 2"],
-  "character_goals": {
-    "Character name": "their goal in the scene"
-  },
+  "character_goals": [
+    { "character": "Character name", "goal": "their goal in the scene" }
+  ],
   "conflict": "main conflict of the scene",
   "stakes": "what is at stake",
   "emotional_tone": "emotional tone",

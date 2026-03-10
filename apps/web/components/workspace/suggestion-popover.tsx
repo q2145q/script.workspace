@@ -306,6 +306,8 @@ export function SuggestionPopover({
       }
 
       editor.view.dispatch(tr);
+      // Collapse selection after applying suggestion
+      editor.commands.setTextSelection(editor.state.selection.to);
     }
 
     applyMutation.mutate({ id: suggestion.id });

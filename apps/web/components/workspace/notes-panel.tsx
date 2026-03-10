@@ -22,6 +22,7 @@ export function NotesPanel({ projectId, currentUser }: NotesPanelProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [mountKey, setMountKey] = useState(0);
 
   const { data: notes, isLoading } = useQuery(
     trpc.note.list.queryOptions({ projectId })
@@ -83,7 +84,7 @@ export function NotesPanel({ projectId, currentUser }: NotesPanelProps) {
                   key={note.id}
                   note={note}
                   isSelected={note.id === selectedNoteId}
-                  onSelect={() => setSelectedNoteId(note.id)}
+                  onSelect={() => { setSelectedNoteId(note.id); setMountKey((k) => k + 1); }}
                   onDelete={() => {
                     if (confirm(t("deleteNote"))) {
                       deleteMutation.mutate({ id: note.id });
@@ -114,6 +115,7 @@ export function NotesPanel({ projectId, currentUser }: NotesPanelProps) {
               noteId={selectedNote.id}
               projectId={projectId}
               currentUser={currentUser}
+              mountKey={mountKey}
             />
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
@@ -209,10 +211,12 @@ function NoteListItem({
 function NoteEditor({
   noteId,
   projectId,
+  mountKey,
 }: {
   noteId: string;
   projectId: string;
   currentUser: CurrentUser;
+  mountKey: number;
 }) {
   const t = useTranslations("Notes");
   const trpc = useTRPC();
@@ -264,7 +268,7 @@ function NoteEditor({
     );
   }
 
-  const editorKey = `${noteId}-${noteData?.id ?? "new"}`;
+  const editorKey = `${noteId}-${noteData?.id ?? "new"}-${mountKey}`;
 
   return (
     <div className="flex h-full flex-col font-mono">

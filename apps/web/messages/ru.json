@@ -57,11 +57,16 @@
     "validationName": "Введите имя",
     "validationLastName": "Введите фамилию",
     "betaQueueTitle": "Вы в очереди на подключение к бета-версии",
-    "betaQueueDescription": "Мы уведомим вас по электронной почте, когда ваш аккаунт будет одобрен. Спасибо за интерес к Script Workspace!",
+    "betaQueueDescription": "Мы уведомим вас через Telegram, когда ваш аккаунт будет одобрен. Спасибо за интерес к Script Workspace!",
     "verifyEmailTitle": "Подтвердите email",
     "verifyEmailDescription": "Мы отправили письмо с ссылкой для подтверждения на вашу почту.",
+    "verifyTelegramTitle": "Подтвердите аккаунт",
+    "verifyTelegramDescription": "Подтвердите свой аккаунт через Telegram-бота.",
+    "openTelegram": "Открыть Telegram",
+    "resendVerification": "Отправить заново",
     "resendEmail": "Отправить повторно",
     "emailSent": "Письмо отправлено повторно",
+    "loading": "Загрузка...",
     "backToSignIn": "Вернуться к входу",
     "forgotPassword": "Забыли пароль?",
     "forgotPasswordDescription": "Введите email, и мы отправим ссылку для сброса пароля.",
@@ -72,8 +77,8 @@
     "passwordsDontMatch": "Пароли не совпадают",
     "invalidToken": "Ссылка для сброса пароля недействительна или устарела",
     "failedResetPassword": "Не удалось сбросить пароль",
-    "passwordResetRequest": "Письмо отправлено",
-    "passwordResetRequestDescription": "Если аккаунт с таким email существует, мы отправили ссылку для сброса пароля."
+    "passwordResetRequest": "Ссылка отправлена",
+    "passwordResetRequestDescription": "Если аккаунт с таким email существует, мы отправили ссылку для сброса пароля через Telegram или email."
   },
   "Dashboard": {
     "title": "Script Workspace",
@@ -212,7 +217,8 @@
     "autoAssignError": "Не удалось распределить сцены"
   },
   "Editor": {
-    "showPanel": "Показать панель",
+    "showPanel": "Показать правую панель",
+    "showLeftPanel": "Показать левое меню",
     "hidePanel": "Скрыть панель",
     "pinSelection": "Закрепить выделение в контексте AI",
     "pin": "Пин",
@@ -330,7 +336,10 @@
     "failedSave": "Не удалось сохранить: {message}",
     "generateSynopsis": "Сгенерировать синопсис",
     "autoReorderDraft": "Перед перестановкой сцен (авто)",
-    "generatedSynopses": "Синопсисы сгенерированы для {count} сцен"
+    "generatedSynopses": "Синопсисы сгенерированы для {count} сцен",
+    "sceneDetail": "Детали сцены",
+    "synopsis": "Синопсис",
+    "sceneText": "Текст сцены"
   },
   "Entities": {
     "characters": "Персонажи",
@@ -358,7 +367,10 @@
     "locationDeleted": "Локация удалена",
     "termCreated": "Термин создан",
     "termUpdated": "Термин обновлён",
-    "termDeleted": "Термин удалён"
+    "termDeleted": "Термин удалён",
+    "generateAllDescriptions": "Сгенерировать описания",
+    "allDescriptionsGenerated": "Описания сгенерированы",
+    "addAll": "Добавить всех"
   },
   "OnePager": {
     "title": "Одностраничник",

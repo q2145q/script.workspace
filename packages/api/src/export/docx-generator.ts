@@ -147,7 +147,7 @@ export async function generateDOCX(
       runs.push(
         new TextRun({
           text: `${block.sceneNumber}. `,
-          font: "Cousine",
+          font: "Courier New",
           size: 24,
           bold: true,
         })
@@ -162,7 +162,7 @@ export async function generateDOCX(
       runs.push(
         new TextRun({
           text: segText,
-          font: "Cousine",
+          font: "Courier New",
           size: 24, // 12pt in half-points
           bold: style.bold || !!seg.bold,
           italics: !!style.italics || !!seg.italic,
@@ -193,7 +193,7 @@ export async function generateDOCX(
               children: [
                 new TextRun({
                   children: [PageNumber.CURRENT, "."],
-                  font: "Cousine",
+                  font: "Courier New",
                   size: 24,
                 }),
               ],
@@ -230,7 +230,7 @@ export async function generateDOCX(
       default: {
         document: {
           run: {
-            font: "Cousine",
+            font: "Courier New",
             size: 24,
           },
         },
@@ -257,7 +257,7 @@ function buildTitlePage(metadata: ScreenplayMetadata): Paragraph[] {
       children: [
         new TextRun({
           text: metadata.title.toUpperCase(),
-          font: "Cousine",
+          font: "Courier New",
           size: 48,
           bold: true,
         }),
@@ -275,7 +275,7 @@ function buildTitlePage(metadata: ScreenplayMetadata): Paragraph[] {
       children: [
         new TextRun({
           text: "Written by",
-          font: "Cousine",
+          font: "Courier New",
           size: 24,
         }),
       ],
@@ -292,7 +292,7 @@ function buildTitlePage(metadata: ScreenplayMetadata): Paragraph[] {
         children: [
           new TextRun({
             text: author,
-            font: "Cousine",
+            font: "Courier New",
             size: 24,
           }),
         ],
@@ -312,7 +312,7 @@ function buildTitlePage(metadata: ScreenplayMetadata): Paragraph[] {
         children: [
           new TextRun({
             text: metadata.company,
-            font: "Cousine",
+            font: "Courier New",
             size: 24,
           }),
         ],
@@ -326,7 +326,7 @@ function buildTitlePage(metadata: ScreenplayMetadata): Paragraph[] {
         children: [
           new TextRun({
             text: metadata.contact,
-            font: "Cousine",
+            font: "Courier New",
             size: 24,
           }),
         ],

@@ -22,6 +22,7 @@ import { revisionRouter } from "./routers/revision";
 import { searchRouter } from "./routers/search";
 import { notificationRouter } from "./routers/notification";
 import { reportRouter } from "./routers/report";
+import { authVerifyRouter } from "./routers/auth-verify";
 
 export const appRouter = createTRPCRouter({
   project: projectRouter,
@@ -47,6 +48,7 @@ export const appRouter = createTRPCRouter({
   search: searchRouter,
   notification: notificationRouter,
   report: reportRouter,
+  authVerify: authVerifyRouter,
 });
 
 export type AppRouter = typeof appRouter;

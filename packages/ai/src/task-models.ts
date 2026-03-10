@@ -72,11 +72,11 @@ export const TASK_MODEL_CONFIG: Record<string, Record<ModelTier, TaskModelEntry[
 
   "character-analysis": {
     best: [
-      { provider: "openai", model: "gpt-5-nano" },
       { provider: "openai", model: "gpt-4.1" },
+      { provider: "openai", model: "gpt-4o" },
     ],
     middle: [
-      { provider: "openai", model: "gpt-5-nano" },
+      { provider: "openai", model: "gpt-4.1-mini" },
     ],
     cheap: [
       { provider: "openai", model: "gpt-4.1-nano" },
@@ -212,9 +212,9 @@ export const TASK_MODEL_CONFIG: Record<string, Record<ModelTier, TaskModelEntry[
 
   "act-assignment": {
     best: [
-      { provider: "anthropic", model: "claude-opus-4-20250514" },
-      { provider: "openai", model: "gpt-5" },
+      { provider: "openai", model: "gpt-4.1" },
       { provider: "openai", model: "gpt-5-mini" },
+      { provider: "anthropic", model: "claude-haiku-4-5-20251001" },
     ],
     middle: [
       { provider: "deepseek", model: "deepseek-chat" },

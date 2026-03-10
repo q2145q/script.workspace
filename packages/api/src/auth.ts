@@ -1,12 +1,9 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "@better-auth/prisma-adapter";
 import { prisma } from "@script/db";
-import {
-  sendEmail,
-  verificationEmailTemplate,
-  resetPasswordTemplate,
-} from "./email";
-import { notifyTelegramNewUser } from "./telegram";
+import { sendEmail, resetPasswordTemplate } from "./email";
+import { notifyTelegramNewUser, sendResetLinkViaTelegram } from "./telegram";
+import { createTelegramVerifyToken } from "./telegram-verify";
 
 const defaultOrigins =
   process.env.NODE_ENV === "production"
@@ -25,26 +22,36 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
-      await sendEmail({
-        to: user.email,
-        subject: "Script Workspace — Сброс пароля",
-        html: resetPasswordTemplate(user.name, url),
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { telegramChatId: true },
       });
+
+      if (dbUser?.telegramChatId) {
+        await sendResetLinkViaTelegram(dbUser.telegramChatId, user.name, url);
+      } else {
+        // Fallback to email (will work when SMTP is available)
+        await sendEmail({
+          to: user.email,
+          subject: "Script Workspace — Сброс пароля",
+          html: resetPasswordTemplate(user.name, url),
+        });
+      }
     },
   },
   emailVerification: {
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
-    sendVerificationEmail: async ({ user, url }) => {
-      await sendEmail({
-        to: user.email,
-        subject: "Script Workspace — Подтвердите email",
-        html: verificationEmailTemplate(user.name, url),
-      });
-      // Notify admin via Telegram about new registration
-      notifyTelegramNewUser(user).catch((err) =>
-        console.error("[telegram] Failed to notify:", err)
-      );
+    sendVerificationEmail: async ({ user }) => {
+      // Generate Telegram verification token instead of email
+      await createTelegramVerifyToken(user.id, user.email);
+
+      // Notify admin about new registration
+      try {
+        await notifyTelegramNewUser(user);
+      } catch (err) {
+        console.error("[telegram] Failed to notify admin:", err);
+      }
     },
   },
   trustedOrigins,

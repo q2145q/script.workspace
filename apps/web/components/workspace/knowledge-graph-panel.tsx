@@ -25,6 +25,7 @@ import "d3-transition";
 
 interface KnowledgeGraphPanelProps {
   projectId: string;
+  documentId: string;
   editor: Editor | null;
 }
 
@@ -316,7 +317,7 @@ function GraphVisualization({ data }: { data: KnowledgeGraph }) {
   );
 }
 
-export function KnowledgeGraphPanel({ projectId, editor }: KnowledgeGraphPanelProps) {
+export function KnowledgeGraphPanel({ projectId, documentId, editor }: KnowledgeGraphPanelProps) {
   const t = useTranslations("KnowledgeGraph");
   const trpc = useTRPC();
   const [graphData, setGraphData] = useState<KnowledgeGraph | null>(null);
@@ -324,6 +325,11 @@ export function KnowledgeGraphPanel({ projectId, editor }: KnowledgeGraphPanelPr
   // Load saved graph from project
   const { data: project } = useQuery(
     trpc.project.getById.queryOptions({ id: projectId })
+  );
+
+  // Fallback: load document content when editor is not available or destroyed
+  const { data: documentData } = useQuery(
+    trpc.document.getById.queryOptions({ id: documentId })
   );
 
   // Initialize from saved data
@@ -357,15 +363,26 @@ export function KnowledgeGraphPanel({ projectId, editor }: KnowledgeGraphPanelPr
   );
 
   const handleExtract = () => {
-    if (!editor) {
-      toast.error(t("editorNotReady"));
-      return;
+    let text = "";
+    if (editor && !editor.isDestroyed) {
+      text = editor.state.doc.textBetween(
+        0,
+        Math.min(editor.state.doc.content.size, 100000),
+        "\n"
+      );
+    } else if (documentData?.content) {
+      // Fallback: extract text from document JSON content
+      const extractText = (node: unknown): string => {
+        if (!node || typeof node !== "object") return "";
+        const n = node as Record<string, unknown>;
+        if (typeof n.text === "string") return n.text;
+        if (Array.isArray(n.content)) {
+          return (n.content as unknown[]).map(extractText).join("\n");
+        }
+        return "";
+      };
+      text = extractText(documentData.content).slice(0, 100000);
     }
-    const text = editor.state.doc.textBetween(
-      0,
-      Math.min(editor.state.doc.content.size, 100000),
-      "\n"
-    );
     if (!text.trim()) {
       toast.error(t("noText"));
       return;
@@ -380,7 +397,7 @@ export function KnowledgeGraphPanel({ projectId, editor }: KnowledgeGraphPanelPr
         <h2 className="text-sm font-semibold text-foreground">{t("title")}</h2>
         <button
           onClick={handleExtract}
-          disabled={mutation.isPending || !editor}
+          disabled={mutation.isPending}
           className="flex items-center gap-1.5 rounded-md bg-cinema px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-cinema/80 disabled:opacity-50"
         >
           {mutation.isPending ? (

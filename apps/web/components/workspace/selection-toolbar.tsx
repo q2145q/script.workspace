@@ -115,6 +115,8 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
           const { tr } = editor.state;
           tr.replaceWith(startBlock, endBlock, fragment);
           editor.view.dispatch(tr);
+          // Collapse selection to end of replaced content
+          editor.commands.setTextSelection(startBlock + fragment.size);
 
           toast.success(result.explanation || t("textFormatted"));
         }

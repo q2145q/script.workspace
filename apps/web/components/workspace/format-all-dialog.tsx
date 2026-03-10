@@ -150,6 +150,11 @@ export function FormatAllDialog({ editor, documentId }: FormatAllDialogProps) {
       }
     }
 
+    // Collapse selection after all formatting is done
+    if (editor) {
+      editor.commands.setTextSelection(editor.state.selection.to);
+    }
+
     setIsProcessing(false);
     if (!cancelledRef.current) {
       toast.success(t("completed"));

@@ -1,7 +1,10 @@
+import { prisma } from "@script/db";
+import { resolveVerifyToken, deleteVerifyToken } from "./telegram-verify";
+
 const BOT_TOKEN = () => process.env.TELEGRAM_BOT_TOKEN;
 const ADMIN_CHAT_ID = () => process.env.TELEGRAM_ADMIN_CHAT_ID;
 
-async function telegramApi(method: string, body: Record<string, unknown>) {
+export async function telegramApi(method: string, body: Record<string, unknown>) {
   const token = BOT_TOKEN();
   if (!token) {
     console.warn("[telegram] TELEGRAM_BOT_TOKEN not configured, skipping");
@@ -72,9 +75,60 @@ export async function notifyTelegramNewUser(user: {
   });
 }
 
+export async function handleTelegramVerification(
+  token: string,
+  chatId: number,
+): Promise<{ success: boolean; userName?: string; error?: string }> {
+  const userId = await resolveVerifyToken(token);
+  if (!userId) {
+    return { success: false, error: "Token expired or invalid" };
+  }
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      emailVerified: true,
+      telegramChatId: String(chatId),
+    },
+    select: { name: true, email: true },
+  });
+
+  await deleteVerifyToken(token, user.email);
+
+  // Clean up Better Auth's Verification record
+  await prisma.verification
+    .deleteMany({ where: { identifier: user.email } })
+    .catch(() => {});
+
+  return { success: true, userName: user.name };
+}
+
+export async function sendResetLinkViaTelegram(
+  chatId: string,
+  userName: string,
+  resetUrl: string,
+) {
+  await telegramApi("sendMessage", {
+    chat_id: chatId,
+    text: [
+      `Здравствуйте, ${userName}!`,
+      "",
+      "Вы запросили сброс пароля для Script Workspace.",
+      "",
+      "Нажмите кнопку ниже, чтобы установить новый пароль.",
+      "Ссылка действительна 1 час.",
+    ].join("\n"),
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "🔑 Сбросить пароль", url: resetUrl }],
+      ],
+    },
+  });
+}
+
 export async function answerCallbackQuery(
   callbackQueryId: string,
-  text: string
+  text: string,
 ) {
   await telegramApi("answerCallbackQuery", {
     callback_query_id: callbackQueryId,
@@ -85,7 +139,7 @@ export async function answerCallbackQuery(
 export async function editMessageReplyMarkup(
   chatId: string | number,
   messageId: number,
-  text: string
+  text: string,
 ) {
   await telegramApi("editMessageText", {
     chat_id: chatId,

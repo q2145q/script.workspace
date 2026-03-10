@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { motion } from "framer-motion";
-import { LayoutList, GripVertical, Sparkles, Loader2, Users } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { LayoutList, GripVertical, Sparkles, Loader2, Users, X, FileText } from "lucide-react";
 import type { Editor, JSONContent } from "@script/editor";
 import { useEditorState } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
@@ -63,6 +63,66 @@ function extractSceneText(editor: Editor, scene: SceneCard): string {
   return doc.textBetween(scene.pos, endPos, "\n");
 }
 
+interface SceneDetailModalProps {
+  scene: SceneCard;
+  synopsis: string | null;
+  fullText: string;
+  onClose: () => void;
+}
+
+function SceneDetailModal({ scene, synopsis, fullText, onClose }: SceneDetailModalProps) {
+  const t = useTranslations("Outline");
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="relative mx-4 max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-xl border border-border bg-background shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between border-b border-border px-5 py-4">
+          <div>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {t("sceneDetail")}
+            </p>
+            <h2 className="mt-0.5 text-sm font-semibold text-foreground">{scene.heading}</h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        {/* Content */}
+        <div className="overflow-y-auto p-5">
+          {synopsis && (
+            <div className="mb-4">
+              <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                {t("synopsis")}
+              </p>
+              <p className="text-sm italic text-cinema/80">{synopsis}</p>
+            </div>
+          )}
+          <div>
+            <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {t("sceneText")}
+            </p>
+            <pre className="whitespace-pre-wrap font-mono text-xs text-muted-foreground leading-relaxed">
+              {fullText}
+            </pre>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProps) {
   const t = useTranslations("Outline");
   const trpc = useTRPC();
@@ -72,6 +132,7 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
   const dragNodeRef = useRef<HTMLDivElement | null>(null);
   const [generatingScene, setGeneratingScene] = useState<string | null>(null);
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
+  const [detailScene, setDetailScene] = useState<SceneCard | null>(null);
 
   const scenes = useEditorState({
     editor: editor as Editor,
@@ -223,7 +284,13 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
         name: t("autoReorderDraft"),
       });
 
-      editor.commands.setContent(newContent);
+      // Use direct ProseMirror transaction to ensure useEditorState picks up the change
+      const newDoc = editor.schema.nodeFromJSON(newContent);
+      const { tr } = editor.state;
+      tr.replaceWith(0, tr.doc.content.size, newDoc.content);
+      tr.setMeta("reorderScenes", true);
+      editor.view.dispatch(tr);
+
       saveMutation.mutate({ id: documentId, content: newContent });
 
       toast.success(t("scenesReordered"));
@@ -357,6 +424,7 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
                 onDrop={(e) => handleDrop(e, i)}
                 onDragEnd={handleDragEnd}
                 onClick={() => handleSceneClick(scene.pos)}
+                onDoubleClick={(e) => { e.stopPropagation(); setDetailScene(scene); }}
                 className={`group cursor-pointer rounded-lg border p-3 transition-all duration-200 select-none ${
                   dragIndex === i
                     ? "border-cinema/50 opacity-50"
@@ -449,6 +517,18 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
           </div>
         )}
       </div>
+
+      {/* Scene Detail Modal */}
+      <AnimatePresence>
+        {detailScene && editor && (
+          <SceneDetailModal
+            scene={detailScene}
+            synopsis={savedSynopses[detailScene.heading] ?? null}
+            fullText={extractSceneText(editor, detailScene)}
+            onClose={() => setDetailScene(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
