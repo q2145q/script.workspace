@@ -49,12 +49,17 @@ export default function SignInPage() {
     });
 
     if (error) {
+      // Debug: log the full error object to see what Better Auth returns
+      console.log("[sign-in] error object:", JSON.stringify(error, null, 2));
+
       const msg = error.message ?? "";
       const code = error.code ?? "";
-      // Better Auth: code "EMAIL_NOT_VERIFIED", message "Email not verified", status 403
+      const status = (error as Record<string, unknown>).status ?? (error as Record<string, unknown>).statusCode;
       const isUnverified =
         code === "EMAIL_NOT_VERIFIED" ||
-        msg.toLowerCase().includes("email not verified");
+        String(status) === "403" ||
+        msg.toLowerCase().includes("email not verified") ||
+        msg.toLowerCase().includes("forbidden");
 
       if (isUnverified) {
         setError(t("telegramNotVerified"));
