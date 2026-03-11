@@ -11,46 +11,40 @@ export function PricingSection() {
   const [period, setPeriod] = useState<"month" | "year">("month");
   const t = useTranslations("Landing.pricing");
 
-  const tierKeys = ["free", "start", "pro"] as const;
+  const tierKeys = ["free", "pro", "team"] as const;
   const tiers = tierKeys.map((key) => ({
     key,
     name: t(`${key}.name`),
     monthlyPrice: t(`${key}.price`),
     yearlyPrice: t(`${key}.yearlyPrice`),
-    yearlyNote: key !== "free" ? t(`${key}.yearlyNote`) : undefined,
-    projects: t(`${key}.projects`),
-    aiRequests: t(`${key}.aiRequests`),
+    yearlyNote: key === "pro" ? t(`${key}.yearlyNote`) : undefined,
+    desc: t(`${key}.desc`),
     features: t.raw(`${key}.features`) as string[],
     cta: t(`${key}.cta`),
     featured: key === "pro",
   }));
 
   return (
-    <section ref={ref} id="pricing" className="landing-section">
+    <section ref={ref} id="pricing" className="landing-section landing-neutral">
       <div className="landing-container">
         <div className={`reveal ${visible ? "visible" : ""}`}>
-          <hr className="editorial-rule" style={{ marginBottom: "2rem" }} />
-          <h2
-            className="text-3xl sm:text-4xl lg:text-5xl mb-4"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 700,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.1,
-              maxWidth: 500,
-            }}
-          >
-            {t("title")}{" "}
-            <span style={{ color: "var(--l-accent)" }}>{t("titleAccent")}</span>
-          </h2>
-
-          {/* Beta offer */}
-          <div className="beta-offer-banner mt-6">
-            {t("betaOffer")}
+          <div style={{ textAlign: "center" }}>
+            <span className="eyebrow">{t("eyebrow")}</span>
+            <h2
+              style={{
+                fontSize: "clamp(1.8rem, 4vw, 2.75rem)",
+                fontWeight: 700,
+                letterSpacing: "-0.02em",
+                lineHeight: 1.15,
+                marginTop: "1rem",
+              }}
+            >
+              {t("title")}
+            </h2>
           </div>
 
           {/* Period toggle */}
-          <div className="flex mt-8">
+          <div className="flex justify-center mt-8">
             <div className="pricing-toggle">
               <button
                 className={period === "month" ? "active" : ""}
@@ -70,7 +64,14 @@ export function PricingSection() {
         </div>
 
         <div
-          className={`stagger ${visible ? "visible" : ""} grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-12`}
+          className={`stagger ${visible ? "visible" : ""}`}
+          style={{
+            display: "grid",
+            gap: "1.5rem",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            marginTop: "3rem",
+            alignItems: "start",
+          }}
         >
           {tiers.map((tier) => (
             <div
@@ -82,27 +83,34 @@ export function PricingSection() {
               )}
 
               <h3
-                className="text-lg font-bold mb-1"
                 style={{
+                  fontSize: "1.2rem",
+                  fontWeight: 700,
                   color: tier.featured
                     ? "var(--l-accent)"
-                    : "var(--l-text)",
+                    : "var(--l-text-primary)",
                 }}
               >
                 {tier.name}
               </h3>
 
-              <div className="mt-3 mb-1">
+              <div style={{ marginTop: "1rem", marginBottom: "0.5rem" }}>
                 <span
-                  className="text-3xl font-bold"
-                  style={{ color: "var(--l-text)" }}
+                  style={{
+                    fontSize: "2.25rem",
+                    fontWeight: 800,
+                    color: "var(--l-text-primary)",
+                  }}
                 >
                   {period === "month" ? tier.monthlyPrice : tier.yearlyPrice}
                 </span>
-                {tier.key !== "free" && (
+                {tier.key !== "free" && tier.key !== "team" && (
                   <span
-                    className="text-sm ml-1"
-                    style={{ color: "var(--l-text-muted)" }}
+                    style={{
+                      fontSize: "0.9rem",
+                      color: "var(--l-text-muted)",
+                      marginLeft: "0.35rem",
+                    }}
                   >
                     / {period === "month" ? t("perMonth") : t("perYear")}
                   </span>
@@ -111,23 +119,30 @@ export function PricingSection() {
 
               {period === "year" && tier.yearlyNote && (
                 <p
-                  className="text-xs mb-3"
-                  style={{ color: "var(--l-accent)" }}
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "var(--l-accent)",
+                    fontWeight: 500,
+                    marginBottom: "0.5rem",
+                  }}
                 >
                   {tier.yearlyNote}
                 </p>
               )}
 
               <p
-                className="text-xs mb-1"
-                style={{ color: "var(--l-text-muted)" }}
+                style={{
+                  fontSize: "0.85rem",
+                  color: "var(--l-text-muted)",
+                  marginBottom: "1.25rem",
+                }}
               >
-                {tier.projects} · AI: {tier.aiRequests}
+                {tier.desc}
               </p>
 
-              <hr className="editorial-rule wide my-4" />
+              <hr style={{ border: "none", borderTop: "1px solid var(--l-border)", margin: "0 0 1.25rem" }} />
 
-              <ul className="space-y-2.5 flex-1">
+              <ul style={{ display: "flex", flexDirection: "column", gap: "0.6rem", flex: 1, listStyle: "none", padding: 0, margin: 0 }}>
                 {tier.features.map((f) => (
                   <li key={f} className="pricing-feature">
                     <span className="pricing-check">
@@ -139,8 +154,9 @@ export function PricingSection() {
               </ul>
 
               <Link
-                href="/sign-up"
-                className={`mt-6 text-center ${tier.featured ? "btn-primary" : "btn-secondary"} w-full justify-center`}
+                href={tier.key === "team" ? "mailto:support@yomimovie.art" : "/sign-up"}
+                className={`${tier.featured ? "btn-primary" : "btn-secondary"} w-full justify-center`}
+                style={{ marginTop: "1.5rem" }}
               >
                 {tier.cta}
               </Link>
@@ -150,17 +166,14 @@ export function PricingSection() {
 
         <div className={`reveal ${visible ? "visible" : ""}`}>
           <p
-            className="mt-8 text-sm"
-            style={{ color: "var(--l-text-muted)" }}
+            style={{
+              marginTop: "2rem",
+              fontSize: "0.85rem",
+              color: "var(--l-text-muted)",
+              textAlign: "center",
+            }}
           >
-            {t("teamQuestion")}{" "}
-            <Link
-              href="/sign-up"
-              style={{ color: "var(--l-accent)", textDecoration: "underline" }}
-            >
-              {t("contact")}
-            </Link>
-            {" "}· {t("paymentMethods")}
+            {t("paymentNote")}
           </p>
         </div>
       </div>

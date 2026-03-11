@@ -2,30 +2,21 @@
 
 import { useTranslations } from "next-intl";
 import { useInView } from "../hooks";
-import {
-  PenTool,
-  BookOpen,
-  Wand2,
-  BarChart3,
-  Megaphone,
-  Users,
-} from "lucide-react";
+import Link from "next/link";
+import { PenTool, Clapperboard, Users } from "lucide-react";
 
-const FEATURE_KEYS = [
-  { key: "editor", icon: PenTool },
-  { key: "bible", icon: BookOpen },
-  { key: "rewrite", icon: Wand2 },
-  { key: "analysis", icon: BarChart3 },
-  { key: "pitch", icon: Megaphone },
-  { key: "collab", icon: Users },
+const PERSONAS = [
+  { key: "screenwriter", icon: PenTool },
+  { key: "director", icon: Clapperboard },
+  { key: "team", icon: Users },
 ] as const;
 
-export function FeaturesSection() {
+export function ForWhoSection() {
+  const t = useTranslations("Landing.forWho");
   const [ref, visible] = useInView();
-  const t = useTranslations("Landing.features");
 
   return (
-    <section ref={ref} id="features" className="landing-section landing-neutral">
+    <section ref={ref} className="landing-section landing-warm">
       <div className="landing-container">
         <div className={`reveal ${visible ? "visible" : ""}`}>
           <h2
@@ -34,49 +25,55 @@ export function FeaturesSection() {
               fontWeight: 700,
               letterSpacing: "-0.02em",
               lineHeight: 1.1,
-              maxWidth: 600,
+              textAlign: "center",
             }}
           >
             {t("title")}
           </h2>
         </div>
 
-        {/* 6 feature cards — 3x2 grid */}
         <div
           className={`stagger ${visible ? "visible" : ""}`}
           style={{
             marginTop: "3rem",
             display: "grid",
-            gap: "1.25rem",
-            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gap: "1.5rem",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
           }}
         >
-          {FEATURE_KEYS.map((feat) => {
-            const Icon = feat.icon;
+          {PERSONAS.map((persona) => {
+            const Icon = persona.icon;
             return (
-              <div key={feat.key} className="reveal feature-card">
-                <div className="feature-icon">
-                  <Icon size={20} />
+              <div key={persona.key} className="reveal persona-card">
+                <div className="persona-icon">
+                  <Icon size={24} />
                 </div>
                 <h3
                   style={{
-                    fontSize: "1.15rem",
+                    fontSize: "1.2rem",
                     fontWeight: 600,
-                    marginBottom: "0.5rem",
                     color: "var(--l-text-primary)",
                   }}
                 >
-                  {t(`${feat.key}.title`)}
+                  {t(`${persona.key}.title`)}
                 </h3>
                 <p
                   style={{
-                    fontSize: "0.9rem",
+                    fontSize: "0.95rem",
                     color: "var(--l-text-secondary)",
                     lineHeight: 1.5,
+                    flex: 1,
                   }}
                 >
-                  {t(`${feat.key}.desc`)}
+                  {t(`${persona.key}.desc`)}
                 </p>
+                <Link
+                  href="/sign-up"
+                  className="btn-secondary"
+                  style={{ alignSelf: "flex-start", padding: "10px 24px", fontSize: "0.9rem" }}
+                >
+                  {t(`${persona.key}.cta`)}
+                </Link>
               </div>
             );
           })}

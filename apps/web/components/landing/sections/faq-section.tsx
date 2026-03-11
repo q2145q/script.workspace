@@ -6,25 +6,34 @@ import { useTranslations } from "next-intl";
 import { useInView } from "../hooks";
 
 export function FAQSection() {
+  const t = useTranslations("Landing.faq");
   const [ref, visible] = useInView();
   const [openIdx, setOpenIdx] = useState<number | null>(null);
-  const t = useTranslations("Landing.faq");
 
-  const faqItems = Array.from({ length: 9 }, (_, i) => ({
-    q: t(`q${i + 1}`),
-    a: t(`a${i + 1}`),
-  }));
+  // Determine number of FAQ items dynamically
+  const faqItems: { q: string; a: string }[] = [];
+  for (let i = 1; i <= 10; i++) {
+    try {
+      const q = t(`q${i}`);
+      const a = t(`a${i}`);
+      if (q && a) faqItems.push({ q, a });
+    } catch {
+      break;
+    }
+  }
 
   return (
     <section ref={ref} className="landing-section">
-      <div className="landing-container max-w-3xl mx-auto">
+      <div className="landing-container" style={{ maxWidth: 800 }}>
         <div className={`reveal ${visible ? "visible" : ""}`}>
           <h2
-            className="text-3xl sm:text-4xl mb-12 text-center"
             style={{
-              fontFamily: "var(--font-display)",
+              fontSize: "clamp(1.8rem, 4vw, 2.75rem)",
               fontWeight: 700,
               letterSpacing: "-0.02em",
+              lineHeight: 1.1,
+              textAlign: "center",
+              marginBottom: "3rem",
             }}
           >
             {t("title")}
@@ -46,8 +55,12 @@ export function FAQSection() {
               </button>
               <div className="faq-answer">
                 <p
-                  className="pb-5 text-sm leading-relaxed"
-                  style={{ color: "var(--l-text-dim)" }}
+                  style={{
+                    paddingBottom: "1.25rem",
+                    fontSize: "0.95rem",
+                    lineHeight: 1.6,
+                    color: "var(--l-text-secondary)",
+                  }}
                 >
                   {item.a}
                 </p>

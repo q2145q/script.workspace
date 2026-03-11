@@ -2,56 +2,74 @@
 
 import { useTranslations } from "next-intl";
 import { useInView } from "../hooks";
-import { PROVIDERS } from "../data";
 
 export function AISection() {
   const t = useTranslations("Landing.ai");
   const [ref, visible] = useInView();
 
-  return (
-    <section ref={ref} className="landing-section">
-      <div className="landing-container" style={{ maxWidth: 800 }}>
-        <div className={`reveal ${visible ? "visible" : ""}`}>
-          <hr className="editorial-rule" style={{ marginBottom: "3rem" }} />
+  const theses = [
+    { num: "1", text: t("thesis1") },
+    { num: "2", text: t("thesis2") },
+    { num: "3", text: t("thesis3") },
+  ];
 
-          <blockquote className="pull-quote">
-            {t("quote")}
-          </blockquote>
+  return (
+    <section ref={ref} className="landing-section landing-dark">
+      <div className="landing-container" style={{ maxWidth: 900 }}>
+        <div className={`reveal ${visible ? "visible" : ""}`}>
+          <span className="eyebrow">{t("eyebrow")}</span>
+
+          <h2
+            style={{
+              fontSize: "clamp(1.8rem, 4vw, 2.75rem)",
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+              lineHeight: 1.15,
+              marginTop: "1.5rem",
+              color: "var(--l-text-white)",
+            }}
+          >
+            {t("title")}
+          </h2>
 
           <p
-            className="mt-8 text-base leading-relaxed"
-            style={{ color: "var(--l-text-dim)", maxWidth: 600 }}
+            style={{
+              marginTop: "1.5rem",
+              fontSize: "1.1rem",
+              color: "rgba(255,255,255,0.7)",
+              maxWidth: 650,
+              lineHeight: 1.6,
+            }}
           >
-            {t("description")}
+            {t("subtitle")}
           </p>
+        </div>
 
-          <div className="mt-10">
-            <p
-              className="text-xs mb-3"
-              style={{
-                color: "var(--l-text-muted)",
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-              }}
-            >
-              {t("modelsLabel")}
-            </p>
-            <p
-              className="text-sm"
-              style={{ color: "var(--l-text-dim)" }}
-            >
-              {PROVIDERS.map((p, i) => (
-                <span key={p} className="provider-badge">
-                  {p}
-                  {i < PROVIDERS.length - 1 && (
-                    <span style={{ color: "var(--l-text-muted)", margin: "0 0.5rem" }}>
-                      ·
-                    </span>
-                  )}
-                </span>
-              ))}
-            </p>
-          </div>
+        {/* 3 thesis items */}
+        <div
+          className={`reveal ${visible ? "visible" : ""}`}
+          style={{
+            marginTop: "3rem",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1.5rem",
+          }}
+        >
+          {theses.map((item) => (
+            <div key={item.num} className="ai-thesis">
+              <div className="ai-thesis-num">{item.num}</div>
+              <p
+                style={{
+                  fontSize: "1rem",
+                  color: "rgba(255,255,255,0.85)",
+                  lineHeight: 1.5,
+                  paddingTop: "0.4rem",
+                }}
+              >
+                {item.text}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

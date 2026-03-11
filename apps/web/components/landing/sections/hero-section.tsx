@@ -14,26 +14,19 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section className="hero-section" style={{ background: "var(--l-bg)" }}>
+    <section className="hero-section">
       <div className="hero-grain" />
-      <div className="hero-vertical-rule" />
 
-      <div className="landing-container w-full">
+      <div className="landing-container w-full" style={{ position: "relative", zIndex: 2 }}>
         <div
-          className={`hero-stagger flex flex-col gap-8 ${loaded ? "loaded" : ""}`}
-          style={{ paddingTop: "6rem" }}
+          className={`hero-stagger flex flex-col gap-6 ${loaded ? "loaded" : ""}`}
+          style={{ paddingTop: "8rem", paddingBottom: "4rem" }}
         >
           <div>
-            <span className="beta-badge">{t("betaBadge")}</span>
+            <span className="eyebrow">{t("eyebrow")}</span>
           </div>
 
-          <h1 className="hero-headline">
-            {t("headline1")}
-            <br />
-            {t("headline2")}
-            <br />
-            <span className="accent">{t("headline3")}</span>
-          </h1>
+          <h1 className="hero-headline">{t("headline")}</h1>
 
           <p className="hero-subtitle">{t("subtitle")}</p>
 
@@ -41,17 +34,37 @@ export function HeroSection() {
             <Link href="/sign-up" className="btn-primary">
               {t("cta")}
             </Link>
-            <Link href="/docs" className="btn-secondary">
-              {t("ctaDocs")}
-            </Link>
+            <button
+              className="btn-secondary"
+              style={{
+                color: "var(--l-accent-light)",
+                borderColor: "var(--l-accent-light)",
+              }}
+            >
+              {t("ctaSecondary")}
+            </button>
           </div>
 
-          <p
-            className="text-xs"
-            style={{ color: "var(--l-text-muted)", letterSpacing: "0.05em" }}
+          <p className="hero-sub-cta">{t("bottomNote")}</p>
+
+          {/* UI Mockup placeholder */}
+          <div
+            style={{
+              marginTop: "2rem",
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "16px",
+              padding: "2rem",
+              minHeight: "300px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "rgba(255,255,255,0.3)",
+              fontSize: "0.9rem",
+            }}
           >
-            {t("bottomNote")}
-          </p>
+            UI Mockup — YOMI Script Interface
+          </div>
         </div>
       </div>
     </section>

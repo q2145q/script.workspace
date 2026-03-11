@@ -777,220 +777,171 @@
       "pricing": "Pricing",
       "docs": "Docs",
       "signIn": "Sign In",
-      "tryFree": "Try it",
-      "tryFreeMobile": "Try for free",
+      "tryFree": "Start Free",
+      "tryFreeMobile": "Start Free",
       "menuLabel": "Menu",
       "closeLabel": "Close"
     },
     "hero": {
-      "betaBadge": "Open beta · Free until May 1, 2026",
-      "headline1": "Screenplay",
-      "headline2": "editor.",
-      "headline3": "Made for film.",
-      "subtitle": "Not Google Docs. Not Final Draft. A professional tool with an AI assistant — right in your browser.",
-      "cta": "Try for free",
-      "ctaDocs": "Docs",
-      "bottomNote": "Free · No card required · No install"
+      "eyebrow": "AI Screenplay Workspace",
+      "headline": "The screenplay workspace where AI knows your whole project",
+      "subtitle": "Script, bible, structure, characters, and pitch materials — in one place. AI works inside the format, not in a separate chat. Browser-based. No install.",
+      "cta": "Start Free",
+      "ctaSecondary": "Watch Demo",
+      "bottomNote": "No credit card required · Works in your browser · Pay from anywhere"
     },
-    "painPoints": {
-      "title": "How do you write now?",
-      "conclusion": "YOMI Script is one tool instead of three.",
-      "googleDocs": {
-        "title": "Google Docs",
-        "desc": "Great for text. Not for screenplays. Formatting is manual. Before submission — an hour lost."
-      },
-      "finalDraft": {
-        "title": "Final Draft",
-        "desc": "Industry standard. $250 one-time. Desktop only. Requires download and installation."
-      },
-      "whatsapp": {
-        "title": "WhatsApp + PDF",
-        "desc": "Notes in messages. Versions get lost. \"Final_final_v3_edits.pdf\" — sound familiar?"
-      }
+    "problem": {
+      "title": "Script in one file. Bible in Notion. Characters in Excel. Pitch in Word. AI in another tab.",
+      "subtitle": "That's not a workflow — that's chaos. Every context switch costs you the thread of the story."
     },
-    "features": {
-      "title": "Everything a",
-      "titleAccent": "screenwriter needs",
-      "mockupTitle": "Untitled — YOMI Script",
-      "mockupScenes": "Scenes",
-      "formatting": {
-        "title": "Screenplay formatting",
-        "desc": "6 element types: scene heading, action, character, dialogue, parenthetical, transition. Keyboard shortcuts. Auto-format."
-      },
-      "rewrite": {
-        "title": "Smart assistant (Cmd+K)",
-        "desc": "Select text, describe what to change — get a variant with highlighted diffs. Apply or dismiss with one click. Your voice stays yours."
-      },
-      "chat": {
-        "title": "AI chat with project context",
-        "desc": "The chat knows your screenplay, bible, and notes. Helps you get unstuck — doesn't write for you."
-      },
-      "versions": {
-        "title": "Versions and drafts",
-        "desc": "Save snapshots, browse history, restore any version."
-      },
-      "series": {
-        "title": "TV series and episodes",
-        "desc": "TV format: multiple episodes in one project, each with its own document."
-      },
-      "export": {
-        "title": "Export to PDF and DOCX",
-        "desc": "Customize title page, scene numbering, paper size, and watermark."
-      }
-    },
-    "editorShowcase": {
-      "title1": "This is what your",
-      "title2": "next screenplay looks like"
+    "workflow": {
+      "title": "One project. Everything inside.",
+      "step1title": "Screenplay Editor",
+      "step1": "Create a project → open your script in proper screenplay format. Export to PDF or DOCX in one click.",
+      "step2title": "Project Bible",
+      "step2": "Build your bible → add characters, locations, arcs, and notes. AI sees them whenever you work on any scene.",
+      "step3title": "AI Inside",
+      "step3": "Select a line or scene and get rewrite options, structural notes, or a beat sheet. No copy-paste.",
+      "step4title": "Pitch Ready",
+      "step4": "Generate a logline, one-pager, or synopsis directly from your project. Share with your team for review."
     },
     "ai": {
-      "quote": "Stuck on a scene? Ask for a rewrite. Dialogue sounds wooden? Show it — get alternatives. AI explains what works and why.",
-      "description": "In film, working with a team is the norm. Editor, director, producer — everyone helps make the story better. AI in Script Workspace is another team member. Not a replacement for the author.",
-      "modelsLabel": "Available models"
+      "eyebrow": "The author stays in control",
+      "title": "AI as a creative collaborator. Not a replacement.",
+      "subtitle": "Rewrite suggests options — you choose. Analysis reveals structure — you decide. We never train models on your text, and we never claim authorship.",
+      "thesis1": "AI sees your full project context — not just the current line.",
+      "thesis2": "Reject anything with one click. Diff shows exactly what changed.",
+      "thesis3": "Your text is never used for model training."
     },
-    "audience": {
-      "title": "Who YOMI Script is for",
-      "screenwriters": {
-        "title": "Screenwriters",
-        "desc": "A professional tool instead of Google Docs and Final Draft. Formatting, versions, smart assistant — all in your browser."
+    "features": {
+      "title": "Everything development needs",
+      "editor": {
+        "title": "Screenplay Editor",
+        "desc": "Professional Courier 12pt format, all scene types, PDF/DOCX export, version history."
       },
-      "showrunners": {
-        "title": "Showrunners",
-        "desc": "Manage your series in one workspace. Episodes, project bible, structure — at your fingertips."
+      "bible": {
+        "title": "Project Bible",
+        "desc": "Characters with arcs, locations, themes, notes. AI reads the bible when working on any scene."
       },
-      "producers": {
-        "title": "Producers",
-        "desc": "Review and comment on your team's work. No more sorting through PDFs in your inbox."
+      "rewrite": {
+        "title": "AI Rewrite",
+        "desc": "Select any block and get rewrite options with diff view. Accept or reject — your call."
+      },
+      "analysis": {
+        "title": "Structure & Analysis",
+        "desc": "Beat sheet, character arc analysis, act structure breakdown. Visual."
+      },
+      "pitch": {
+        "title": "Pitch Artifacts",
+        "desc": "Logline, synopsis, and one-pager generated from your project. Ready to pitch."
+      },
+      "collab": {
+        "title": "Team Collaboration",
+        "desc": "Roles, threaded comments, real-time co-editing, version history. For the writers' room."
       }
     },
-    "comparison": {
-      "title": "Why not",
-      "titleAccent": "Final Draft",
-      "browser": "Browser",
-      "platform": "Platform",
-      "aiBuiltIn": "Built-in",
-      "aiRewrite": "AI Rewrite",
-      "teamwork": "Teamwork",
-      "russianLang": "Multilingual",
-      "full": "Full",
-      "paymentRu": "Payment",
-      "price": "Price",
-      "priceFrom": "from $0",
-      "desktop": "Desktop",
-      "oneTime": "one-time",
-      "starcPrice": "~$5/mo",
-      "kitName": "KIT Scenarist"
-    },
-    "pricing": {
-      "title": "Start",
-      "titleAccent": "for free",
-      "betaOffer": "Register before May 1, 2026 — get PRO free for 3 months",
-      "month": "Monthly",
-      "year": "Yearly",
-      "yearDiscount": "−2 mo",
-      "perMonth": "mo",
-      "perYear": "year",
-      "popular": "Popular",
-      "teamQuestion": "Need a team plan?",
-      "contact": "Contact us",
-      "paymentMethods": "Visa, Mastercard, PayPal",
-      "free": {
-        "name": "FREE",
-        "price": "$0",
-        "yearlyPrice": "$0",
-        "projects": "1 project",
-        "aiRequests": "—",
-        "features": ["Screenplay formatting", "Export PDF / DOCX", "Basic editor"],
-        "cta": "Get started free"
+    "forWho": {
+      "title": "For everyone who works with a screenplay",
+      "screenwriter": {
+        "title": "Screenwriter",
+        "desc": "Write professional screenplays without Final Draft. Your AI already knows your characters.",
+        "cta": "Try Free"
       },
-      "start": {
-        "name": "START",
-        "price": "$10",
-        "yearlyPrice": "$100",
-        "yearlyNote": "save 2 months",
-        "projects": "3 projects",
-        "aiRequests": "150 / mo",
-        "features": ["Everything in FREE", "AI Rewrite and AI Chat", "150 AI requests / mo", "Comments and drafts"],
-        "cta": "Choose START"
-      },
-      "pro": {
-        "name": "PRO",
-        "price": "$20",
-        "yearlyPrice": "$200",
-        "yearlyNote": "save 2 months",
-        "projects": "10 projects",
-        "aiRequests": "400 / mo",
-        "features": ["Everything in START", "400 AI requests / mo", "TV series and episodes", "All AI models", "Priority support"],
-        "cta": "Choose PRO"
+      "director": {
+        "title": "Director",
+        "desc": "Develop from idea to one-pager in one place. Iterate structure with AI.",
+        "cta": "See an example"
       },
       "team": {
-        "name": "TEAM",
-        "price": "$40",
-        "yearlyPrice": "custom",
-        "projects": "Unlimited",
-        "aiRequests": "Unlimited",
-        "features": ["Everything in PRO", "Unlimited projects", "Unlimited AI requests", "Team access", "Dedicated support"],
+        "title": "Team",
+        "desc": "Write in real-time, leave comments, track versions. A workspace for writers' rooms.",
+        "cta": "Team plan"
+      }
+    },
+    "social": {
+      "title": "What screenwriters say",
+      "quote1": "Finally, I don't need the bible in Notion and the script in another tab. Everything's in one window, and AI knows the context.",
+      "author1": "Early user",
+      "quote2": "Rewrite with diff is on another level. You see exactly what changed and can roll back with one click.",
+      "author2": "Early user",
+      "quote3": "One-pager from the project generates in seconds. Used to take an hour in Word.",
+      "author3": "Early user"
+    },
+    "pricing": {
+      "eyebrow": "Simple, transparent pricing",
+      "title": "Start free. Scale when you need.",
+      "month": "Monthly",
+      "year": "Yearly",
+      "yearDiscount": "−20%",
+      "perMonth": "mo",
+      "perYear": "year",
+      "popular": "Most Popular",
+      "paymentNote": "Pay with Stripe · Cancel anytime · VAT included where applicable",
+      "free": {
+        "name": "Free",
+        "price": "Free",
+        "yearlyPrice": "Free",
+        "desc": "2 projects",
+        "features": ["Screenplay editor", "Basic AI (limited requests)", "PDF export"],
+        "cta": "Start Free"
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "$15",
+        "yearlyPrice": "$144",
+        "yearlyNote": "save 20%",
+        "desc": "Unlimited projects",
+        "features": ["Full AI (Rewrite, Analysis, One-pager)", "Team access up to 5 members", "Priority support", "All AI models"],
+        "cta": "Choose Pro"
+      },
+      "team": {
+        "name": "Team",
+        "price": "Custom",
+        "yearlyPrice": "Custom",
+        "desc": "Writers' room",
+        "features": ["Workspace for writers' rooms", "Roles and permissions", "Real-time editing", "Dedicated support"],
         "cta": "Contact us"
       }
     },
-    "betaStory": {
-      "title1": "We're in open beta.",
-      "title2": "This matters.",
-      "subtitle": "YOMI Script is a young product. We don't hide it.",
-      "forYouTitle": "What this means for you",
-      "forYou1": "Free PRO access during beta (until May 1, 2026)",
-      "forYou2": "Your feedback directly shapes what we build next",
-      "forYou3": "You'll be among the first to master the tool before it grows",
-      "guaranteeTitle": "What we guarantee",
-      "guarantee1": "Your screenplays are safe (AES-256-GCM encryption)",
-      "guarantee2": "We don't use your text to train models",
-      "guarantee3": "Support responds within 24 hours"
-    },
-    "yomi": {
-      "title1": "YOMI builds services for film.",
-      "title2": "Tailored for you.",
-      "description1": "We're a team that works in film production and builds tools for the industry. Not generic products \"for everyone,\" but services that understand your workflow: how the screenwriting process works, how productions run, what a showrunner needs.",
-      "description2": "YOMI Script is the first YOMI product. But not the last."
-    },
     "faq": {
-      "title": "FAQ",
-      "q1": "What is YOMI Script?",
-      "a1": "YOMI Script is a browser-based screenplay editor with a smart AI assistant. It replaces Final Draft and Google Docs, supporting professional screenplay formatting, AI rewriting, comments, versions, and export to PDF/DOCX.",
-      "q2": "How is it different from Final Draft or Celtx?",
-      "a2": "YOMI Script runs right in your browser — no installation needed. A built-in AI assistant helps rewrite dialogue, analyze structure, and break through creative blocks. Available in multiple languages.",
-      "q3": "How does AI Rewrite work?",
-      "a3": "Select text in the screenplay, press Cmd+K (or Ctrl+K), and describe what you want to change. AI will generate a variant and you'll see a diff with highlighted changes — green for additions, red for deletions. Apply or dismiss with one click.",
-      "q4": "Do I need a separate ChatGPT/Claude subscription?",
-      "a4": "No. All AI models are already connected and work out of the box. Depending on your plan, you get access to GPT, Claude, DeepSeek, and more. No additional subscriptions required.",
-      "q5": "Is my data safe?",
-      "a5": "Yes. Data is encrypted (AES-256-GCM). Your screenplays are stored on secure servers in the EU. We do not use your content to train models.",
-      "q6": "When will the stable version be released?",
-      "a6": "The product is currently in open beta. We're actively improving functionality based on user feedback. Join the beta to influence the product's development.",
-      "q7": "Can I collaborate with a team?",
-      "a7": "Yes. You can invite members to a project with different roles: editor, commenter, or viewer. Comments are tied to specific positions in the text and support threads.",
-      "q8": "Who is behind YOMI?",
-      "a8": "YOMI is a team that works in film production. Servers are in the EU, data is protected. Payment is available via Visa, Mastercard, and PayPal.",
-      "q9": "Why is the beta free?",
-      "a9": "We want to build the tool together with the community. Early users get free PRO access and the ability to shape the product."
+      "title": "Frequently asked questions",
+      "q1": "Is this for professionals or beginners?",
+      "a1": "Both. Formatting meets industry standards. AI helps beginners and accelerates experienced writers.",
+      "q2": "Do I need to install anything?",
+      "a2": "No. YOMI Script works in your browser on any device. Your projects sync automatically.",
+      "q3": "Is my text used to train AI?",
+      "a3": "No. Your screenplays belong to you. We don't use them for model training.",
+      "q4": "How is this different from Final Draft?",
+      "a4": "Final Draft is a desktop editor without AI or bible. YOMI Script is a workspace: formatting + development + AI in the browser.",
+      "q5": "Is there real-time collaboration?",
+      "a5": "Yes. Comments, roles, real-time editing, and version history are available on Pro and Team plans.",
+      "q6": "Can I import an existing screenplay?",
+      "a6": "Yes. You can import .fdx (Final Draft) and .docx files directly into YOMI Script.",
+      "q7": "Is this for Hollywood-style scripts only?",
+      "a7": "No. YOMI Script supports both US Letter (Courier 12pt) and other screenplay formats. Works for any narrative format."
     },
-    "cta": {
-      "title1": "Your next screenplay starts here.",
-      "description": "Get beta access — free, no card required, right now. Offer valid until May 1, 2026.",
-      "button": "Get free access"
+    "finalCta": {
+      "title": "First project. Today.",
+      "subtitle": "No file migration. No steep learning curve. Open a browser and start.",
+      "cta": "Start Free",
+      "note": "Free to start. No credit card. Works in any browser."
     },
     "footer": {
+      "tagline": "AI Screenplay Workspace",
+      "product": "Product",
+      "company": "Company",
+      "legal": "Legal",
+      "features": "Features",
       "pricing": "Pricing",
-      "tutorial": "Tutorial",
       "docs": "Docs",
-      "signIn": "Sign In",
-      "signUp": "Sign Up",
-      "copyright": "\u00a9 2026 YOMI Film. All rights reserved.",
-      "security": "Data encrypted with AES-256 \u00b7 We don't train models on your text"
-    },
-    "betaBanner": {
-      "text": "The app is in active testing. You may encounter bugs or rough edges. We'd love your feedback \u2014",
-      "linkText": "reach out to us",
-      "textEnd": ", and we'll help at every step.",
-      "closeLabel": "Close"
+      "changelog": "Changelog",
+      "about": "About",
+      "blog": "Blog",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "cookies": "Cookie Policy",
+      "copyright": "\u00a9 2026 YOMI",
+      "bottomLine": "No AI writing instead of you"
     }
   },
   "LocaleSwitcher": {

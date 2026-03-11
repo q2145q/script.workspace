@@ -21,18 +21,22 @@ export function Header({ scrolled }: { scrolled: boolean }) {
         <div className="landing-container flex items-center justify-between h-16">
           <Link
             href="/"
-            className="flex items-center gap-2.5"
+            className="flex items-center gap-2"
             style={{ textDecoration: "none" }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/yomi-light.svg" alt="YOMI" className="h-7 w-auto" />
+            <img
+              src="/yomi-light.svg"
+              alt="YOMI"
+              className="h-7 w-auto"
+            />
             <span
               style={{
                 fontSize: "0.65rem",
-                letterSpacing: "0.15em",
+                letterSpacing: "0.12em",
                 textTransform: "uppercase",
-                color: "var(--l-text-muted)",
-                fontWeight: 400,
+                color: "rgba(255,255,255,0.5)",
+                fontWeight: 500,
               }}
             >
               Script
@@ -59,7 +63,7 @@ export function Header({ scrolled }: { scrolled: boolean }) {
               {t("signIn")}
             </Link>
             <LocaleSwitcher />
-            <Link href="/sign-up" className="btn-primary text-sm">
+            <Link href="/sign-up" className="btn-primary" style={{ padding: "10px 24px", fontSize: "0.9rem" }}>
               {t("tryFree")}
             </Link>
           </nav>
@@ -70,12 +74,12 @@ export function Header({ scrolled }: { scrolled: boolean }) {
               background: "none",
               border: "none",
               cursor: "pointer",
-              color: "var(--l-text)",
+              color: "#FFFFFF",
             }}
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={t("menuLabel")}
           >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </header>
@@ -86,14 +90,16 @@ export function Header({ scrolled }: { scrolled: boolean }) {
         onClick={() => setMobileOpen(false)}
       />
       <div className={`landing-mobile-panel ${mobileOpen ? "open" : ""}`}>
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center mb-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/yomi-dark.svg" alt="YOMI" className="h-6 w-auto" />
           <button
             onClick={() => setMobileOpen(false)}
             style={{
               background: "none",
               border: "none",
               cursor: "pointer",
-              color: "var(--l-text-dim)",
+              color: "var(--l-text-muted)",
             }}
             aria-label={t("closeLabel")}
           >
@@ -113,7 +119,7 @@ export function Header({ scrolled }: { scrolled: boolean }) {
           href="/sign-up"
           className="btn-primary"
           onClick={() => setMobileOpen(false)}
-          style={{ textAlign: "center", justifyContent: "center" }}
+          style={{ textAlign: "center", justifyContent: "center", marginTop: "0.5rem" }}
         >
           {t("tryFreeMobile")}
         </Link>
