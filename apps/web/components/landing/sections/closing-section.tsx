@@ -3,13 +3,21 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useInView } from "../hooks";
-import { FAQ } from "../data";
 
 export function ClosingSection() {
+  const tFaq = useTranslations("Landing.faq");
+  const tCta = useTranslations("Landing.cta");
+  const tFooter = useTranslations("Landing.footer");
   const [faqRef, faqVisible] = useInView();
   const [ctaRef, ctaVisible] = useInView();
   const [openIdx, setOpenIdx] = useState<number | null>(null);
+
+  const faqItems = Array.from({ length: 9 }, (_, i) => ({
+    q: tFaq(`q${i + 1}`),
+    a: tFaq(`a${i + 1}`),
+  }));
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -30,12 +38,12 @@ export function ClosingSection() {
                 letterSpacing: "-0.02em",
               }}
             >
-              Частые вопросы
+              {tFaq("title")}
             </h2>
           </div>
 
           <div className={`reveal ${faqVisible ? "visible" : ""}`}>
-            {FAQ.map((item, i) => (
+            {faqItems.map((item, i) => (
               <div
                 key={i}
                 className={`faq-item ${openIdx === i ? "open" : ""}`}
@@ -75,21 +83,18 @@ export function ClosingSection() {
                 maxWidth: 600,
               }}
             >
-              Ваш следующий сценарий
-              <br />
-              <span style={{ color: "var(--l-accent)" }}>начинается здесь</span>
+              {tCta("title1")}
             </h2>
 
             <p
               className="text-base mb-8 leading-relaxed"
               style={{ color: "var(--l-text-dim)", maxWidth: 480 }}
             >
-              Откройте бета-доступ — бесплатно, без карты, прямо сейчас.
-              Предложение действует до 1 мая 2026.
+              {tCta("description")}
             </p>
 
             <Link href="/sign-up" className="btn-primary">
-              Получить бесплатный доступ
+              {tCta("button")}
             </Link>
           </div>
         </div>
@@ -125,16 +130,16 @@ export function ClosingSection() {
                 onClick={() => scrollTo("pricing")}
                 className="landing-nav-link"
               >
-                Тарифы
+                {tFooter("pricing")}
               </button>
               <Link href="/docs" className="landing-nav-link">
-                Документация
+                {tFooter("docs")}
               </Link>
               <Link href="/sign-in" className="landing-nav-link">
-                Войти
+                {tFooter("signIn")}
               </Link>
               <Link href="/sign-up" className="landing-nav-link">
-                Регистрация
+                {tFooter("signUp")}
               </Link>
             </nav>
           </div>
@@ -149,9 +154,9 @@ export function ClosingSection() {
               className="text-xs"
               style={{ color: "var(--l-text-muted)" }}
             >
-              © 2026 YOMI Film. Все права защищены.
+              {tFooter("copyright")}
               {" · "}
-              Данные зашифрованы AES-256 · Мы не обучаем модели на вашем тексте
+              {tFooter("security")}
             </p>
             <div
               className="flex items-center gap-4 text-xs"

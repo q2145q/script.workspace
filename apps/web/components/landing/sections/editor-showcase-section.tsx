@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useInView, useTypewriter } from "../hooks";
 import { SCREENPLAY, SIDEBAR_SCENES } from "../data";
 
@@ -8,6 +9,7 @@ export function EditorShowcaseSection() {
   const [ref, visible] = useInView();
   const [started, setStarted] = useState(false);
   const tw = useTypewriter(SCREENPLAY, 28);
+  const t = useTranslations("Landing");
 
   useEffect(() => {
     if (visible && !started) {
@@ -30,9 +32,9 @@ export function EditorShowcaseSection() {
               lineHeight: 1.15,
             }}
           >
-            Так выглядит ваш
+            {t("editorShowcase.title1")}
             <br />
-            <span style={{ color: "var(--l-accent)" }}>следующий сценарий</span>
+            <span style={{ color: "var(--l-accent)" }}>{t("editorShowcase.title2")}</span>
           </h2>
         </div>
 
@@ -49,7 +51,7 @@ export function EditorShowcaseSection() {
                 className="ml-3 text-xs"
                 style={{ color: "#52525b" }}
               >
-                Без названия — YOMI Script
+                {t("features.mockupTitle")}
               </span>
             </div>
 
@@ -62,7 +64,7 @@ export function EditorShowcaseSection() {
                     borderBottom: "1px solid #1a1a22",
                   }}
                 >
-                  Сцены
+                  {t("features.mockupScenes")}
                 </div>
                 {SIDEBAR_SCENES.map((s) => (
                   <div

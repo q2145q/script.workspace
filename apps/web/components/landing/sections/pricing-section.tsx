@@ -3,15 +3,27 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useInView } from "../hooks";
-import { PRICING } from "../data";
 
 export function PricingSection() {
   const [ref, visible] = useInView();
   const [period, setPeriod] = useState<"month" | "year">("month");
+  const t = useTranslations("Landing.pricing");
 
-  // Only show first 3 tiers (КОМАНДА merged into PRO)
-  const tiers = PRICING.slice(0, 3);
+  const tierKeys = ["free", "start", "pro"] as const;
+  const tiers = tierKeys.map((key) => ({
+    key,
+    name: t(`${key}.name`),
+    monthlyPrice: t(`${key}.price`),
+    yearlyPrice: t(`${key}.yearlyPrice`),
+    yearlyNote: key !== "free" ? t(`${key}.yearlyNote`) : undefined,
+    projects: t(`${key}.projects`),
+    aiRequests: t(`${key}.aiRequests`),
+    features: t.raw(`${key}.features`) as string[],
+    cta: t(`${key}.cta`),
+    featured: key === "pro",
+  }));
 
   return (
     <section ref={ref} id="pricing" className="landing-section">
@@ -28,13 +40,13 @@ export function PricingSection() {
               maxWidth: 500,
             }}
           >
-            Начните{" "}
-            <span style={{ color: "var(--l-accent)" }}>бесплатно</span>
+            {t("title")}{" "}
+            <span style={{ color: "var(--l-accent)" }}>{t("titleAccent")}</span>
           </h2>
 
           {/* Beta offer */}
           <div className="beta-offer-banner mt-6">
-            При регистрации до 1 мая 2026 — PRO на 3 месяца бесплатно
+            {t("betaOffer")}
           </div>
 
           {/* Period toggle */}
@@ -44,14 +56,14 @@ export function PricingSection() {
                 className={period === "month" ? "active" : ""}
                 onClick={() => setPeriod("month")}
               >
-                Месяц
+                {t("month")}
               </button>
               <button
                 className={period === "year" ? "active" : ""}
                 onClick={() => setPeriod("year")}
               >
-                Год
-                <span className="toggle-badge">−2 мес</span>
+                {t("year")}
+                <span className="toggle-badge">{t("yearDiscount")}</span>
               </button>
             </div>
           </div>
@@ -62,11 +74,11 @@ export function PricingSection() {
         >
           {tiers.map((tier) => (
             <div
-              key={tier.name}
+              key={tier.key}
               className={`reveal pricing-card ${tier.featured ? "featured" : ""}`}
             >
               {tier.featured && (
-                <div className="pricing-badge">Популярный</div>
+                <div className="pricing-badge">{t("popular")}</div>
               )}
 
               <h3
@@ -87,12 +99,12 @@ export function PricingSection() {
                 >
                   {period === "month" ? tier.monthlyPrice : tier.yearlyPrice}
                 </span>
-                {tier.monthlyPrice !== "0 ₽" && (
+                {tier.key !== "free" && (
                   <span
                     className="text-sm ml-1"
                     style={{ color: "var(--l-text-muted)" }}
                   >
-                    / {period === "month" ? "мес" : "год"}
+                    / {period === "month" ? t("perMonth") : t("perYear")}
                   </span>
                 )}
               </div>
@@ -127,7 +139,7 @@ export function PricingSection() {
               </ul>
 
               <Link
-                href={tier.ctaHref}
+                href="/sign-up"
                 className={`mt-6 text-center ${tier.featured ? "btn-primary" : "btn-secondary"} w-full justify-center`}
               >
                 {tier.cta}
@@ -141,14 +153,14 @@ export function PricingSection() {
             className="mt-8 text-sm"
             style={{ color: "var(--l-text-muted)" }}
           >
-            Нужен командный тариф?{" "}
+            {t("teamQuestion")}{" "}
             <Link
               href="/sign-up"
               style={{ color: "var(--l-accent)", textDecoration: "underline" }}
             >
-              Связаться
+              {t("contact")}
             </Link>
-            {" "}· Оплата картами РФ · СБП · Счёт для ООО/ИП
+            {" "}· {t("paymentMethods")}
           </p>
         </div>
       </div>

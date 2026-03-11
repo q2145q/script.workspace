@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@script/api/auth";
 import { prisma } from "@script/db";
 import { headers } from "next/headers";
+import { BetaBanner } from "@/components/beta-banner";
 
 export default async function WorkspaceLayout({
   children,
@@ -26,5 +27,10 @@ export default async function WorkspaceLayout({
     redirect("/dashboard");
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <BetaBanner />
+      {children}
+    </>
+  );
 }

@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 
 export function Header({ scrolled }: { scrolled: boolean }) {
+  const t = useTranslations("Landing.header");
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const scrollTo = (id: string) => {
@@ -41,22 +44,23 @@ export function Header({ scrolled }: { scrolled: boolean }) {
               onClick={() => scrollTo("features")}
               className="landing-nav-link"
             >
-              Возможности
+              {t("features")}
             </button>
             <button
               onClick={() => scrollTo("pricing")}
               className="landing-nav-link"
             >
-              Тарифы
+              {t("pricing")}
             </button>
             <Link href="/docs" className="landing-nav-link">
-              Документация
+              {t("docs")}
             </Link>
             <Link href="/sign-in" className="landing-nav-link">
-              Войти
+              {t("signIn")}
             </Link>
+            <LocaleSwitcher />
             <Link href="/sign-up" className="btn-primary text-sm">
-              Попробовать
+              {t("tryFree")}
             </Link>
           </nav>
 
@@ -69,7 +73,7 @@ export function Header({ scrolled }: { scrolled: boolean }) {
               color: "var(--l-text)",
             }}
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Меню"
+            aria-label={t("menuLabel")}
           >
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -91,26 +95,27 @@ export function Header({ scrolled }: { scrolled: boolean }) {
               cursor: "pointer",
               color: "var(--l-text-dim)",
             }}
-            aria-label="Закрыть"
+            aria-label={t("closeLabel")}
           >
             <X size={22} />
           </button>
         </div>
-        <button onClick={() => scrollTo("features")}>Возможности</button>
-        <button onClick={() => scrollTo("pricing")}>Тарифы</button>
+        <button onClick={() => scrollTo("features")}>{t("features")}</button>
+        <button onClick={() => scrollTo("pricing")}>{t("pricing")}</button>
         <Link href="/docs" onClick={() => setMobileOpen(false)}>
-          Документация
+          {t("docs")}
         </Link>
         <Link href="/sign-in" onClick={() => setMobileOpen(false)}>
-          Войти
+          {t("signIn")}
         </Link>
+        <LocaleSwitcher />
         <Link
           href="/sign-up"
           className="btn-primary"
           onClick={() => setMobileOpen(false)}
           style={{ textAlign: "center", justifyContent: "center" }}
         >
-          Попробовать бесплатно
+          {t("tryFreeMobile")}
         </Link>
       </div>
     </>

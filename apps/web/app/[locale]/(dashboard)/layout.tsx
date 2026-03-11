@@ -7,6 +7,8 @@ import { getTranslations } from "next-intl/server";
 import { SignOutButton } from "@/components/dashboard/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { NotificationBell } from "@/components/dashboard/notification-bell";
+import { BetaBanner } from "@/components/beta-banner";
+import { LocaleSwitcherApp } from "@/components/locale-switcher-app";
 
 export default async function DashboardLayout({
   children,
@@ -91,6 +93,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-background">
+      <BetaBanner />
       <header className="glass-panel sticky top-0 z-30 border-b border-border">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
           <Link href="/dashboard" className="text-lg font-semibold text-foreground">
@@ -104,6 +107,7 @@ export default async function DashboardLayout({
               {session.user.name}
             </Link>
             <NotificationBell />
+            <LocaleSwitcherApp />
             <ThemeToggle />
             <SignOutButton />
           </div>

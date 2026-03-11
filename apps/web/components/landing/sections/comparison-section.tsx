@@ -1,27 +1,28 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useInView } from "../hooks";
-import { COMPARISON_ROWS } from "../data";
-
-const COMPETITORS = [
-  { name: "STARC", type: "Десктоп", price: "~380 ₽/мес" },
-  { name: "КиТ Сценарист", type: "Десктоп", price: "единоразово" },
-  { name: "Final Draft", type: "Десктоп", price: "$250" },
-];
-
-const SW_HIGHLIGHTS = [
-  { label: "Платформа", value: "Браузер" },
-  { label: "AI", value: "Встроен" },
-  { label: "AI Rewrite", value: "✓" },
-  { label: "Командная работа", value: "✓" },
-  { label: "Русский язык", value: "Полный" },
-  { label: "Оплата из РФ", value: "✓" },
-  { label: "YandexGPT", value: "✓" },
-  { label: "Цена", value: "от 0 ₽" },
-];
 
 export function ComparisonSection() {
   const [ref, visible] = useInView();
+  const t = useTranslations("Landing.comparison");
+
+  const competitors = [
+    { name: "STARC", type: t("desktop"), price: t("starcPrice") },
+    { name: t("kitName"), type: t("desktop"), price: t("oneTime") },
+    { name: "Final Draft", type: t("desktop"), price: "$250" },
+  ];
+
+  const highlights = [
+    { label: t("platform"), value: t("browser") },
+    { label: "AI", value: t("aiBuiltIn") },
+    { label: t("aiRewrite"), value: "✓" },
+    { label: t("teamwork"), value: "✓" },
+    { label: t("russianLang"), value: t("full") },
+    { label: t("paymentRu"), value: "✓" },
+    { label: "YandexGPT", value: "✓" },
+    { label: t("price"), value: t("priceFrom") },
+  ];
 
   return (
     <section ref={ref} className="landing-section">
@@ -38,8 +39,8 @@ export function ComparisonSection() {
               maxWidth: 500,
             }}
           >
-            Почему не{" "}
-            <span style={{ color: "var(--l-accent)" }}>Final Draft</span>?
+            {t("title")}{" "}
+            <span style={{ color: "var(--l-accent)" }}>{t("titleAccent")}</span>?
           </h2>
         </div>
 
@@ -75,14 +76,14 @@ export function ComparisonSection() {
                   fontWeight: 500,
                 }}
               >
-                Браузер
+                {t("browser")}
               </span>
             </div>
             <div
               className="grid gap-3"
               style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}
             >
-              {SW_HIGHLIGHTS.map((h) => (
+              {highlights.map((h) => (
                 <div key={h.label} className="flex items-center gap-2">
                   <span
                     className="text-sm"
@@ -109,7 +110,7 @@ export function ComparisonSection() {
             className="grid gap-3"
             style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}
           >
-            {COMPETITORS.map((c) => (
+            {competitors.map((c) => (
               <div key={c.name} className="reveal comparison-competitor">
                 <div className="flex items-center justify-between mb-3">
                   <span className="font-medium text-sm">{c.name}</span>
@@ -143,7 +144,7 @@ export function ComparisonSection() {
                     className="text-xs"
                     style={{ color: "var(--l-text-muted)" }}
                   >
-                    Цена
+                    {t("price")}
                   </span>
                   <span
                     className="text-sm"

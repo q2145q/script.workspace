@@ -1,14 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 export function HeroSection() {
+  const t = useTranslations("Landing.hero");
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setLoaded(true), 200);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setLoaded(true), 200);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -22,30 +24,25 @@ export function HeroSection() {
           style={{ paddingTop: "6rem" }}
         >
           <div>
-            <span className="beta-badge">
-              Открытая бета · Бесплатно до 1 мая 2026
-            </span>
+            <span className="beta-badge">{t("betaBadge")}</span>
           </div>
 
           <h1 className="hero-headline">
-            Редактор
+            {t("headline1")}
             <br />
-            сценариев.
+            {t("headline2")}
             <br />
-            <span className="accent">Сделан для кино.</span>
+            <span className="accent">{t("headline3")}</span>
           </h1>
 
-          <p className="hero-subtitle">
-            Не Google Docs. Не Final Draft. Профессиональный инструмент
-            с AI-помощником — прямо в браузере, на русском языке.
-          </p>
+          <p className="hero-subtitle">{t("subtitle")}</p>
 
           <div className="flex flex-wrap items-center gap-4">
             <Link href="/sign-up" className="btn-primary">
-              Попробовать бесплатно
+              {t("cta")}
             </Link>
             <Link href="/docs" className="btn-secondary">
-              Документация
+              {t("ctaDocs")}
             </Link>
           </div>
 
@@ -53,7 +50,7 @@ export function HeroSection() {
             className="text-xs"
             style={{ color: "var(--l-text-muted)", letterSpacing: "0.05em" }}
           >
-            Бесплатно · Без карты · Без установки
+            {t("bottomNote")}
           </p>
         </div>
       </div>

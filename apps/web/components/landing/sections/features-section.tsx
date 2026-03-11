@@ -1,13 +1,32 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
+import {
+  PenTool,
+  Wand2,
+  MessageSquareText,
+  History,
+  Clapperboard,
+  FileDown,
+} from "lucide-react";
 import { useInView, useTypewriter } from "../hooks";
-import { FEATURES, SCREENPLAY, SIDEBAR_SCENES } from "../data";
+import { SCREENPLAY, SIDEBAR_SCENES } from "../data";
+
+const FEATURE_KEYS = [
+  { key: "formatting", icon: PenTool },
+  { key: "rewrite", icon: Wand2 },
+  { key: "chat", icon: MessageSquareText },
+  { key: "versions", icon: History },
+  { key: "series", icon: Clapperboard },
+  { key: "export", icon: FileDown },
+] as const;
 
 export function FeaturesSection() {
   const [ref, visible] = useInView();
   const [started, setStarted] = useState(false);
   const tw = useTypewriter(SCREENPLAY, 28);
+  const t = useTranslations("Landing.features");
 
   useEffect(() => {
     if (visible && !started) {
@@ -32,8 +51,8 @@ export function FeaturesSection() {
               maxWidth: 600,
             }}
           >
-            Всё что нужно{" "}
-            <span style={{ color: "var(--l-accent)" }}>сценаристу</span>
+            {t("title")}{" "}
+            <span style={{ color: "var(--l-accent)" }}>{t("titleAccent")}</span>
           </h2>
         </div>
 
@@ -48,7 +67,7 @@ export function FeaturesSection() {
               <div className="editor-dot" style={{ background: "#febc2e" }} />
               <div className="editor-dot" style={{ background: "#28c840" }} />
               <span className="ml-3 text-xs" style={{ color: "#52525b" }}>
-                Без названия — YOMI Script
+                {t("mockupTitle")}
               </span>
             </div>
 
@@ -61,7 +80,7 @@ export function FeaturesSection() {
                     borderBottom: "1px solid #1a1a22",
                   }}
                 >
-                  Сцены
+                  {t("mockupScenes")}
                 </div>
                 {SIDEBAR_SCENES.map((s) => (
                   <div
@@ -98,53 +117,56 @@ export function FeaturesSection() {
             gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
           }}
         >
-          {FEATURES.map((feat, i) => (
-            <div
-              key={feat.title}
-              className={`reveal feature-card${i === 0 ? " large" : ""}`}
-              style={{ background: "var(--l-bg)" }}
-            >
-              {i === 0 ? (
-                <div className="flex flex-col sm:flex-row gap-6 items-start">
-                  <div className="feature-icon">
-                    <feat.icon size={22} />
+          {FEATURE_KEYS.map((feat, i) => {
+            const Icon = feat.icon;
+            return (
+              <div
+                key={feat.key}
+                className={`reveal feature-card${i === 0 ? " large" : ""}`}
+                style={{ background: "var(--l-bg)" }}
+              >
+                {i === 0 ? (
+                  <div className="flex flex-col sm:flex-row gap-6 items-start">
+                    <div className="feature-icon">
+                      <Icon size={22} />
+                    </div>
+                    <div>
+                      <h3
+                        className="text-lg sm:text-xl font-semibold mb-2"
+                        style={{ color: "var(--l-text)" }}
+                      >
+                        {t(`${feat.key}.title`)}
+                      </h3>
+                      <p
+                        className="text-sm sm:text-base leading-relaxed"
+                        style={{ color: "var(--l-text-dim)", maxWidth: 560 }}
+                      >
+                        {t(`${feat.key}.desc`)}
+                      </p>
+                    </div>
                   </div>
-                  <div>
+                ) : (
+                  <>
+                    <div className="feature-icon">
+                      <Icon size={20} />
+                    </div>
                     <h3
-                      className="text-lg sm:text-xl font-semibold mb-2"
+                      className="text-base font-semibold mb-2"
                       style={{ color: "var(--l-text)" }}
                     >
-                      {feat.title}
+                      {t(`${feat.key}.title`)}
                     </h3>
                     <p
-                      className="text-sm sm:text-base leading-relaxed"
-                      style={{ color: "var(--l-text-dim)", maxWidth: 560 }}
+                      className="text-sm leading-relaxed"
+                      style={{ color: "var(--l-text-dim)" }}
                     >
-                      {feat.desc}
+                      {t(`${feat.key}.desc`)}
                     </p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="feature-icon">
-                    <feat.icon size={20} />
-                  </div>
-                  <h3
-                    className="text-base font-semibold mb-2"
-                    style={{ color: "var(--l-text)" }}
-                  >
-                    {feat.title}
-                  </h3>
-                  <p
-                    className="text-sm leading-relaxed"
-                    style={{ color: "var(--l-text-dim)" }}
-                  >
-                    {feat.desc}
-                  </p>
-                </>
-              )}
-            </div>
-          ))}
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -1,10 +1,17 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useInView } from "../hooks";
-import { AUDIENCE } from "../data";
+
+const items = [
+  { emoji: "✍️", key: "screenwriters" },
+  { emoji: "📺", key: "showrunners" },
+  { emoji: "🎬", key: "producers" },
+];
 
 export function AudienceSection() {
   const [ref, visible] = useInView();
+  const t = useTranslations("Landing.audience");
 
   return (
     <section ref={ref} className="landing-section">
@@ -18,15 +25,15 @@ export function AudienceSection() {
               letterSpacing: "-0.02em",
             }}
           >
-            Кому подходит YOMI Script
+            {t("title")}
           </h2>
         </div>
 
         <div
           className={`stagger ${visible ? "visible" : ""} grid gap-8 sm:grid-cols-3 mt-12`}
         >
-          {AUDIENCE.map((a) => (
-            <div key={a.title} className="reveal audience-card">
+          {items.map((a) => (
+            <div key={a.key} className="reveal audience-card">
               <div className="audience-icon">
                 <span className="text-2xl">{a.emoji}</span>
               </div>
@@ -34,13 +41,13 @@ export function AudienceSection() {
                 className="text-lg font-semibold mb-2"
                 style={{ color: "var(--l-text)" }}
               >
-                {a.title}
+                {t(`${a.key}.title`)}
               </h3>
               <p
                 className="text-sm leading-relaxed"
                 style={{ color: "var(--l-text-dim)" }}
               >
-                {a.desc}
+                {t(`${a.key}.desc`)}
               </p>
             </div>
           ))}

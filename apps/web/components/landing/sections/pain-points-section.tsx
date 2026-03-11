@@ -1,10 +1,17 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useInView } from "../hooks";
-import { PAIN_POINTS } from "../data";
+
+const PAIN_ITEMS = [
+  { key: "googleDocs", emoji: "📄" },
+  { key: "finalDraft", emoji: "💸" },
+  { key: "whatsapp", emoji: "💬" },
+] as const;
 
 export function PainPointsSection() {
   const [ref, visible] = useInView();
+  const t = useTranslations("Landing.painPoints");
 
   return (
     <section ref={ref} className="landing-section">
@@ -18,27 +25,27 @@ export function PainPointsSection() {
               letterSpacing: "-0.02em",
             }}
           >
-            Как вы пишете сейчас?
+            {t("title")}
           </h2>
         </div>
 
         <div
           className={`stagger ${visible ? "visible" : ""} grid gap-6 sm:grid-cols-3 mt-12`}
         >
-          {PAIN_POINTS.map((pain) => (
-            <div key={pain.title} className="reveal pain-card">
+          {PAIN_ITEMS.map((pain) => (
+            <div key={pain.key} className="reveal pain-card">
               <div className="text-3xl mb-4">{pain.emoji}</div>
               <h3
                 className="text-lg font-semibold mb-3"
                 style={{ color: "var(--l-text)" }}
               >
-                {pain.title}
+                {t(`${pain.key}.title`)}
               </h3>
               <p
                 className="text-sm leading-relaxed"
                 style={{ color: "var(--l-text-dim)" }}
               >
-                {pain.desc}
+                {t(`${pain.key}.desc`)}
               </p>
             </div>
           ))}
@@ -52,7 +59,7 @@ export function PainPointsSection() {
               fontFamily: "var(--font-display)",
             }}
           >
-            YOMI Script — это один инструмент вместо трёх.
+            {t("conclusion")}
           </p>
         </div>
       </div>

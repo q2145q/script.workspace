@@ -2,16 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "../landing.css";
 import "../docs.css";
-import { DocsHeader } from "../../components/docs/docs-header";
-import { DocsFooter } from "../../components/docs/docs-footer";
-import { DocsNav } from "../../components/docs/docs-nav";
-import { MockupEditor } from "../../components/docs/mockup-editor";
-import { MockupRewrite } from "../../components/docs/mockup-rewrite";
-import { MockupChat } from "../../components/docs/mockup-chat";
-import { MockupWorkspace } from "../../components/docs/mockup-workspace";
-import { MockupSceneBoard } from "../../components/docs/mockup-scene-board";
-import { MockupSelectionToolbar } from "../../components/docs/mockup-selection-toolbar";
-import { Kbd } from "../../components/docs/kbd";
+import { DocsHeader } from "@/components/docs/docs-header";
+import { DocsFooter } from "@/components/docs/docs-footer";
+import { DocsNav } from "@/components/docs/docs-nav";
+import { MockupEditor } from "@/components/docs/mockup-editor";
+import { MockupRewrite } from "@/components/docs/mockup-rewrite";
+import { MockupChat } from "@/components/docs/mockup-chat";
+import { MockupWorkspace } from "@/components/docs/mockup-workspace";
+import { MockupSceneBoard } from "@/components/docs/mockup-scene-board";
+import { MockupSelectionToolbar } from "@/components/docs/mockup-selection-toolbar";
+import { Kbd } from "@/components/docs/kbd";
 
 export const metadata: Metadata = {
   title: "Документация — YOMI Script",

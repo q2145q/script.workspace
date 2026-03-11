@@ -1,9 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useInView } from "../hooks";
 import { PROVIDERS } from "../data";
 
 export function AISection() {
+  const t = useTranslations("Landing.ai");
   const [ref, visible] = useInView();
 
   return (
@@ -13,18 +15,14 @@ export function AISection() {
           <hr className="editorial-rule" style={{ marginBottom: "3rem" }} />
 
           <blockquote className="pull-quote">
-            Застряли на сцене? Попросите переписать.
-            Диалог звучит деревянно? Покажите — получите варианты.
-            AI объяснит что работает и почему.
+            {t("quote")}
           </blockquote>
 
           <p
             className="mt-8 text-base leading-relaxed"
             style={{ color: "var(--l-text-dim)", maxWidth: 600 }}
           >
-            В кино давно привыкли работать с командой. Редактор, режиссёр,
-            продюсер — каждый помогает истории стать лучше. AI в Script
-            Workspace — такой же участник процесса. Не замена автору.
+            {t("description")}
           </p>
 
           <div className="mt-10">
@@ -36,7 +34,7 @@ export function AISection() {
                 textTransform: "uppercase",
               }}
             >
-              Доступные модели
+              {t("modelsLabel")}
             </p>
             <p
               className="text-sm"

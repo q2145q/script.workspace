@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "../landing.css";
 import "../docs.css";
-import { DocsHeader } from "../../components/docs/docs-header";
-import { DocsFooter } from "../../components/docs/docs-footer";
-import { MockupEditor } from "../../components/docs/mockup-editor";
-import { MockupWorkspace } from "../../components/docs/mockup-workspace";
-import { MockupRewrite } from "../../components/docs/mockup-rewrite";
-import { MockupChat } from "../../components/docs/mockup-chat";
-import { MockupSelectionToolbar } from "../../components/docs/mockup-selection-toolbar";
-import { Kbd } from "../../components/docs/kbd";
+import { DocsHeader } from "@/components/docs/docs-header";
+import { DocsFooter } from "@/components/docs/docs-footer";
+import { MockupEditor } from "@/components/docs/mockup-editor";
+import { MockupWorkspace } from "@/components/docs/mockup-workspace";
+import { MockupRewrite } from "@/components/docs/mockup-rewrite";
+import { MockupChat } from "@/components/docs/mockup-chat";
+import { MockupSelectionToolbar } from "@/components/docs/mockup-selection-toolbar";
+import { Kbd } from "@/components/docs/kbd";
 
 export const metadata: Metadata = {
   title: "Руководство — YOMI Script",

@@ -1,9 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useInView } from "../hooks";
 
 export function YomiSection() {
   const [ref, visible] = useInView();
+  const t = useTranslations("Landing.yomi");
 
   return (
     <section ref={ref} className="landing-section">
@@ -17,8 +19,8 @@ export function YomiSection() {
               letterSpacing: "-0.02em",
             }}
           >
-            YOMI делает сервисы для кино.{" "}
-            <span style={{ color: "var(--l-accent)" }}>Прямо под вас.</span>
+            {t("title1")}{" "}
+            <span style={{ color: "var(--l-accent)" }}>{t("title2")}</span>
           </h2>
         </div>
 
@@ -28,13 +30,10 @@ export function YomiSection() {
             style={{ color: "var(--l-text-dim)" }}
           >
             <p>
-              Мы — команда, которая работает в кинопроизводстве и делает
-              инструменты для индустрии. Не универсальные продукты «для всех», а
-              сервисы, которые понимают специфику вашей работы: как устроен
-              сценарный процесс, как работают продакшны, что нужно шоураннеру.
+              {t("description1")}
             </p>
             <p style={{ color: "var(--l-text)" }}>
-              YOMI Script — первый продукт YOMI. Но не последний.
+              {t("description2")}
             </p>
           </div>
         </div>

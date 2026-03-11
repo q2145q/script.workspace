@@ -1,9 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useInView } from "../hooks";
 
 export function BetaStorySection() {
   const [ref, visible] = useInView();
+  const t = useTranslations("Landing.betaStory");
 
   return (
     <section ref={ref} className="landing-section">
@@ -17,8 +19,8 @@ export function BetaStorySection() {
               letterSpacing: "-0.02em",
             }}
           >
-            Мы в открытой бете.{" "}
-            <span style={{ color: "var(--l-accent)" }}>Это важно.</span>
+            {t("title1")}{" "}
+            <span style={{ color: "var(--l-accent)" }}>{t("title2")}</span>
           </h2>
         </div>
 
@@ -27,7 +29,7 @@ export function BetaStorySection() {
             className="text-base text-center mb-8"
             style={{ color: "var(--l-text-dim)" }}
           >
-            YOMI Script — молодой продукт. Мы не скрываем это.
+            {t("subtitle")}
           </p>
 
           <div className="grid gap-8 sm:grid-cols-2">
@@ -36,7 +38,7 @@ export function BetaStorySection() {
                 className="text-base font-semibold mb-4"
                 style={{ color: "var(--l-text)" }}
               >
-                Что это значит для вас
+                {t("forYouTitle")}
               </h3>
               <ul
                 className="space-y-3 text-sm leading-relaxed"
@@ -44,15 +46,15 @@ export function BetaStorySection() {
               >
                 <li className="flex gap-2">
                   <span style={{ color: "var(--l-accent)" }}>→</span>
-                  Бесплатный PRO-доступ пока идёт бета (до 1 мая 2026)
+                  {t("forYou1")}
                 </li>
                 <li className="flex gap-2">
                   <span style={{ color: "var(--l-accent)" }}>→</span>
-                  Ваш фидбек напрямую влияет на то, что мы делаем дальше
+                  {t("forYou2")}
                 </li>
                 <li className="flex gap-2">
                   <span style={{ color: "var(--l-accent)" }}>→</span>
-                  Вы будете среди первых, кто освоил инструмент до его роста
+                  {t("forYou3")}
                 </li>
               </ul>
             </div>
@@ -62,7 +64,7 @@ export function BetaStorySection() {
                 className="text-base font-semibold mb-4"
                 style={{ color: "var(--l-text)" }}
               >
-                Что мы гарантируем
+                {t("guaranteeTitle")}
               </h3>
               <ul
                 className="space-y-3 text-sm leading-relaxed"
@@ -70,15 +72,15 @@ export function BetaStorySection() {
               >
                 <li className="flex gap-2">
                   <span style={{ color: "var(--l-accent)" }}>→</span>
-                  Ваши сценарии в безопасности (шифрование AES-256-GCM)
+                  {t("guarantee1")}
                 </li>
                 <li className="flex gap-2">
                   <span style={{ color: "var(--l-accent)" }}>→</span>
-                  Мы не используем ваш текст для обучения моделей
+                  {t("guarantee2")}
                 </li>
                 <li className="flex gap-2">
                   <span style={{ color: "var(--l-accent)" }}>→</span>
-                  Поддержка отвечает в течение 24 часов
+                  {t("guarantee3")}
                 </li>
               </ul>
             </div>

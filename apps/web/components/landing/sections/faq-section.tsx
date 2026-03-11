@@ -2,12 +2,18 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useInView } from "../hooks";
-import { FAQ } from "../data";
 
 export function FAQSection() {
   const [ref, visible] = useInView();
   const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const t = useTranslations("Landing.faq");
+
+  const faqItems = Array.from({ length: 9 }, (_, i) => ({
+    q: t(`q${i + 1}`),
+    a: t(`a${i + 1}`),
+  }));
 
   return (
     <section ref={ref} className="landing-section">
@@ -21,12 +27,12 @@ export function FAQSection() {
               letterSpacing: "-0.02em",
             }}
           >
-            Частые вопросы
+            {t("title")}
           </h2>
         </div>
 
         <div className={`reveal ${visible ? "visible" : ""}`}>
-          {FAQ.map((item, i) => (
+          {faqItems.map((item, i) => (
             <div
               key={i}
               className={`faq-item ${openIdx === i ? "open" : ""}`}
