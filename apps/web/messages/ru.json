@@ -68,6 +68,7 @@
     "emailSent": "Письмо отправлено повторно",
     "loading": "Загрузка...",
     "verifyAccount": "Верифицировать аккаунт",
+    "skipForNow": "Пропустить",
     "backToSignIn": "Вернуться к входу",
     "forgotPassword": "Забыли пароль?",
     "forgotPasswordDescription": "Введите email, и мы отправим ссылку для сброса пароля.",

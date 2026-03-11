@@ -3,6 +3,7 @@ import { prismaAdapter } from "@better-auth/prisma-adapter";
 import { prisma } from "@script/db";
 import { sendEmail, resetPasswordTemplate } from "./email";
 import { notifyTelegramNewUser, sendResetLinkViaTelegram } from "./telegram";
+import { createTelegramVerifyToken } from "./telegram-verify";
 
 const defaultOrigins =
   process.env.NODE_ENV === "production"
@@ -42,6 +43,12 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
+          // Create Telegram verification token
+          try {
+            await createTelegramVerifyToken(user.id, user.email);
+          } catch (err) {
+            console.error("[auth] Failed to create verification token:", err);
+          }
           // Notify admin about new registration
           try {
             await notifyTelegramNewUser(user);

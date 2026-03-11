@@ -96,7 +96,7 @@ export default function SignUpPage() {
       // Profile creation is non-critical — will be created lazily on first access
     }
 
-    router.push("/dashboard");
+    router.push("/verify-telegram?email=" + encodeURIComponent(email));
   }
 
   const getInputClass = (field: string) => fieldErrors[field] ? inputErrorClass : inputClass;
