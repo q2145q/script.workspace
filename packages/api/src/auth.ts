@@ -3,7 +3,6 @@ import { prismaAdapter } from "@better-auth/prisma-adapter";
 import { prisma } from "@script/db";
 import { sendEmail, resetPasswordTemplate } from "./email";
 import { notifyTelegramNewUser, sendResetLinkViaTelegram } from "./telegram";
-import { createTelegramVerifyToken } from "./telegram-verify";
 
 const defaultOrigins =
   process.env.NODE_ENV === "production"
@@ -20,7 +19,7 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: true,
+    requireEmailVerification: false,
     sendResetPassword: async ({ user, url }) => {
       const dbUser = await prisma.user.findUnique({
         where: { id: user.id },
@@ -39,24 +38,18 @@ export const auth = betterAuth({
       }
     },
   },
-  emailVerification: {
-    sendOnSignUp: true,
-    autoSignInAfterVerification: true,
-    sendVerificationEmail: async ({ user }) => {
-      // Generate Telegram verification token instead of email
-      try {
-        await createTelegramVerifyToken(user.id, user.email);
-      } catch (err) {
-        // Don't fail signup if token creation fails — user can resend from verify page
-        console.error("[auth] Failed to create verification token:", err);
-      }
-
-      // Notify admin about new registration
-      try {
-        await notifyTelegramNewUser(user);
-      } catch (err) {
-        console.error("[telegram] Failed to notify admin:", err);
-      }
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          // Notify admin about new registration
+          try {
+            await notifyTelegramNewUser(user);
+          } catch (err) {
+            console.error("[telegram] Failed to notify admin:", err);
+          }
+        },
+      },
     },
   },
   trustedOrigins,

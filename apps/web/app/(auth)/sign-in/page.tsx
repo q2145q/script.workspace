@@ -21,7 +21,6 @@ export default function SignInPage() {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [unverifiedEmail, setUnverifiedEmail] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,12 +47,7 @@ export default function SignInPage() {
     });
 
     if (error) {
-      const msg = error.message ?? t("failedSignIn");
-      setError(msg);
-      // Better Auth returns "Email is not verified" for unverified accounts
-      if (error.code === "EMAIL_NOT_VERIFIED" || msg.toLowerCase().includes("not verified")) {
-        setUnverifiedEmail(email);
-      }
+      setError(error.message ?? t("failedSignIn"));
       setLoading(false);
     } else {
       router.push("/dashboard");
@@ -135,15 +129,6 @@ export default function SignInPage() {
           {loading ? t("signingIn") : t("signIn")}
         </button>
       </form>
-
-      {unverifiedEmail && (
-        <Link
-          href={`/verify-telegram?email=${encodeURIComponent(unverifiedEmail)}`}
-          className="mt-3 flex w-full items-center justify-center rounded-lg border border-cinema bg-cinema/10 px-3 py-2.5 text-sm font-medium text-cinema transition-all duration-200 hover:bg-cinema/20"
-        >
-          {t("verifyAccount")}
-        </Link>
-      )}
 
       <p className="mt-4 text-center text-sm text-muted-foreground">
         {t("noAccount")}{" "}
