@@ -20,7 +20,7 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false,
+    requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
       const dbUser = await prisma.user.findUnique({
         where: { id: user.id },

@@ -42,7 +42,7 @@ function VerifyTelegramContent() {
 
   useEffect(() => {
     if (verifyQuery.data?.verified) {
-      router.push("/dashboard");
+      router.push("/sign-in?verified=true");
     }
   }, [verifyQuery.data?.verified, router]);
 
@@ -121,12 +121,14 @@ function VerifyTelegramContent() {
           {resendMutation.isPending ? "..." : t("resendVerification")}
         </button>
 
-        <Link
-          href="/dashboard"
-          className="flex w-full items-center justify-center rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground"
-        >
-          {t("skipForNow")}
-        </Link>
+        <p className="text-center text-sm text-muted-foreground">
+          <Link
+            href="/sign-in"
+            className="text-cinema transition-colors hover:underline"
+          >
+            {t("backToSignIn")}
+          </Link>
+        </p>
       </div>
     </motion.div>
   );
