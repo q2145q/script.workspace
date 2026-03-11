@@ -21,13 +21,10 @@ export default function SignInPage() {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [unverifiedEmail, setUnverifiedEmail] = useState("");
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setFieldErrors({});
-    setUnverifiedEmail("");
 
     const result = signInSchema.safeParse({ email, password });
     if (!result.success) {
@@ -62,8 +59,8 @@ export default function SignInPage() {
         msg.toLowerCase().includes("forbidden");
 
       if (isUnverified) {
-        setError(t("telegramNotVerified"));
-        setUnverifiedEmail(email);
+        router.push(`/verify-telegram?email=${encodeURIComponent(email)}`);
+        return;
       } else {
         setError(msg || t("failedSignIn"));
       }
@@ -148,15 +145,6 @@ export default function SignInPage() {
           {loading ? t("signingIn") : t("signIn")}
         </button>
       </form>
-
-      {unverifiedEmail && (
-        <Link
-          href={`/verify-telegram?email=${encodeURIComponent(unverifiedEmail)}`}
-          className="mt-3 flex w-full items-center justify-center rounded-lg border border-cinema bg-cinema/10 px-3 py-2.5 text-sm font-medium text-cinema transition-all duration-200 hover:bg-cinema/20"
-        >
-          {t("verifyAccount")}
-        </Link>
-      )}
 
       <p className="mt-4 text-center text-sm text-muted-foreground">
         {t("noAccount")}{" "}
