@@ -49,10 +49,18 @@ export default function SignInPage() {
     });
 
     if (error) {
-      const msg = error.message ?? t("failedSignIn");
-      setError(msg);
-      if (error.code === "EMAIL_NOT_VERIFIED" || msg.toLowerCase().includes("not verified")) {
+      const msg = error.message ?? "";
+      const code = error.code ?? "";
+      // Better Auth: code "EMAIL_NOT_VERIFIED", message "Email not verified", status 403
+      const isUnverified =
+        code === "EMAIL_NOT_VERIFIED" ||
+        msg.toLowerCase().includes("email not verified");
+
+      if (isUnverified) {
+        setError(t("telegramNotVerified"));
         setUnverifiedEmail(email);
+      } else {
+        setError(msg || t("failedSignIn"));
       }
       setLoading(false);
     } else {

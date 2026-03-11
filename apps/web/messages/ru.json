@@ -51,6 +51,7 @@
     "noAccount": "Нет аккаунта?",
     "hasAccount": "Уже есть аккаунт?",
     "failedSignIn": "Не удалось войти",
+    "telegramNotVerified": "Аккаунт не верифицирован. Подтвердите аккаунт через Telegram.",
     "failedSignUp": "Не удалось зарегистрироваться",
     "validationEmail": "Введите корректный email",
     "validationPassword": "Пароль должен быть не менее 8 символов",
