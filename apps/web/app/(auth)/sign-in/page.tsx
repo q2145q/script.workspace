@@ -59,7 +59,8 @@ export default function SignInPage() {
         msg.toLowerCase().includes("forbidden");
 
       if (isUnverified) {
-        router.push(`/verify-telegram?email=${encodeURIComponent(email)}`);
+        setLoading(false);
+        window.location.href = `/verify-telegram?email=${encodeURIComponent(email)}`;
         return;
       } else {
         setError(msg || t("failedSignIn"));
