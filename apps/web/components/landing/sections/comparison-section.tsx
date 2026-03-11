@@ -51,7 +51,7 @@ export function ComparisonSection() {
             gap: "1.5rem",
           }}
         >
-          {/* Script Workspace — hero card */}
+          {/* YOMI Script — hero card */}
           <div className="reveal comparison-hero-card">
             <div className="flex items-center gap-3 mb-6">
               <span
@@ -61,7 +61,7 @@ export function ComparisonSection() {
                   fontWeight: 700,
                 }}
               >
-                Script Workspace
+                YOMI Script
               </span>
               <span
                 className="text-xs"

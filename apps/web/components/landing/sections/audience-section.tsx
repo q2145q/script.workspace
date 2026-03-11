@@ -18,7 +18,7 @@ export function AudienceSection() {
               letterSpacing: "-0.02em",
             }}
           >
-            Кому подходит Script Workspace
+            Кому подходит YOMI Script
           </h2>
         </div>
 

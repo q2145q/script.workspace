@@ -48,7 +48,7 @@ export function FeaturesSection() {
               <div className="editor-dot" style={{ background: "#febc2e" }} />
               <div className="editor-dot" style={{ background: "#28c840" }} />
               <span className="ml-3 text-xs" style={{ color: "#52525b" }}>
-                Без названия — Script Workspace
+                Без названия — YOMI Script
               </span>
             </div>
 

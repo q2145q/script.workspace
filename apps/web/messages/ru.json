@@ -34,7 +34,7 @@
     "signingIn": "Вход...",
     "creatingAccount": "Создание аккаунта...",
     "createAccount": "Создать аккаунт",
-    "welcomeBack": "Добро пожаловать в Script Workspace",
+    "welcomeBack": "Добро пожаловать в YOMI Script",
     "startWriting": "Начните писать свой сценарий",
     "email": "Электронная почта",
     "emailPlaceholder": "you@example.com",
@@ -57,7 +57,7 @@
     "validationName": "Введите имя",
     "validationLastName": "Введите фамилию",
     "betaQueueTitle": "Вы в очереди на подключение к бета-версии",
-    "betaQueueDescription": "Мы уведомим вас через Telegram, когда ваш аккаунт будет одобрен. Спасибо за интерес к Script Workspace!",
+    "betaQueueDescription": "Мы уведомим вас через Telegram, когда ваш аккаунт будет одобрен. Спасибо за интерес к YOMI Script!",
     "verifyEmailTitle": "Подтвердите email",
     "verifyEmailDescription": "Мы отправили письмо с ссылкой для подтверждения на вашу почту.",
     "verifyTelegramTitle": "Подтвердите аккаунт",
@@ -81,7 +81,7 @@
     "passwordResetRequestDescription": "Если аккаунт с таким email существует, мы отправили ссылку для сброса пароля через Telegram или email."
   },
   "Dashboard": {
-    "title": "Script Workspace",
+    "title": "YOMI Script",
     "projects": "Проекты",
     "projectsSubtitle": "Ваши сценарные проекты",
     "noProjects": "Проектов пока нет",
@@ -243,7 +243,14 @@
     "commentAdded": "Комментарий добавлен",
     "dialoguePassBtn": "Диалог",
     "dialoguePassTitle": "Улучшить диалог: субтекст, голос персонажа, ритм",
-    "shortcuts": "Горячие клавиши"
+    "shortcuts": "Горячие клавиши",
+    "fixGrammarBtn": "Грамматика",
+    "noGrammarErrors": "Ошибок не найдено",
+    "grammarCorrections": "{count, plural, one {# исправление} few {# исправления} other {# исправлений}}",
+    "acceptAll": "Принять все",
+    "accept": "Принять",
+    "reject": "Отклонить",
+    "grammarFixed": "Грамматика исправлена"
   },
   "RightPanel": {
     "comments": "Комментарии",
@@ -617,7 +624,9 @@
     "convertToSections": "Конвертировать в разделы",
     "emptyBibleTitle": "Библия проекта пуста",
     "emptyBibleDescription": "Создайте разделы для организации персонажей, локаций и арок вашей истории.",
-    "createDefaultSections": "Создать разделы по умолчанию"
+    "createDefaultSections": "Создать разделы по умолчанию",
+    "autoPopulate": "Заполнить из сценария",
+    "autoPopulated": "Библия заполнена данными из сценария"
   },
   "Search": {
     "find": "Найти...",

@@ -30,7 +30,7 @@ function extractScenes(editor: Editor): SceneCard[] {
 
   editor.state.doc.descendants((node, pos) => {
     if (node.type.name === "sceneHeading") {
-      const heading = node.textContent || `Scene ${sceneIndex + 1}`;
+      const heading = (node.textContent || `Scene ${sceneIndex + 1}`).toUpperCase();
 
       let preview = "";
       const nextPos = pos + node.nodeSize;
@@ -130,6 +130,7 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const dragNodeRef = useRef<HTMLDivElement | null>(null);
+  const wasDraggingRef = useRef(false);
   const [generatingScene, setGeneratingScene] = useState<string | null>(null);
   const [isGeneratingAll, setIsGeneratingAll] = useState(false);
   const [detailScene, setDetailScene] = useState<SceneCard | null>(null);
@@ -300,6 +301,7 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
 
   const handleDragStart = useCallback(
     (e: React.DragEvent<HTMLDivElement>, index: number) => {
+      wasDraggingRef.current = true;
       setDragIndex(index);
       e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData("text/plain", String(index));
@@ -348,11 +350,13 @@ export function OutlinePanel({ editor, documentId, projectId }: OutlinePanelProp
       dragNodeRef.current.style.opacity = "";
       dragNodeRef.current = null;
     }
+    // Reset drag flag after a short delay so onClick doesn't fire
+    setTimeout(() => { wasDraggingRef.current = false; }, 100);
   }, []);
 
   const handleSceneClick = useCallback(
     (pos: number) => {
-      if (!editor) return;
+      if (!editor || wasDraggingRef.current) return;
       editor.commands.focus();
       editor.commands.setTextSelection(pos + 1);
       const domNode = editor.view.domAtPos(pos + 1);

@@ -185,13 +185,15 @@ export const AutocompleteExtension = Extension.create({
             update(view, prevState) {
               if (Date.now() - mountTime < MOUNT_GRACE_MS) return;
 
-              // Only show autocomplete when user is actively typing
-              // (doc content changed), not on cursor placement alone
               const docChanged = !prevState.doc.eq(view.state.doc);
+              const selectionChanged = !prevState.selection.eq(view.state.selection);
               const prev = autocompletePluginKey.getState(prevState);
 
-              // If doc didn't change and autocomplete is not already active, skip
-              if (!docChanged && !prev?.active) return;
+              // Show autocomplete when:
+              // 1. User is typing (doc changed)
+              // 2. Cursor moved into an autocomplete-eligible node (selection changed)
+              // 3. Autocomplete was already active
+              if (!docChanged && !selectionChanged && !prev?.active) return;
 
               // Reset dismissed flag when the cursor moves or text changes
               const prevDismissed =

@@ -26,7 +26,7 @@ export function SceneNavigator({ editor }: SceneNavigatorProps) {
           index++;
           result.push({
             pos,
-            text: node.textContent || `Scene ${index}`,
+            text: (node.textContent || `Scene ${index}`).toUpperCase(),
             index,
           });
         }

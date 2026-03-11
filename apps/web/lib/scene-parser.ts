@@ -24,15 +24,16 @@ const SCENE_HEADING_RE =
 export function parseSceneHeading(heading: string): {
   intExt: string | null;
   location: string | null;
+  subLocation: string | null;
   timeOfDay: string | null;
 } {
   const match = heading.trim().match(SCENE_HEADING_RE);
   if (!match) {
-    return { intExt: null, location: null, timeOfDay: null };
+    return { intExt: null, location: null, subLocation: null, timeOfDay: null };
   }
 
   const rawIntExt = match[1].toUpperCase();
-  const location = match[2]?.trim() || null;
+  const rawLocation = match[2]?.trim() || null;
   const timeOfDay = match[3]?.trim() || null;
 
   // Normalize INT/EXT
@@ -45,7 +46,23 @@ export function parseSceneHeading(heading: string): {
     intExt = "EXT";
   }
 
-  return { intExt, location, timeOfDay };
+  // Split location into main location and sub-location by period separator
+  // e.g. "КВАРТИРА 1. ЛИФТ" → location: "КВАРТИРА 1", subLocation: "ЛИФТ"
+  let location: string | null = rawLocation;
+  let subLocation: string | null = null;
+  if (rawLocation) {
+    const dotIdx = rawLocation.indexOf(". ", 0);
+    if (dotIdx !== -1) {
+      const before = rawLocation.slice(0, dotIdx).trim();
+      const after = rawLocation.slice(dotIdx + 2).trim();
+      if (before && after) {
+        location = before;
+        subLocation = after;
+      }
+    }
+  }
+
+  return { intExt, location, subLocation, timeOfDay };
 }
 
 /**

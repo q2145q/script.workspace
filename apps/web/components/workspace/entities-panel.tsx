@@ -33,29 +33,34 @@ interface EntitiesPanelProps {
   hideTabs?: boolean;
 }
 
-// Extract unique character names from editor document
+// Extract unique character names from editor document, sorted by mention count (descending)
 function extractCharacterNames(editor: Editor): string[] {
-  const names = new Set<string>();
+  const counts = new Map<string, number>();
   editor.state.doc.descendants((node) => {
     if (node.type.name === "character" && node.textContent.trim()) {
-      names.add(node.textContent.trim());
+      const name = node.textContent.trim();
+      counts.set(name, (counts.get(name) ?? 0) + 1);
     }
   });
-  return Array.from(names).sort();
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([name]) => name);
 }
 
-// Extract unique location names from scene headings
+// Extract unique location names from scene headings, sorted by occurrence count (descending)
 function extractLocationNames(editor: Editor): string[] {
-  const locations = new Set<string>();
+  const counts = new Map<string, number>();
   editor.state.doc.descendants((node) => {
     if (node.type.name === "sceneHeading" && node.textContent.trim()) {
       const parsed = parseSceneHeading(node.textContent.trim());
       if (parsed.location) {
-        locations.add(parsed.location);
+        counts.set(parsed.location, (counts.get(parsed.location) ?? 0) + 1);
       }
     }
   });
-  return Array.from(locations).sort();
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([name]) => name);
 }
 
 const TABS: { key: EntityTab; labelKey: "characters" | "locations" | "glossary"; icon: typeof Users }[] = [
@@ -541,6 +546,7 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
   );
 
   const [aiDescribingId, setAiDescribingId] = useState<string | null>(null);
+  const [isGeneratingAll, setIsGeneratingAll] = useState(false);
   const describeLocMutation = useMutation(
     trpc.ai.describeLocation.mutationOptions({
       onError: (err) => {
@@ -564,6 +570,35 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
       updateMutation.mutate({ id: locId, description: result.description });
     } finally {
       setAiDescribingId(null);
+    }
+  };
+
+  const handleGenerateAllDescriptions = async () => {
+    if (locations.length === 0) return;
+    setIsGeneratingAll(true);
+    const context = editor
+      ? editor.state.doc.textBetween(0, Math.min(editor.state.doc.content.size, 10000), "\n")
+      : "";
+    try {
+      for (const loc of locations) {
+        if (loc.description) continue;
+        const result = await describeLocMutation.mutateAsync({
+          projectId,
+          locationName: loc.name,
+          locationContext: context,
+        });
+        updateMutation.mutate({ id: loc.id, description: result.description });
+      }
+      toast.success(t("allDescriptionsGenerated"));
+    } finally {
+      setIsGeneratingAll(false);
+    }
+  };
+
+  const handleAddAllSuggested = () => {
+    if (unsavedDetectedLocs.length === 0) return;
+    for (const locName of unsavedDetectedLocs) {
+      createMutation.mutate({ projectId, name: locName });
     }
   };
 
@@ -613,7 +648,21 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
 
   return (
     <div>
-      <div className="flex justify-end px-3 py-2">
+      <div className="flex flex-wrap items-center justify-end gap-1 px-3 py-2">
+        {locations.length > 0 && (
+          <button
+            onClick={handleGenerateAllDescriptions}
+            disabled={isGeneratingAll || describeLocMutation.isPending}
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-cinema disabled:opacity-50"
+          >
+            {isGeneratingAll ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Sparkles className="h-3 w-3" />
+            )}
+            {t("generateAllDescriptions")}
+          </button>
+        )}
         <button
           onClick={() => {
             resetForm();
@@ -750,9 +799,19 @@ function LocationsTab({ projectId, editor }: { projectId: string; editor?: Edito
       {/* Detected from Script */}
       {editor && unsavedDetectedLocs.length > 0 && (
         <div className="border-t border-border p-2">
-          <p className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            {t("detectedInScript")}
-          </p>
+          <div className="flex items-center justify-between px-3 py-1">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {t("detectedInScript")}
+            </p>
+            <button
+              onClick={handleAddAllSuggested}
+              disabled={createMutation.isPending}
+              className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-cinema hover:bg-cinema/10 disabled:opacity-50"
+            >
+              <Plus className="h-2.5 w-2.5" />
+              {t("addAll")}
+            </button>
+          </div>
           <div className="space-y-0.5">
             {unsavedDetectedLocs.map((detectedName) => (
               <div

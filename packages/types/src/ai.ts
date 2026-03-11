@@ -327,3 +327,29 @@ export const analyzePacingSchema = z.object({
   projectId: z.string(),
   text: z.string().min(1),
 });
+
+// ============================================================
+// Fix Grammar
+// ============================================================
+
+export const grammarCorrectionSchema = z.object({
+  original: z.string(),
+  corrected: z.string(),
+  explanation: z.string(),
+});
+export type GrammarCorrection = z.infer<typeof grammarCorrectionSchema>;
+
+export const grammarResultSchema = z.object({
+  corrections: z.array(grammarCorrectionSchema),
+});
+export type GrammarResult = z.infer<typeof grammarResultSchema>;
+
+export const fixGrammarSchema = z.object({
+  documentId: z.string(),
+  selectionFrom: z.number().int().min(0),
+  selectionTo: z.number().int().min(0),
+  selectedText: z.string().min(1),
+  contextBefore: z.string().max(2000).default(""),
+  contextAfter: z.string().max(2000).default(""),
+});
+export type FixGrammarInput = z.infer<typeof fixGrammarSchema>;

@@ -33,7 +33,7 @@ export const auth = betterAuth({
         // Fallback to email (will work when SMTP is available)
         await sendEmail({
           to: user.email,
-          subject: "Script Workspace — Сброс пароля",
+          subject: "YOMI Script — Сброс пароля",
           html: resetPasswordTemplate(user.name, url),
         });
       }
@@ -44,7 +44,12 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user }) => {
       // Generate Telegram verification token instead of email
-      await createTelegramVerifyToken(user.id, user.email);
+      try {
+        await createTelegramVerifyToken(user.id, user.email);
+      } catch (err) {
+        // Don't fail signup if token creation fails — user can resend from verify page
+        console.error("[auth] Failed to create verification token:", err);
+      }
 
       // Notify admin about new registration
       try {

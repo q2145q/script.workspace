@@ -5,6 +5,8 @@ export type SaveState = "idle" | "saving" | "saved" | "error";
 
 export interface AutosaveResult {
   handleUpdate: (content: JSONContent) => void;
+  /** Immediately save any pending content. Returns a promise that resolves when save completes. */
+  flush: () => Promise<void>;
   saveState: SaveState;
   lastSavedAt: Date | null;
 }
@@ -46,6 +48,25 @@ export function useEditorAutosave(
     [delay]
   );
 
+  const flush = useCallback(async () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    timeoutRef.current = null;
+
+    if (latestContent.current) {
+      const contentToSave = latestContent.current;
+      latestContent.current = null;
+      setSaveState("saving");
+      try {
+        await saveFnRef.current(contentToSave);
+        setSaveState("saved");
+        setLastSavedAt(new Date());
+      } catch {
+        setSaveState("error");
+      }
+    }
+  }, []);
+
   useEffect(() => {
     return () => {
       // Cancel debounce timer
@@ -61,5 +82,5 @@ export function useEditorAutosave(
     };
   }, []);
 
-  return { handleUpdate, saveState, lastSavedAt };
+  return { handleUpdate, flush, saveState, lastSavedAt };
 }

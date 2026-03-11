@@ -370,8 +370,12 @@ export default function UsagePage() {
           </thead>
           <tbody>
             {byUser.map((u) => (
-              <tr key={u.userId}>
-                <td className="font-medium">{u.user.name}</td>
+              <tr
+                key={u.userId}
+                className="cursor-pointer hover:bg-accent/5"
+                onClick={() => window.location.href = `/users/${u.userId}`}
+              >
+                <td className="font-medium text-accent">{u.user.name}</td>
                 <td className="text-muted-foreground">{u.user.email}</td>
                 <td>{formatNum(u._count)}</td>
                 <td>{formatNum(u._sum.tokensIn || 0)}</td>

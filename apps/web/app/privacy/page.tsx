@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Политика конфиденциальности — Script Workspace",
-  description: "Политика конфиденциальности сервиса Script Workspace от YOMI Film",
+  title: "Политика конфиденциальности — YOMI Script",
+  description: "Политика конфиденциальности сервиса YOMI Script от YOMI Film",
 };
 
 export default function PrivacyPage() {
@@ -12,7 +12,7 @@ export default function PrivacyPage() {
       <header className="glass-panel sticky top-0 z-30 border-b border-border">
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
           <Link href="/" className="text-lg font-semibold text-foreground">
-            Script Workspace
+            YOMI Script
           </Link>
           <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             На главную
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
           <section>
             <p>
               Настоящая Политика конфиденциальности описывает, как YOMI Film (далее — «мы», «наш», «Компания»)
-              собирает, использует и защищает персональные данные пользователей сервиса Script Workspace
+              собирает, использует и защищает персональные данные пользователей сервиса YOMI Script
               (далее — «Сервис»), доступного по адресу <a href="https://script.yomimovie.art" className="text-cinema hover:underline">script.yomimovie.art</a>.
               Используя Сервис, вы соглашаетесь с условиями данной политики.
             </p>
@@ -43,7 +43,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground">1. Какие данные мы собираем</h2>
-            <p>При использовании Script Workspace мы можем собирать следующие категории данных:</p>
+            <p>При использовании YOMI Script мы можем собирать следующие категории данных:</p>
 
             <h3 className="text-base font-medium text-foreground mt-4">1.1. Данные аккаунта</h3>
             <ul className="list-disc pl-6 space-y-1">

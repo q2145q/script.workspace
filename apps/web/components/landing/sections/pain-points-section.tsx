@@ -52,7 +52,7 @@ export function PainPointsSection() {
               fontFamily: "var(--font-display)",
             }}
           >
-            Script Workspace — это один инструмент вместо трёх.
+            YOMI Script — это один инструмент вместо трёх.
           </p>
         </div>
       </div>

@@ -5,7 +5,8 @@ import { z } from "zod";
 
 const updateUserSchema = z.object({
   userId: z.string().min(1),
-  betaApproved: z.boolean(),
+  betaApproved: z.boolean().optional(),
+  banned: z.boolean().optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -34,6 +35,7 @@ export async function GET(req: NextRequest) {
         name: true,
         email: true,
         betaApproved: true,
+        banned: true,
         createdAt: true,
         _count: { select: { ownedProjects: true } },
       },
@@ -66,20 +68,25 @@ export async function PATCH(req: NextRequest) {
     );
   }
 
-  const { userId, betaApproved } = parsed.data;
+  const { userId, betaApproved, banned } = parsed.data;
+
+  const data: Record<string, unknown> = {};
+  if (betaApproved !== undefined) data.betaApproved = betaApproved;
+  if (banned !== undefined) data.banned = banned;
 
   await prisma.user.update({
     where: { id: userId },
-    data: { betaApproved },
+    data,
   });
 
   // Audit log
+  const action = banned !== undefined ? "admin:toggle_ban" : "admin:toggle_beta";
   await prisma.activityLog.create({
     data: {
       projectId: "admin",
       userId: "admin",
-      action: "admin:toggle_beta",
-      details: { targetUserId: userId, betaApproved },
+      action,
+      details: { targetUserId: userId, ...data },
     },
   }).catch((err) => console.error("[admin] Audit log failed:", err));
 

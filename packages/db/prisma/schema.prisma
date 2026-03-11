@@ -20,6 +20,7 @@ model User {
   createdAt     DateTime
   updatedAt     DateTime
   betaApproved    Boolean   @default(false)
+  banned          Boolean   @default(false)
   telegramChatId  String?
 
   sessions Session[]
@@ -226,7 +227,7 @@ model CommentThread {
   updatedAt   DateTime @updatedAt
 
   document  Document         @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  createdBy User             @relation("ThreadCreator", fields: [createdById], references: [id])
+  createdBy User             @relation("ThreadCreator", fields: [createdById], references: [id], onDelete: Cascade)
   messages  CommentMessage[]
 
   @@index([documentId])
@@ -292,7 +293,7 @@ model Suggestion {
   updatedAt     DateTime         @updatedAt
 
   document  Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  createdBy User     @relation("SuggestionCreator", fields: [createdById], references: [id])
+  createdBy User     @relation("SuggestionCreator", fields: [createdById], references: [id], onDelete: Cascade)
 
   @@index([documentId])
   @@index([documentId, status])

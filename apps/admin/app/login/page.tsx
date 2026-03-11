@@ -41,7 +41,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="admin-card">
           <h1 className="text-xl font-semibold text-foreground mb-1">Админ-панель</h1>
-          <p className="text-sm text-muted-foreground mb-6">Script Workspace</p>
+          <p className="text-sm text-muted-foreground mb-6">YOMI Script</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

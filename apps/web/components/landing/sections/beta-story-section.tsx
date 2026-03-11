@@ -27,7 +27,7 @@ export function BetaStorySection() {
             className="text-base text-center mb-8"
             style={{ color: "var(--l-text-dim)" }}
           >
-            Script Workspace — молодой продукт. Мы не скрываем это.
+            YOMI Script — молодой продукт. Мы не скрываем это.
           </p>
 
           <div className="grid gap-8 sm:grid-cols-2">

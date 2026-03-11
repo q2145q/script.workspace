@@ -38,7 +38,7 @@ export function DocsHeader() {
               letterSpacing: "-0.01em",
             }}
           >
-            Script Workspace
+            YOMI Script
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">

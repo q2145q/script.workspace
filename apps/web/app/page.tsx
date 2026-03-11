@@ -21,15 +21,15 @@ const ibmPlexSans = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Script Workspace — Редактор сценариев для российских авторов",
+  title: "YOMI Script — Редактор сценариев для российских авторов",
   description:
     "Профессиональный браузерный редактор screenplay с AI-помощником. Форматирование, версии, командная работа. Бесплатная бета. Без Final Draft.",
   openGraph: {
-    title: "Script Workspace — Редактор сценариев для российских авторов",
+    title: "YOMI Script — Редактор сценариев для российских авторов",
     description:
       "Профессиональный браузерный редактор screenplay с AI-помощником. Форматирование, версии, командная работа. Бесплатная бета.",
     url: "https://script.yomimovie.art",
-    siteName: "Script Workspace",
+    siteName: "YOMI Script",
     type: "website",
     locale: "ru_RU",
   },
@@ -47,7 +47,7 @@ export default async function Home() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "Script Workspace",
+    name: "YOMI Script",
     applicationCategory: "MultimediaApplication",
     operatingSystem: "Web",
     url: "https://script.yomimovie.art",

@@ -5,6 +5,8 @@ import {
   rewriteSchema,
   formatSchema,
   dialoguePassSchema,
+  fixGrammarSchema,
+  grammarResultSchema,
 } from "@script/types";
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { resolveApiKey } from "../../global-key-resolver";
@@ -294,6 +296,78 @@ export const rewriteRouter = createTRPCRouter({
         handleAIError(error, "Dialogue pass", {
           userId: ctx.user.id, projectId: document.project.id,
           provider: resolved.provider, model: resolved.model, feature: "dialogue-pass",
+        });
+      }
+    }),
+
+  /** Fix grammar, spelling, and punctuation in selected text */
+  fixGrammar: protectedProcedure
+    .input(fixGrammarSchema)
+    .mutation(async ({ ctx, input }) => {
+      const document = await prisma.document.findFirst({
+        where: {
+          id: input.documentId,
+          deletedAt: null,
+          project: {
+            OR: [
+              { ownerId: ctx.user.id },
+              { members: { some: { userId: ctx.user.id, role: { in: ["OWNER", "EDITOR"] } } } },
+            ],
+          },
+        },
+        include: {
+          project: { select: { id: true, language: true } },
+        },
+      });
+
+      if (!document) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Document not found or no editor access" });
+      }
+
+      let resolved;
+      try {
+        resolved = await resolveTaskModel(getSecret(), "fix-grammar");
+      } catch {
+        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No AI provider configured." });
+      }
+
+      const userPrompt = [
+        `Selected text:\n${input.selectedText}`,
+        input.contextBefore ? `\nContext before:\n${input.contextBefore}` : "",
+        input.contextAfter ? `\nContext after:\n${input.contextAfter}` : "",
+      ].filter(Boolean).join("\n");
+
+      try {
+        const { result, tokensIn, tokensOut, durationMs } = await callAIWithSchema(
+          resolved.provider as ProviderId,
+          "fix-grammar",
+          userPrompt,
+          { apiKey: resolved.apiKey, model: resolved.model },
+          grammarResultSchema,
+          { USER_LANGUAGE: document.project.language },
+        );
+
+        await logApiUsage({
+          userId: ctx.user.id,
+          projectId: document.project.id,
+          provider: resolved.provider,
+          model: resolved.model,
+          feature: "fix-grammar",
+          tokensIn,
+          tokensOut,
+          durationMs,
+          keySource: resolved.source,
+        }).catch((err) => logger.error({ err }, "Usage log failed"));
+
+        return {
+          corrections: result.corrections,
+          selectionFrom: input.selectionFrom,
+          selectionTo: input.selectionTo,
+        };
+      } catch (error) {
+        handleAIError(error, "Fix Grammar", {
+          userId: ctx.user.id, projectId: document.project.id,
+          provider: resolved.provider, model: resolved.model, feature: "fix-grammar",
         });
       }
     }),

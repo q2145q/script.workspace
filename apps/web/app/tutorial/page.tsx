@@ -12,9 +12,9 @@ import { MockupSelectionToolbar } from "../../components/docs/mockup-selection-t
 import { Kbd } from "../../components/docs/kbd";
 
 export const metadata: Metadata = {
-  title: "Руководство — Script Workspace",
+  title: "Руководство — YOMI Script",
   description:
-    "Пошаговое руководство по началу работы с Script Workspace — профессиональным редактором сценариев с AI-инструментами.",
+    "Пошаговое руководство по началу работы с YOMI Script — профессиональным редактором сценариев с AI-инструментами.",
 };
 
 export default function TutorialPage() {
@@ -28,7 +28,7 @@ export default function TutorialPage() {
           <div className="beta-badge" style={{ marginBottom: "1.5rem" }}>
             Руководство
           </div>
-          <h1>Начните работу с Script Workspace</h1>
+          <h1>Начните работу с YOMI Script</h1>
           <p>
             Пошаговое руководство по созданию вашего первого сценария — от
             проекта до финального текста с AI-помощником.
@@ -234,7 +234,7 @@ export default function TutorialPage() {
             </div>
             <div className="docs-prose">
               <p>
-                Script Workspace предлагает мощные AI-инструменты для работы над сценарием.
+                YOMI Script предлагает мощные AI-инструменты для работы над сценарием.
                 Поддерживается 6 провайдеров: OpenAI, Anthropic, DeepSeek, Gemini, Yandex, Grok.
               </p>
 

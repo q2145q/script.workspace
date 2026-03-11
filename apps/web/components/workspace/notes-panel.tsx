@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useTRPC } from "@/lib/trpc/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,6 +23,7 @@ export function NotesPanel({ projectId, currentUser }: NotesPanelProps) {
   const queryClient = useQueryClient();
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [mountKey, setMountKey] = useState(0);
+  const flushRef = useRef<(() => Promise<void>) | null>(null);
 
   const { data: notes, isLoading } = useQuery(
     trpc.note.list.queryOptions({ projectId })
@@ -84,7 +85,11 @@ export function NotesPanel({ projectId, currentUser }: NotesPanelProps) {
                   key={note.id}
                   note={note}
                   isSelected={note.id === selectedNoteId}
-                  onSelect={() => { setSelectedNoteId(note.id); setMountKey((k) => k + 1); }}
+                  onSelect={async () => {
+                    if (flushRef.current) await flushRef.current();
+                    setSelectedNoteId(note.id);
+                    setMountKey((k) => k + 1);
+                  }}
                   onDelete={() => {
                     if (confirm(t("deleteNote"))) {
                       deleteMutation.mutate({ id: note.id });
@@ -116,6 +121,7 @@ export function NotesPanel({ projectId, currentUser }: NotesPanelProps) {
               projectId={projectId}
               currentUser={currentUser}
               mountKey={mountKey}
+              flushRef={flushRef}
             />
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
@@ -212,11 +218,13 @@ function NoteEditor({
   noteId,
   projectId,
   mountKey,
+  flushRef,
 }: {
   noteId: string;
   projectId: string;
   currentUser: CurrentUser;
   mountKey: number;
+  flushRef: React.MutableRefObject<(() => Promise<void>) | null>;
 }) {
   const t = useTranslations("Notes");
   const trpc = useTRPC();
@@ -252,13 +260,19 @@ function NoteEditor({
   const saveFnRef = useRef(saveMutation.mutateAsync);
   saveFnRef.current = saveMutation.mutateAsync;
 
-  const { handleUpdate: handleAutosave, saveState } = useEditorAutosave(
+  const { handleUpdate: handleAutosave, flush, saveState } = useEditorAutosave(
     useCallback(async (content: JSONContent) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await saveFnRef.current({ id: noteIdRef.current, content: content as any });
     }, []),
     2000
   );
+
+  // Expose flush to parent so it can save before switching notes
+  useEffect(() => {
+    flushRef.current = flush;
+    return () => { flushRef.current = null; };
+  }, [flush, flushRef]);
 
   if (noteLoading) {
     return (

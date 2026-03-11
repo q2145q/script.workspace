@@ -19,10 +19,10 @@ export default async function WorkspaceLayout({
   // Beta gate
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { betaApproved: true },
+    select: { betaApproved: true, banned: true },
   });
 
-  if (!user?.betaApproved) {
+  if (user?.banned || !user?.betaApproved) {
     redirect("/dashboard");
   }
 

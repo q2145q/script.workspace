@@ -9,6 +9,7 @@ interface User {
   name: string;
   email: string;
   betaApproved: boolean;
+  banned: boolean;
   createdAt: string;
   _count: { ownedProjects: number };
 }
@@ -68,6 +69,26 @@ export default function UsersPage() {
     }
   }
 
+  async function toggleBan(userId: string, banned: boolean) {
+    if (banned && !confirm("Заблокировать пользователя? Он потеряет доступ к сервису.")) {
+      return;
+    }
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-csrf-check": "1" },
+        body: JSON.stringify({ userId, banned }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, banned } : u))
+      );
+      toast.success(banned ? "Пользователь заблокирован" : "Пользователь разблокирован");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Ошибка обновления");
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -102,12 +123,20 @@ export default function UsersPage() {
               <th>Регистрация</th>
               <th>Проекты</th>
               <th>Бета-доступ</th>
+              <th>Бан</th>
             </tr>
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id}>
-                <td className="font-medium">{u.name}</td>
+              <tr key={u.id} className={u.banned ? "opacity-50" : ""}>
+                <td className="font-medium">
+                  <a
+                    href={`/users/${u.id}`}
+                    className="hover:text-accent transition-colors"
+                  >
+                    {u.name}
+                  </a>
+                </td>
                 <td className="text-muted-foreground">{u.email}</td>
                 <td className="text-muted-foreground">
                   {new Date(u.createdAt).toLocaleDateString("ru")}
@@ -119,11 +148,17 @@ export default function UsersPage() {
                     className={`toggle ${u.betaApproved ? "active" : ""}`}
                   />
                 </td>
+                <td>
+                  <button
+                    onClick={() => toggleBan(u.id, !u.banned)}
+                    className={`toggle ban ${u.banned ? "active" : ""}`}
+                  />
+                </td>
               </tr>
             ))}
             {!loading && users.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center text-muted-foreground py-8">
+                <td colSpan={6} className="text-center text-muted-foreground py-8">
                   Пользователи не найдены
                 </td>
               </tr>

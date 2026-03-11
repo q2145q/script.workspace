@@ -26,6 +26,7 @@ const PROVIDER_LABELS: Record<string, string> = {
 export default function ModelsPage() {
   const [models, setModels] = useState<ModelConfig[]>([]);
   const [saving, setSaving] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchModels = useCallback(async () => {
@@ -40,6 +41,26 @@ export default function ModelsPage() {
   }, []);
 
   useEffect(() => { fetchModels(); }, [fetchModels]);
+
+  async function syncModels() {
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/admin/models/sync", {
+        method: "POST",
+        headers: { "x-csrf-check": "1" },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      toast.success(
+        `Синхронизация: добавлено ${data.added}, обновлено ${data.updated}, отключено ${data.disabled}`,
+      );
+      fetchModels();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Ошибка синхронизации");
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   async function updateModel(id: string, updates: Partial<ModelConfig>) {
     setSaving(id);
@@ -69,7 +90,12 @@ export default function ModelsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-6">Модели</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold">Модели</h1>
+        <button onClick={syncModels} disabled={syncing} className="admin-btn">
+          {syncing ? "Синхронизация..." : "Синхронизировать из кода"}
+        </button>
+      </div>
 
       {error && (
         <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-400">

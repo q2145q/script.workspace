@@ -33,8 +33,11 @@ export async function POST(req: NextRequest) {
   // 2. Beta gate
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { betaApproved: true },
+    select: { betaApproved: true, banned: true },
   });
+  if (user?.banned) {
+    return new Response("Ваш аккаунт заблокирован.", { status: 403 });
+  }
   if (!user?.betaApproved) {
     return new Response("Доступ ограничен. Вы в очереди на подключение к бета-версии.", { status: 403 });
   }

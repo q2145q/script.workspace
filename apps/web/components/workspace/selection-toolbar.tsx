@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Type, Pin, Loader2, X, MessageSquare, Drama } from "lucide-react";
+import { Sparkles, Type, Pin, Loader2, X, MessageSquare, Drama, SpellCheck, Check, XCircle } from "lucide-react";
 import type { Editor, SuggestionData } from "@script/editor";
 import { Fragment } from "@script/editor";
 import { useTRPC } from "@/lib/trpc/client";
@@ -218,7 +218,27 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
     })
   );
 
-  const isPending = formatMutation.isPending || rewriteMutation.isPending || commentMutation.isPending || dialoguePassMutation.isPending;
+  const [grammarCorrections, setGrammarCorrections] = useState<
+    Array<{ original: string; corrected: string; explanation: string }>
+  >([]);
+  const [grammarSelRange, setGrammarSelRange] = useState<{ from: number; to: number } | null>(null);
+
+  const fixGrammarMutation = useMutation(
+    trpc.ai.fixGrammar.mutationOptions({
+      onSuccess: (result) => {
+        if (result.corrections.length === 0) {
+          toast.success(t("noGrammarErrors"));
+          hideToolbar();
+          return;
+        }
+        setGrammarCorrections(result.corrections);
+        setGrammarSelRange({ from: result.selectionFrom, to: result.selectionTo });
+      },
+      onError: (err) => toast.error(err.message),
+    })
+  );
+
+  const isPending = formatMutation.isPending || rewriteMutation.isPending || commentMutation.isPending || dialoguePassMutation.isPending || fixGrammarMutation.isPending;
 
   // --- actions ---
 
@@ -228,6 +248,8 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
     setCommentMode(false);
     setInstruction("");
     setCommentText("");
+    setGrammarCorrections([]);
+    setGrammarSelRange(null);
     selectionRef.current = null;
   }, []);
 
@@ -319,6 +341,64 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
       content: commentText.trim(),
     });
   }, [documentId, commentText, commentMutation, isPending]);
+
+  const handleFixGrammar = useCallback(() => {
+    const sel = selectionRef.current;
+    if (!sel || isPending) return;
+    fixGrammarMutation.mutate({
+      documentId,
+      selectionFrom: sel.from,
+      selectionTo: sel.to,
+      selectedText: sel.text,
+      contextBefore: sel.contextBefore,
+      contextAfter: sel.contextAfter,
+    });
+  }, [documentId, fixGrammarMutation, isPending]);
+
+  const handleAcceptCorrection = useCallback((index: number) => {
+    if (!editor) return;
+    const correction = grammarCorrections[index];
+    if (!correction) return;
+
+    // Search-and-replace in editor content
+    const docText = editor.state.doc.textBetween(0, editor.state.doc.content.size, "\n");
+    const pos = docText.indexOf(correction.original);
+    if (pos !== -1) {
+      // +1 because textBetween starts at pos 0 but doc positions start at 1 for top-level content
+      editor.chain().focus().insertContentAt(
+        { from: pos + 1, to: pos + 1 + correction.original.length },
+        correction.corrected
+      ).run();
+    }
+
+    setGrammarCorrections((prev) => prev.filter((_, i) => i !== index));
+  }, [editor, grammarCorrections]);
+
+  const handleAcceptAllCorrections = useCallback(() => {
+    if (!editor || grammarCorrections.length === 0) return;
+
+    // Apply all corrections in reverse order by position to avoid offset issues
+    const docText = editor.state.doc.textBetween(0, editor.state.doc.content.size, "\n");
+    const positioned = grammarCorrections
+      .map((c) => ({ ...c, pos: docText.indexOf(c.original) }))
+      .filter((c) => c.pos !== -1)
+      .sort((a, b) => b.pos - a.pos); // reverse order
+
+    const { tr } = editor.state;
+    for (const c of positioned) {
+      const from = c.pos + 1;
+      const to = from + c.original.length;
+      tr.replaceWith(from, to, editor.state.schema.text(c.corrected));
+    }
+    editor.view.dispatch(tr);
+
+    setGrammarCorrections([]);
+    toast.success(t("grammarFixed"));
+  }, [editor, grammarCorrections, t]);
+
+  const handleRejectCorrection = useCallback((index: number) => {
+    setGrammarCorrections((prev) => prev.filter((_, i) => i !== index));
+  }, []);
 
   const enterRewriteMode = useCallback(() => {
     setRewriteMode(true);
@@ -550,6 +630,26 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
               </>
             )}
 
+            {/* Fix Grammar button */}
+            {!rewriteMode && !commentMode && (
+              <>
+                <div className="h-4 w-px bg-border" />
+                <button
+                  onClick={handleFixGrammar}
+                  disabled={isPending}
+                  className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+                  title={t("fixGrammarBtn")}
+                >
+                  {fixGrammarMutation.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-ai-accent" />
+                  ) : (
+                    <SpellCheck className="h-3.5 w-3.5" />
+                  )}
+                  {t("fixGrammarBtn")}
+                </button>
+              </>
+            )}
+
             <div className="h-4 w-px bg-border" />
 
             {/* Comment button / input */}
@@ -616,6 +716,54 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
               <Pin className="h-3.5 w-3.5" />
             </button>
           </div>
+
+          {/* Grammar corrections panel */}
+          {grammarCorrections.length > 0 && (
+            <div className="mt-1 max-h-64 w-80 overflow-y-auto rounded-lg border border-border bg-popover/95 p-2 shadow-lg backdrop-blur">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                  {t("grammarCorrections", { count: grammarCorrections.length })}
+                </span>
+                <button
+                  onClick={handleAcceptAllCorrections}
+                  className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium text-green-500 hover:bg-green-500/10"
+                >
+                  <Check className="h-3 w-3" />
+                  {t("acceptAll")}
+                </button>
+              </div>
+              <div className="space-y-1">
+                {grammarCorrections.map((c, i) => (
+                  <div key={i} className="group flex items-start gap-2 rounded-md border border-border/50 bg-background/50 p-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs">
+                        <span className="line-through text-red-400/80">{c.original}</span>
+                        <span className="mx-1 text-muted-foreground">→</span>
+                        <span className="text-green-400">{c.corrected}</span>
+                      </div>
+                      <p className="mt-0.5 text-[10px] text-muted-foreground">{c.explanation}</p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-0.5">
+                      <button
+                        onClick={() => handleAcceptCorrection(i)}
+                        className="rounded p-0.5 text-green-500 hover:bg-green-500/10"
+                        title={t("accept")}
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleRejectCorrection(i)}
+                        className="rounded p-0.5 text-red-400 hover:bg-red-400/10"
+                        title={t("reject")}
+                      >
+                        <XCircle className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

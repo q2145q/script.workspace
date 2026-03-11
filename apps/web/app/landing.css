@@ -24,7 +24,7 @@
   background: var(--l-bg);
   color: var(--l-text);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   font-family: var(--font-body), "Helvetica Neue", Arial, sans-serif;
   font-weight: 400;
   position: relative;
@@ -463,7 +463,6 @@
 }
 
 .feature-card.large {
-  grid-column: 1 / -1;
   padding: 2.5rem;
   border-bottom: 1px solid var(--l-border);
 }

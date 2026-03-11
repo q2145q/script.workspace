@@ -16,8 +16,8 @@ const geist = Geist({
 
 export const metadata: Metadata = {
   title: {
-    default: "Script Workspace — AI-редактор сценариев",
-    template: "%s — Script Workspace",
+    default: "YOMI Script — AI-редактор сценариев",
+    template: "%s — YOMI Script",
   },
   description:
     "Профессиональная платформа для написания сценариев с AI. Совместное редактирование, форматирование, версии, экспорт в PDF/FDX.",
@@ -27,23 +27,23 @@ export const metadata: Metadata = {
     "screenplay editor",
     "screenwriting",
     "AI writing",
-    "Script Workspace",
+    "YOMI Script",
   ],
-  authors: [{ name: "Script Workspace" }],
-  creator: "Script Workspace",
+  authors: [{ name: "YOMI Script" }],
+  creator: "YOMI Script",
   metadataBase: new URL("https://script.yomimovie.art"),
   openGraph: {
     type: "website",
     locale: "ru_RU",
     url: "https://script.yomimovie.art",
-    siteName: "Script Workspace",
-    title: "Script Workspace — AI-редактор сценариев",
+    siteName: "YOMI Script",
+    title: "YOMI Script — AI-редактор сценариев",
     description:
       "Профессиональная платформа для написания сценариев с AI. Совместное редактирование, форматирование, версии, экспорт.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Script Workspace — AI-редактор сценариев",
+    title: "YOMI Script — AI-редактор сценариев",
     description:
       "Профессиональная платформа для написания сценариев с AI.",
   },

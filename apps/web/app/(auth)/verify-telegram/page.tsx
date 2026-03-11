@@ -103,9 +103,13 @@ function VerifyTelegramContent() {
           >
             {t("openTelegram")}
           </a>
-        ) : (
+        ) : tokenQuery.isLoading ? (
           <div className="flex w-full items-center justify-center rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-sm text-muted-foreground">
             {t("loading")}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-border bg-muted/50 px-3 py-2.5 text-center text-sm text-muted-foreground">
+            <p>{t("tokenNotReady", { defaultMessage: "Ссылка ещё не готова. Нажмите кнопку ниже, чтобы получить ссылку для верификации." })}</p>
           </div>
         )}
 

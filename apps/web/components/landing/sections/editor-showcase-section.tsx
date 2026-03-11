@@ -49,7 +49,7 @@ export function EditorShowcaseSection() {
                 className="ml-3 text-xs"
                 style={{ color: "#52525b" }}
               >
-                Без названия — Script Workspace
+                Без названия — YOMI Script
               </span>
             </div>
 

@@ -20,7 +20,10 @@ import {
   Check,
   X,
   Search,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface BibleSectionsProps {
   projectId: string;
@@ -93,6 +96,116 @@ export function BibleSections({ projectId }: BibleSectionsProps) {
       },
     })
   );
+
+  const [isAutoPopulating, setIsAutoPopulating] = useState(false);
+
+  const handleAutoPopulate = async () => {
+    setIsAutoPopulating(true);
+    try {
+      const [characters, locations] = await Promise.all([
+        queryClient.fetchQuery(trpc.entity.listCharacters.queryOptions({ projectId })),
+        queryClient.fetchQuery(trpc.entity.listLocations.queryOptions({ projectId })),
+      ]);
+
+      // Build TipTap JSONContent for characters
+      const charNodes: JSONContent[] = [];
+      for (const char of characters) {
+        charNodes.push({
+          type: "heading",
+          attrs: { level: 3 },
+          content: [{ type: "text", text: char.name }],
+        });
+        if (char.description) {
+          charNodes.push({
+            type: "paragraph",
+            content: [{ type: "text", text: char.description }],
+          });
+        }
+        if ((char as { traits?: string[] }).traits?.length) {
+          charNodes.push({
+            type: "paragraph",
+            content: [
+              { type: "text", marks: [{ type: "bold" }], text: "Traits: " },
+              { type: "text", text: ((char as { traits: string[] }).traits).join(", ") },
+            ],
+          });
+        }
+      }
+      const charContent: JSONContent = {
+        type: "doc",
+        content: charNodes.length > 0 ? charNodes : [{ type: "paragraph" }],
+      };
+
+      // Build TipTap JSONContent for locations
+      const locNodes: JSONContent[] = [];
+      for (const loc of locations) {
+        locNodes.push({
+          type: "heading",
+          attrs: { level: 3 },
+          content: [{ type: "text", text: loc.name }],
+        });
+        if (loc.description) {
+          locNodes.push({
+            type: "paragraph",
+            content: [{ type: "text", text: loc.description }],
+          });
+        }
+      }
+      const locContent: JSONContent = {
+        type: "doc",
+        content: locNodes.length > 0 ? locNodes : [{ type: "paragraph" }],
+      };
+
+      // Find existing sections or create new ones
+      const charSection = sections.find((s) => s.type === "CHARACTERS");
+      const locSection = sections.find((s) => s.type === "LOCATIONS");
+
+      if (charSection) {
+        await updateMutation.mutateAsync({
+          projectId,
+          sectionId: charSection.id,
+          content: charContent,
+        });
+      } else {
+        const newSec = await createMutation.mutateAsync({
+          projectId,
+          type: "CHARACTERS",
+          title: t("typeCharacters"),
+        });
+        await updateMutation.mutateAsync({
+          projectId,
+          sectionId: newSec.id,
+          content: charContent,
+        });
+      }
+
+      if (locSection) {
+        await updateMutation.mutateAsync({
+          projectId,
+          sectionId: locSection.id,
+          content: locContent,
+        });
+      } else {
+        const newSec = await createMutation.mutateAsync({
+          projectId,
+          type: "LOCATIONS",
+          title: t("typeLocations"),
+        });
+        await updateMutation.mutateAsync({
+          projectId,
+          sectionId: newSec.id,
+          content: locContent,
+        });
+      }
+
+      queryClient.invalidateQueries({ queryKey: trpc.bible.listSections.queryKey({ projectId }) });
+      toast.success(t("autoPopulated"));
+    } catch (err) {
+      toast.error(String(err));
+    } finally {
+      setIsAutoPopulating(false);
+    }
+  };
 
   // Auto-select first section
   useEffect(() => {
@@ -186,13 +299,27 @@ export function BibleSections({ projectId }: BibleSectionsProps) {
             <BookOpen className="h-4 w-4 text-cinema" />
             <span className="text-sm font-medium">{t("title")}</span>
           </div>
-          <button
-            onClick={() => setShowNewSection(true)}
-            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            title={t("addSection")}
-          >
-            <Plus className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={handleAutoPopulate}
+              disabled={isAutoPopulating}
+              className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-cinema disabled:opacity-50"
+              title={t("autoPopulate")}
+            >
+              {isAutoPopulating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+            </button>
+            <button
+              onClick={() => setShowNewSection(true)}
+              className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              title={t("addSection")}
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Search */}

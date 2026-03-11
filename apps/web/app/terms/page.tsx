@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Условия использования — Script Workspace",
-  description: "Условия использования сервиса Script Workspace",
+  title: "Условия использования — YOMI Script",
+  description: "Условия использования сервиса YOMI Script",
 };
 
 export default function TermsPage() {
@@ -12,7 +12,7 @@ export default function TermsPage() {
       <header className="glass-panel sticky top-0 z-30 border-b border-border">
         <div className="mx-auto flex h-14 max-w-3xl items-center px-4">
           <Link href="/" className="text-lg font-semibold text-foreground">
-            Script Workspace
+            YOMI Script
           </Link>
         </div>
       </header>
@@ -29,7 +29,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-foreground">1. Общие положения</h2>
             <p>
-              Script Workspace — онлайн-сервис для создания и редактирования сценариев.
+              YOMI Script — онлайн-сервис для создания и редактирования сценариев.
               Используя сервис, вы соглашаетесь с настоящими условиями.
             </p>
           </section>

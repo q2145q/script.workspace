@@ -40,7 +40,7 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("");
   const [position, setPosition] = useState("Writer");
   const [company, setCompany] = useState("");
-  const [defaultLanguage, setDefaultLanguage] = useState("en");
+  const [defaultLanguage, setDefaultLanguage] = useState("ru");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);

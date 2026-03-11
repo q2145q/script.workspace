@@ -24,7 +24,7 @@ export async function sendEmail({
     return;
   }
 
-  const from = process.env.EMAIL_FROM || `Script Workspace <${process.env.SMTP_USER}>`;
+  const from = process.env.EMAIL_FROM || `YOMI Script <${process.env.SMTP_USER}>`;
 
   try {
     await transporter.sendMail({ from, to, subject, html });
@@ -44,7 +44,7 @@ function emailLayout(content: string) {
       <table width="100%" style="max-width:480px;background:#161616;border:1px solid #232323;border-radius:12px;overflow:hidden">
         <tr><td style="padding:32px 32px 0">
           <div style="font-size:14px;font-weight:600;color:#6b6560;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:24px">
-            YOMI · Script Workspace
+            YOMI · YOMI Script
           </div>
         </td></tr>
         <tr><td style="padding:0 32px 32px">
@@ -68,7 +68,7 @@ export function verificationEmailTemplate(name: string, url: string) {
       Подтвердите email
     </h1>
     <p style="font-size:15px;color:#a09a8e;line-height:1.6;margin:0 0 24px">
-      Здравствуйте, ${name}! Для завершения регистрации в Script Workspace подтвердите свой email-адрес.
+      Здравствуйте, ${name}! Для завершения регистрации в YOMI Script подтвердите свой email-адрес.
     </p>
     <a href="${url}" style="display:inline-block;background:#e8c97a;color:#0d0d0d;font-weight:600;font-size:14px;padding:12px 28px;border-radius:8px;text-decoration:none">
       Подтвердить email
@@ -85,7 +85,7 @@ export function resetPasswordTemplate(name: string, url: string) {
       Сброс пароля
     </h1>
     <p style="font-size:15px;color:#a09a8e;line-height:1.6;margin:0 0 24px">
-      ${name}, вы запросили сброс пароля для Script Workspace. Нажмите кнопку ниже, чтобы установить новый пароль.
+      ${name}, вы запросили сброс пароля для YOMI Script. Нажмите кнопку ниже, чтобы установить новый пароль.
     </p>
     <a href="${url}" style="display:inline-block;background:#e8c97a;color:#0d0d0d;font-weight:600;font-size:14px;padding:12px 28px;border-radius:8px;text-decoration:none">
       Сбросить пароль

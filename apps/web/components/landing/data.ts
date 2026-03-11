@@ -108,11 +108,11 @@ export const FEATURES = [
 
 export interface ComparisonRow {
   label: string;
-  values: [string, string, string, string]; // Script Workspace, STARC, КиТ, Final Draft
+  values: [string, string, string, string]; // YOMI Script, STARC, КиТ, Final Draft
 }
 
 export const COMPARISON_HEADERS = [
-  "Script Workspace",
+  "YOMI Script",
   "STARC",
   "КиТ Сценарист",
   "Final Draft",
@@ -284,12 +284,12 @@ export const PRICING: PricingTier[] = [
 
 export const FAQ = [
   {
-    q: "Что такое Script Workspace?",
-    a: "Script Workspace — это браузерный редактор сценариев с умным AI-помощником. Он заменяет Final Draft и Google Docs, поддерживая профессиональное форматирование screenplay, AI-переписывание, комментарии, версии и экспорт в PDF/DOCX.",
+    q: "Что такое YOMI Script?",
+    a: "YOMI Script — это браузерный редактор сценариев с умным AI-помощником. Он заменяет Final Draft и Google Docs, поддерживая профессиональное форматирование screenplay, AI-переписывание, комментарии, версии и экспорт в PDF/DOCX.",
   },
   {
     q: "Чем отличается от Final Draft или Celtx?",
-    a: "Script Workspace работает прямо в браузере — ничего устанавливать не нужно. Встроенный AI-помощник помогает переписывать реплики, анализировать структуру и выбираться из творческих тупиков. Полностью на русском языке, с оплатой из России.",
+    a: "YOMI Script работает прямо в браузере — ничего устанавливать не нужно. Встроенный AI-помощник помогает переписывать реплики, анализировать структуру и выбираться из творческих тупиков. Полностью на русском языке, с оплатой из России.",
   },
   {
     q: "Как работает AI Rewrite?",

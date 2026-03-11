@@ -82,7 +82,7 @@ export function VideoDemoModal({ open, onOpenChange }: VideoDemoModalProps) {
                   className="text-xs"
                   style={{ color: "#6b6560" }}
                 >
-                  60-секундный обзор Script Workspace
+                  60-секундный обзор YOMI Script
                 </p>
               </div>
             </div>

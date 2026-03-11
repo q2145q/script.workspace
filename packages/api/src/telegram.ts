@@ -113,7 +113,7 @@ export async function sendResetLinkViaTelegram(
     text: [
       `Здравствуйте, ${userName}!`,
       "",
-      "Вы запросили сброс пароля для Script Workspace.",
+      "Вы запросили сброс пароля для YOMI Script.",
       "",
       "Нажмите кнопку ниже, чтобы установить новый пароль.",
       "Ссылка действительна 1 час.",

@@ -3,7 +3,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Script Workspace — Админ-панель",
+  title: "YOMI Script — Админ-панель",
 };
 
 export default function RootLayout({

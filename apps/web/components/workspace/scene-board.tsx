@@ -100,7 +100,7 @@ function extractEditorScenes(editor: Editor): Array<{
 
   editor.state.doc.descendants((node, pos) => {
     if (node.type.name === "sceneHeading") {
-      const heading = node.textContent || `Scene ${i + 1}`;
+      const heading = (node.textContent || `Scene ${i + 1}`).toUpperCase();
       // Collect all text until the next sceneHeading
       const parts: string[] = [];
       let cursor = pos + node.nodeSize;

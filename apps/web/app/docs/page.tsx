@@ -14,9 +14,9 @@ import { MockupSelectionToolbar } from "../../components/docs/mockup-selection-t
 import { Kbd } from "../../components/docs/kbd";
 
 export const metadata: Metadata = {
-  title: "Документация — Script Workspace",
+  title: "Документация — YOMI Script",
   description:
-    "Полная документация Script Workspace — редактор сценариев, AI-инструменты, совместная работа, горячие клавиши и экспорт.",
+    "Полная документация YOMI Script — редактор сценариев, AI-инструменты, совместная работа, горячие клавиши и экспорт.",
 };
 
 export default function DocsPage() {
@@ -29,7 +29,7 @@ export default function DocsPage() {
           <div className="beta-badge" style={{ marginBottom: "1rem" }}>
             Документация
           </div>
-          <h1>Script Workspace</h1>
+          <h1>YOMI Script</h1>
           <p>
             Полное руководство по всем возможностям редактора сценариев.{" "}
             <Link href="/tutorial" style={{ color: "var(--l-accent)" }}>
@@ -47,7 +47,7 @@ export default function DocsPage() {
               Редактор сценариев
             </h2>
             <p>
-              Редактор Script Workspace создан для профессионального написания
+              Редактор YOMI Script создан для профессионального написания
               сценариев. Он автоматически форматирует текст по стандартам
               киноиндустрии (US Letter, Courier 12pt) и поддерживает все типы
               сценарных блоков.
@@ -141,7 +141,7 @@ export default function DocsPage() {
               AI-инструменты
             </h2>
             <p>
-              Script Workspace интегрирует 6 AI-провайдеров для помощи на
+              YOMI Script интегрирует 6 AI-провайдеров для помощи на
               каждом этапе работы над сценарием.
             </p>
 
@@ -289,7 +289,7 @@ export default function DocsPage() {
               Совместная работа
             </h2>
             <p>
-              Script Workspace поддерживает совместное редактирование в реальном
+              YOMI Script поддерживает совместное редактирование в реальном
               времени.
             </p>
 

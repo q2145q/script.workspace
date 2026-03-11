@@ -34,7 +34,7 @@ export function YomiSection() {
               сценарный процесс, как работают продакшны, что нужно шоураннеру.
             </p>
             <p style={{ color: "var(--l-text)" }}>
-              Script Workspace — первый продукт YOMI. Но не последний.
+              YOMI Script — первый продукт YOMI. Но не последний.
             </p>
           </div>
         </div>

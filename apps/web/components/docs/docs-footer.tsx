@@ -19,7 +19,7 @@ export function DocsFooter() {
           }}
         >
           <div style={{ color: "var(--l-text-muted)", fontSize: "0.8rem" }}>
-            &copy; {new Date().getFullYear()} Script Workspace
+            &copy; {new Date().getFullYear()} YOMI Script
           </div>
           <nav
             style={{
