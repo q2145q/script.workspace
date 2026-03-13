@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import type { CallBackProps } from "react-joyride";
-import { STATUS } from "react-joyride";
+import { ACTIONS, EVENTS, STATUS } from "react-joyride";
 import { useTutorial } from "./use-tutorial";
 import { TutorialTooltip } from "./tutorial-tooltip";
 import {
   ALL_TUTORIAL_STEPS,
+  TOTAL_STEPS,
   logicalStepToJoyrideIndex,
 } from "./tutorial-steps";
 
@@ -20,29 +21,56 @@ interface TutorialProviderProps {
 
 export function TutorialProvider({ children }: TutorialProviderProps) {
   const { step, isActive, goToStep, skip } = useTutorial();
+  const [ready, setReady] = useState(false);
 
   const stepIndex = useMemo(
     () => logicalStepToJoyrideIndex(step),
     [step]
   );
 
+  // Wait for DOM to be fully rendered before starting joyride
+  useEffect(() => {
+    if (!isActive) {
+      setReady(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setReady(true);
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [isActive]);
+
   const handleCallback = useCallback(
     (data: CallBackProps) => {
       const { status, action, type } = data;
 
-      // Handle skip
-      if (action === "skip") {
+      // Handle skip button
+      if (action === ACTIONS.SKIP) {
         skip();
         return;
       }
 
-      // Handle step change
-      if (type === "step:after") {
-        if (action === "next") {
-          goToStep(step + 1);
-        } else if (action === "prev") {
-          goToStep(step - 1);
+      // Handle close button
+      if (action === ACTIONS.CLOSE) {
+        skip();
+        return;
+      }
+
+      // Handle step navigation (next/prev)
+      if (type === EVENTS.STEP_AFTER) {
+        if (action === ACTIONS.NEXT) {
+          const nextStep = step + 1;
+          if (nextStep > TOTAL_STEPS) {
+            skip();
+          } else {
+            goToStep(nextStep);
+          }
+        } else if (action === ACTIONS.PREV) {
+          goToStep(Math.max(1, step - 1));
         }
+        return;
       }
 
       // Handle tour end
@@ -56,9 +84,9 @@ export function TutorialProvider({ children }: TutorialProviderProps) {
   return (
     <>
       {children}
-      {isActive && (
+      {isActive && ready && (
         <Joyride
-          key={step}
+          run={true}
           steps={ALL_TUTORIAL_STEPS}
           stepIndex={stepIndex}
           continuous
@@ -66,6 +94,7 @@ export function TutorialProvider({ children }: TutorialProviderProps) {
           disableOverlayClose
           disableCloseOnEsc={false}
           spotlightClicks={false}
+          scrollToFirstStep
           callback={handleCallback}
           tooltipComponent={TutorialTooltip}
           locale={{
@@ -80,7 +109,7 @@ export function TutorialProvider({ children }: TutorialProviderProps) {
             options: {
               arrowColor: "#18181b",
               backgroundColor: "#18181b",
-              overlayColor: "rgba(0, 0, 0, 0.6)",
+              overlayColor: "rgba(0, 0, 0, 0.5)",
               primaryColor: "#f97316",
               zIndex: 10000,
             },

@@ -3,193 +3,161 @@ import type { Step } from "react-joyride";
 /**
  * Tutorial steps configuration.
  *
- * Steps reference DOM elements via `data-tutorial="<key>"` attributes
- * that must be added to the corresponding workspace components.
- *
- * Phase 4 will add these attributes and implement the interactive logic.
+ * IMPORTANT: All targets must be elements that are ALWAYS mounted in the DOM.
+ * - Selection toolbar buttons (format, rewrite, dialogue, comments) are NOT
+ *   always mounted — they only appear when text is selected.
+ * - Analysis/chat panels are only mounted when their tab is active in right-panel.
+ * - Sidebar items and right-panel tab buttons are always mounted.
  */
 
-// ── Step groups ───────────────────────────────────────────────
-
-export const editorSteps: Step[] = [
+export const ALL_TUTORIAL_STEPS: Step[] = [
+  // ── Step 1: Welcome ──────────────────────────────────────
   {
     target: '[data-tutorial="editor"]',
-    title: "Редактор сценария",
+    title: "Добро пожаловать в Script!",
     content:
-      "Добро пожаловать в Script! Это ваш первый проект. Давайте научимся писать сценарий. Начните с заголовка сцены: напишите ИНТ. или НАТ. — редактор автоматически определит тип блока.",
+      "Это редактор сценария. Перед вами загружен полный сценарий фильма «Начало» Кристофера Нолана. Прокрутите текст, нажмите на любой блок — каждый имеет свой тип: заголовок сцены, действие, персонаж, реплика.",
     disableBeacon: true,
     placement: "center",
   },
-  {
-    target: '[data-tutorial="editor"]',
-    title: "Заголовок сцены",
-    content:
-      "Нажмите Enter — следующий блок станет «действием». Нажмите Tab — переключитесь на другой тип блока (персонаж, ремарка, переход).",
-    disableBeacon: true,
-  },
-  {
-    target: '[data-tutorial="editor"]',
-    title: "Неформатированный текст",
-    content:
-      "Часто нужно отформатировать уже написанный текст. Мы вставили фрагмент из сценария «Начало» — выделите его и нажмите «Формат».",
-    disableBeacon: true,
-  },
-  {
-    target: '[data-tutorial="format-button"]',
-    title: "Форматирование",
-    content:
-      "Нажмите «Формат» — ИИ автоматически разобьёт текст на правильные блоки сценария: заголовок сцены, действие, персонаж, реплика.",
-    disableBeacon: true,
-    spotlightClicks: true,
-  },
-];
 
-export const inceptionSteps: Step[] = [
+  // ── Step 2: Editor basics ────────────────────────────────
   {
     target: '[data-tutorial="editor"]',
-    title: "Сценарий «Начало»",
+    title: "Работа с текстом",
     content:
-      "Перед вами полный сценарий фильма «Начало» Кристофера Нолана. Прокрутите текст, нажмите на любой блок для редактирования. Каждый блок имеет тип: заголовок сцены, действие, персонаж, реплика, ремарка, переход.",
+      "Начните писать ИНТ. или НАТ. — редактор автоматически определит заголовок сцены. Enter — новый блок «действие». Tab — переключение типа блока (персонаж, ремарка, переход).",
     disableBeacon: true,
-    placement: "center",
+    placement: "bottom",
   },
-  {
-    target: '[data-tutorial="rewrite-button"]',
-    title: "Переписать",
-    content:
-      "Выделите фрагмент текста и нажмите «Переписать» — ИИ предложит улучшенную версию, сохраняя стиль и тон.",
-    disableBeacon: true,
-    spotlightClicks: true,
-  },
-  {
-    target: '[data-tutorial="dialogue-button"]',
-    title: "Диалог",
-    content:
-      "Выделите диалог и нажмите «Диалог» — ИИ улучшит реплики, сохраняя характер персонажа и динамику сцены.",
-    disableBeacon: true,
-    spotlightClicks: true,
-  },
-  {
-    target: '[data-tutorial="comments-button"]',
-    title: "Комментарии",
-    content:
-      "Выделите текст и добавьте комментарий — как в Google Docs. Комментарии помогают при совместной работе над сценарием.",
-    disableBeacon: true,
-    spotlightClicks: true,
-  },
-];
 
-export const sidebarSteps: Step[] = [
+  // ── Step 3: Selection toolbar hint ───────────────────────
+  {
+    target: '[data-tutorial="editor"]',
+    title: "Панель инструментов",
+    content:
+      "Выделите любой фрагмент текста — появится панель с кнопками: Формат (разбивает текст на блоки сценария), Переписать (ИИ улучшает текст), Диалог (улучшает реплики), Комментарий (как в Google Docs).",
+    disableBeacon: true,
+    placement: "bottom",
+  },
+
+  // ── Step 4: Sidebar overview ─────────────────────────────
   {
     target: '[data-tutorial="sidebar"]',
     title: "Боковая панель",
     content:
-      "Слева — 10 режимов работы. Каждый открывает свой раздел: сценарий, документы, персонажи, локации, структура и другие.",
+      "Слева — навигация по разделам проекта. Каждая иконка открывает свой режим работы.",
     disableBeacon: true,
+    placement: "right",
   },
+
+  // ── Step 5: Sidebar — script ─────────────────────────────
   {
     target: '[data-tutorial="sidebar-script"]',
     title: "Сценарий",
-    content: "Основной режим — редактор сценария с инструментами форматирования.",
+    content:
+      "Основной режим — редактор сценария со списком сцен для быстрой навигации.",
     disableBeacon: true,
+    placement: "right",
   },
+
+  // ── Step 6: Sidebar — bible ──────────────────────────────
   {
     target: '[data-tutorial="sidebar-bible"]',
     title: "Библия проекта",
     content:
-      "Библия проекта — центральный документ с миром, правилами и справочной информацией.",
+      "Центральный документ проекта — мир, правила, справочная информация. Всё в одном месте.",
     disableBeacon: true,
+    placement: "right",
   },
+
+  // ── Step 7: Sidebar — characters ─────────────────────────
   {
     target: '[data-tutorial="sidebar-chars"]',
-    title: "Персонажи и локации",
+    title: "Персонажи",
     content:
-      "Список всех персонажей и локаций вашего сценария с описаниями и статистикой.",
+      "Список всех персонажей с описаниями и статистикой появлений. В демо-проекте уже загружены 14 персонажей «Начала».",
     disableBeacon: true,
+    placement: "right",
   },
-];
 
-export const analysisPanelSteps: Step[] = [
+  // ── Step 8: Sidebar — locations ──────────────────────────
+  {
+    target: '[data-tutorial="sidebar-locs"]',
+    title: "Локации",
+    content:
+      "Все места действия вашего сценария. В демо загружены 26 локаций, сгруппированных по уровням сна.",
+    disableBeacon: true,
+    placement: "right",
+  },
+
+  // ── Step 9: Right panel overview ─────────────────────────
   {
     target: '[data-tutorial="right-panel"]',
-    title: "Панель анализа",
+    title: "Правая панель",
     content:
-      "Справа — аналитические инструменты. ИИ анализирует ваш сценарий и предоставляет структурный разбор, ритм, консистентность и другие метрики.",
+      "Справа — аналитика, чат с ИИ, комментарии и контекст. Переключайтесь между вкладками.",
     disableBeacon: true,
+    placement: "left",
   },
+
+  // ── Step 10: Right panel — analysis tab ──────────────────
   {
-    target: '[data-tutorial="analysis-beatSheet"]',
-    title: "Beat Sheet",
+    target: '[data-tutorial="right-panel-analysis"]',
+    title: "Анализ",
     content:
-      "Ключевые повороты сюжета по методу Save the Cat. ИИ находит все структурные точки: открывающий образ, катализатор, мидпоинт, кульминация.",
+      "ИИ анализирует ваш сценарий: Beat Sheet (ключевые повороты), структура, ритм, консистентность, граф знаний. В демо-проекте все анализы уже предрассчитаны.",
     disableBeacon: true,
+    placement: "left",
   },
+
+  // ── Step 11: Right panel — chat tab ──────────────────────
   {
-    target: '[data-tutorial="analysis-structure"]',
-    title: "Анализ структуры",
-    content:
-      "Трёхактная структура, поворотные точки, арки персонажей и тематические линии.",
-    disableBeacon: true,
-  },
-  {
-    target: '[data-tutorial="analysis-pacing"]',
-    title: "Анализ ритма",
-    content:
-      "Графики динамики, соотношение действия и диалога, кривая напряжения по сценам.",
-    disableBeacon: true,
-  },
-  {
-    target: '[data-tutorial="analysis-consistency"]',
-    title: "Проверка консистентности",
-    content:
-      "ИИ проверяет сценарий на ошибки: имена персонажей, локации, временные несоответствия и другие неточности.",
-    disableBeacon: true,
-  },
-  {
-    target: '[data-tutorial="chat-panel"]',
+    target: '[data-tutorial="right-panel-chat"]',
     title: "Чат с ИИ",
     content:
-      "Задавайте вопросы о вашем сценарии, просите совет, генерируйте идеи. ИИ знает контекст всего проекта.",
+      "Задавайте вопросы о сценарии, просите совет, генерируйте идеи. ИИ знает контекст всего проекта.",
     disableBeacon: true,
+    placement: "left",
   },
-];
 
-export const finishSteps: Step[] = [
+  // ── Step 12: Right panel — comments tab ──────────────────
+  {
+    target: '[data-tutorial="right-panel-comments"]',
+    title: "Комментарии",
+    content:
+      "Все комментарии к сценарию в одном месте — как в Google Docs. Удобно для совместной работы.",
+    disableBeacon: true,
+    placement: "left",
+  },
+
+  // ── Step 13: Settings ────────────────────────────────────
   {
     target: '[data-tutorial="sidebar-settings"]',
     title: "Настройки и экспорт",
     content:
-      "В настройках проекта — экспорт в PDF, FDX или Fountain, а также параметры проекта. Ваш демо-проект «Начало» всегда доступен в списке проектов.",
+      "В настройках — экспорт в PDF, FDX или Fountain, выбор ИИ-провайдера и параметры проекта.",
     disableBeacon: true,
+    placement: "right",
   },
+
+  // ── Step 14: Finish ──────────────────────────────────────
   {
     target: '[data-tutorial="editor"]',
-    title: "Туториал завершён!",
+    title: "Туториал завершён! 🎬",
     content:
-      "Вы познакомились со всеми основными функциями Script. Демо-проект останется в вашем аккаунте. Вы можете вернуться к туториалу через Настройки → Туториал. Удачного творчества!",
+      "Вы познакомились со всеми основными функциями Script. Демо-проект «Начало» останется в вашем аккаунте — экспериментируйте! Повторить туториал можно в Настройках.",
     disableBeacon: true,
     placement: "center",
   },
-];
-
-// ── Combined steps ────────────────────────────────────────────
-
-export const ALL_TUTORIAL_STEPS: Step[] = [
-  ...editorSteps, // Steps 1-4
-  ...inceptionSteps, // Steps 5-8
-  ...sidebarSteps, // Steps 9-12
-  ...analysisPanelSteps, // Steps 13-18
-  ...finishSteps, // Steps 19-20 (but we mapped to 17 logical steps)
 ];
 
 export const TOTAL_STEPS = ALL_TUTORIAL_STEPS.length;
 
 /**
- * Map logical tutorial step (1-18 from DB) to joyride step index (0-based).
- * Step 0 = not started, step 18 = completed.
+ * Map logical tutorial step (1-based, from DB) to joyride step index (0-based).
+ * Step 0 = not started, step >= TOTAL_STEPS = completed.
  */
 export function logicalStepToJoyrideIndex(logicalStep: number): number {
-  // Logical steps 1-18 map to joyride indices 0-17
-  // (clamped to available steps)
   return Math.max(0, Math.min(logicalStep - 1, ALL_TUTORIAL_STEPS.length - 1));
 }

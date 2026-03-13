@@ -9,7 +9,7 @@ import {
   loadInceptionAnalyses,
 } from "@script/db";
 
-const MAX_TUTORIAL_STEP = 18;
+const MAX_TUTORIAL_STEP = 14;
 
 export const tutorialRouter = createTRPCRouter({
   /** Get current tutorial state */
@@ -94,6 +94,13 @@ export const tutorialRouter = createTRPCRouter({
         include: { documents: { select: { id: true }, take: 1 } },
       });
       if (existing) {
+        // Ensure tutorial is started (step=1) even on repeat clicks
+        if (profile.tutorialStep === 0 || profile.tutorialCompleted) {
+          await prisma.userProfile.update({
+            where: { userId: ctx.user.id },
+            data: { tutorialStep: 1, tutorialCompleted: false },
+          });
+        }
         return {
           projectId: existing.id,
           documentId: existing.documents[0]?.id ?? null,
