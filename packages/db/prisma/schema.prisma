@@ -46,14 +46,17 @@ model User {
 }
 
 model UserProfile {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  lastName        String   @default("")
-  position        String   @default("Writer")
-  company         String?
-  defaultLanguage String   @default("en")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  lastName          String   @default("")
+  position          String   @default("Writer")
+  company           String?
+  defaultLanguage   String   @default("en")
+  tutorialStep      Int      @default(0)
+  tutorialCompleted Boolean  @default(false)
+  demoProjectId     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -140,6 +143,7 @@ model Project {
   language    String        @default("ru")
   ownerId     String
   isPrivate   Boolean       @default(true)
+  isDemo      Boolean       @default(false)
   preferredProvider String?
   preferredModel    String?
   logline         String?   @db.Text
@@ -163,7 +167,8 @@ model Project {
   locations    Location[]
   terms        Term[]
   activityLogs ActivityLog[]
-  notes        ProjectNote[]
+  notes          ProjectNote[]
+  demoAnalyses   DemoAnalysis[]
 
   @@index([ownerId])
   @@index([ownerId, deletedAt])
@@ -700,6 +705,25 @@ model AiResponseLog {
   @@index([status, createdAt])
   @@index([createdAt])
   @@map("ai_response_log")
+}
+
+// ============================================================
+// DEMO / TUTORIAL
+// ============================================================
+
+model DemoAnalysis {
+  id        String   @id @default(cuid())
+  projectId String
+  type      String   // "beat_sheet" | "structure" | "pacing" | "consistency" | "knowledge_graph" | "synopsis" | "character_analysis"
+  result    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, type])
+  @@index([projectId])
+  @@map("demo_analysis")
 }
 
 model UserReport {

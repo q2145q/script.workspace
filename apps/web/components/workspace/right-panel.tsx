@@ -38,11 +38,12 @@ export function RightPanel({ editor, documentId, projectId, onToggle, activeTab:
   ];
 
   return (
-    <div className="flex h-full flex-col">
+    <div data-tutorial="right-panel" className="flex h-full flex-col">
       <div className="relative flex border-b border-sidebar-border">
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            data-tutorial={`right-panel-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
             className={`relative flex-1 px-2 py-2.5 text-xs font-medium transition-colors duration-200 ${
               activeTab === tab.id

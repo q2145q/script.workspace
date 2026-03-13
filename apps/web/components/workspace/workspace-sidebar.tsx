@@ -215,6 +215,7 @@ export function WorkspaceSidebar({
       {/* Scrollable middle section */}
       <div className="flex-1 overflow-y-auto">
         <motion.nav
+          data-tutorial="sidebar"
           className="space-y-0.5 p-2"
           variants={container}
           initial="hidden"
@@ -223,6 +224,7 @@ export function WorkspaceSidebar({
           {visibleNavItems.map((navItem) => (
             <motion.div key={navItem.key} variants={itemVariant}>
               <button
+                data-tutorial={`sidebar-${navItem.key}`}
                 onClick={() => onModeChange(navItem.mode)}
                 className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm transition-all duration-200 ${
                   workspaceMode === navItem.mode
@@ -301,6 +303,7 @@ export function WorkspaceSidebar({
       {/* Fixed bottom section — always visible */}
       <div className="shrink-0 border-t border-sidebar-border p-2">
         <Link
+          data-tutorial="sidebar-settings"
           href={`/project/${project.id}/settings`}
           className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-foreground"
         >

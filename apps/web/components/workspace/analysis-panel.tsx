@@ -769,12 +769,13 @@ export function AnalysisPanel({ editor, projectId }: AnalysisPanelProps) {
   const clampedIndex = Math.min(historyIndex, historyCount - 1);
 
   return (
-    <div className="flex h-full flex-col">
+    <div data-tutorial="analysis-panel" className="flex h-full flex-col">
       {/* Tab bar */}
       <div className="flex border-b border-border">
         {TABS.map((tab) => (
           <button
             key={tab.key}
+            data-tutorial={`analysis-${tab.key}`}
             onClick={() => { setActiveTab(tab.key); setHistoryIndex(0); }}
             className={`flex flex-1 items-center justify-center gap-1.5 px-2 py-2 text-[11px] font-medium transition-colors ${
               activeTab === tab.key

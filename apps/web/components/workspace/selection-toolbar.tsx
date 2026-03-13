@@ -543,6 +543,7 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
           <div className="flex items-center gap-0.5 rounded-lg border border-border bg-popover/95 p-1 shadow-lg backdrop-blur">
             {/* Format button */}
             <button
+              data-tutorial="format-button"
               onClick={handleFormat}
               disabled={isPending}
               className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
@@ -600,6 +601,7 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
               </div>
             ) : (
               <button
+                data-tutorial="rewrite-button"
                 onClick={enterRewriteMode}
                 disabled={isPending}
                 className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
@@ -615,6 +617,7 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
               <>
                 <div className="h-4 w-px bg-border" />
                 <button
+                  data-tutorial="dialogue-button"
                   onClick={handleDialoguePass}
                   disabled={isPending}
                   className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-ai-accent/80 transition-colors hover:bg-ai-accent/10 hover:text-ai-accent disabled:opacity-50"
@@ -694,6 +697,7 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
               </div>
             ) : (
               <button
+                data-tutorial="comments-button"
                 onClick={enterCommentMode}
                 disabled={isPending}
                 className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"

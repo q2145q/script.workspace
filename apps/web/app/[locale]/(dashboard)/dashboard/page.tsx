@@ -11,6 +11,7 @@ import { ProjectListView } from "@/components/dashboard/project-list-view";
 import { CreateProjectDialog } from "@/components/dashboard/create-project-dialog";
 import { DashboardToolbar } from "@/components/dashboard/dashboard-toolbar";
 import { useDashboardFilters } from "@/hooks/use-dashboard-filters";
+import { TutorialBanner } from "@/components/tutorial";
 
 export default function DashboardPage() {
   const trpc = useTRPC();
@@ -76,6 +77,8 @@ export default function DashboardPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
+      <TutorialBanner />
+
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">{t("projects")}</h1>

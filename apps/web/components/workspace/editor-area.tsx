@@ -266,7 +266,7 @@ export function EditorArea({ document, projectTitle, projectId, onEditorReady, c
       )}
 
       {/* Editor content — focused writing area */}
-      <div className="flex-1 overflow-y-auto bg-muted/30">
+      <div data-tutorial="editor" className="flex-1 overflow-y-auto bg-muted/30">
         <ScriptEditor
           content={!useCollab ? (document.content as JSONContent) : undefined}
           collaboration={collabConfig}

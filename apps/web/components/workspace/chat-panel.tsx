@@ -515,7 +515,7 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div data-tutorial="chat-panel" className="flex h-full flex-col">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
         <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">

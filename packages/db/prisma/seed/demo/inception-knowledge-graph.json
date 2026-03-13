@@ -1,0 +1,74 @@
+{
+  "nodes": [
+    { "id": "cobb", "label": "Кобб", "type": "character", "group": "team", "size": 10 },
+    { "id": "mal", "label": "Мол", "type": "character", "group": "antagonist", "size": 8 },
+    { "id": "arthur", "label": "Артур", "type": "character", "group": "team", "size": 7 },
+    { "id": "ariadne", "label": "Ариадна", "type": "character", "group": "team", "size": 7 },
+    { "id": "eames", "label": "Имс", "type": "character", "group": "team", "size": 6 },
+    { "id": "saito", "label": "Сайто", "type": "character", "group": "client", "size": 6 },
+    { "id": "yusuf", "label": "Юсуф", "type": "character", "group": "team", "size": 5 },
+    { "id": "fischer", "label": "Фишер", "type": "character", "group": "target", "size": 7 },
+    { "id": "browning", "label": "Браунинг", "type": "character", "group": "target", "size": 4 },
+    { "id": "miles", "label": "Майлз", "type": "character", "group": "ally", "size": 3 },
+    { "id": "fischer_sr", "label": "Отец (Морис)", "type": "character", "group": "target", "size": 3 },
+    { "id": "nash", "label": "Нэш", "type": "character", "group": "other", "size": 2 },
+    { "id": "children", "label": "Джеймс и Филиппа", "type": "character", "group": "ally", "size": 3 },
+
+    { "id": "totem", "label": "Волчок (тотем)", "type": "concept", "group": "concept", "size": 5 },
+    { "id": "inception", "label": "Внедрение", "type": "concept", "group": "concept", "size": 6 },
+    { "id": "extraction", "label": "Извлечение", "type": "concept", "group": "concept", "size": 4 },
+    { "id": "kick", "label": "Выброс", "type": "concept", "group": "concept", "size": 4 },
+    { "id": "limbo", "label": "Лимб", "type": "concept", "group": "concept", "size": 5 },
+
+    { "id": "level1", "label": "Уровень 1: Город", "type": "location", "group": "dream", "size": 5 },
+    { "id": "level2", "label": "Уровень 2: Отель", "type": "location", "group": "dream", "size": 5 },
+    { "id": "level3", "label": "Уровень 3: Горы", "type": "location", "group": "dream", "size": 5 },
+    { "id": "limbo_city", "label": "Город Лимба", "type": "location", "group": "dream", "size": 4 },
+    { "id": "reality", "label": "Реальность", "type": "location", "group": "reality", "size": 4 }
+  ],
+  "edges": [
+    { "source": "cobb", "target": "mal", "label": "муж / жена", "type": "family", "weight": 10 },
+    { "source": "cobb", "target": "children", "label": "отец", "type": "family", "weight": 8 },
+    { "source": "cobb", "target": "arthur", "label": "партнёры", "type": "professional", "weight": 7 },
+    { "source": "cobb", "target": "ariadne", "label": "наставник → ученица", "type": "professional", "weight": 6 },
+    { "source": "cobb", "target": "saito", "label": "исполнитель ↔ заказчик", "type": "professional", "weight": 6 },
+    { "source": "cobb", "target": "eames", "label": "коллеги", "type": "professional", "weight": 4 },
+    { "source": "cobb", "target": "yusuf", "label": "коллеги", "type": "professional", "weight": 3 },
+    { "source": "cobb", "target": "miles", "label": "тесть", "type": "family", "weight": 3 },
+    { "source": "cobb", "target": "fischer", "label": "цель внедрения", "type": "antagonism", "weight": 7 },
+    { "source": "cobb", "target": "nash", "label": "бывший коллега", "type": "professional", "weight": 2 },
+
+    { "source": "mal", "target": "inception", "label": "жертва внедрения", "type": "thematic", "weight": 9 },
+    { "source": "mal", "target": "limbo", "label": "застряла в Лимбе", "type": "thematic", "weight": 7 },
+    { "source": "mal", "target": "children", "label": "мать", "type": "family", "weight": 5 },
+    { "source": "mal", "target": "miles", "label": "дочь", "type": "family", "weight": 3 },
+    { "source": "cobb", "target": "totem", "label": "владелец тотема", "type": "thematic", "weight": 6 },
+    { "source": "mal", "target": "totem", "label": "прятала в сейфе", "type": "thematic", "weight": 5 },
+
+    { "source": "fischer", "target": "browning", "label": "крёстный отец", "type": "family", "weight": 5 },
+    { "source": "fischer", "target": "fischer_sr", "label": "сын (конфликт → примирение)", "type": "family", "weight": 8 },
+    { "source": "eames", "target": "browning", "label": "принимает его облик", "type": "deception", "weight": 5 },
+
+    { "source": "ariadne", "target": "level1", "label": "спроектировала", "type": "creation", "weight": 4 },
+    { "source": "ariadne", "target": "level2", "label": "спроектировала", "type": "creation", "weight": 4 },
+    { "source": "ariadne", "target": "level3", "label": "спроектировала", "type": "creation", "weight": 4 },
+    { "source": "cobb", "target": "limbo_city", "label": "построил с Мол", "type": "creation", "weight": 6 },
+    { "source": "mal", "target": "limbo_city", "label": "построила с Коббом", "type": "creation", "weight": 6 },
+
+    { "source": "yusuf", "target": "level1", "label": "управляет", "type": "control", "weight": 5 },
+    { "source": "arthur", "target": "level2", "label": "управляет", "type": "control", "weight": 5 },
+    { "source": "eames", "target": "level3", "label": "управляет", "type": "control", "weight": 5 },
+    { "source": "cobb", "target": "limbo_city", "label": "спускается", "type": "control", "weight": 5 },
+
+    { "source": "saito", "target": "limbo", "label": "попадает после смерти", "type": "thematic", "weight": 5 },
+    { "source": "fischer", "target": "inception", "label": "цель внедрения", "type": "thematic", "weight": 8 },
+    { "source": "kick", "target": "level1", "label": "фургон → река", "type": "mechanic", "weight": 4 },
+    { "source": "kick", "target": "level2", "label": "взрыв лифта", "type": "mechanic", "weight": 4 },
+    { "source": "kick", "target": "level3", "label": "взрыв крепости", "type": "mechanic", "weight": 4 },
+
+    { "source": "miles", "target": "ariadne", "label": "рекомендовал", "type": "professional", "weight": 3 },
+    { "source": "level1", "target": "level2", "label": "сон внутри сна", "type": "structure", "weight": 6 },
+    { "source": "level2", "target": "level3", "label": "сон внутри сна", "type": "structure", "weight": 6 },
+    { "source": "level3", "target": "limbo_city", "label": "после смерти → Лимб", "type": "structure", "weight": 5 }
+  ]
+}
