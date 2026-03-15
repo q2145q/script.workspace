@@ -3,7 +3,6 @@ import { auth } from "@script/api/auth";
 import { prisma } from "@script/db";
 import { headers } from "next/headers";
 import { BetaBanner } from "@/components/beta-banner";
-import { TutorialProvider } from "@/components/tutorial";
 
 export default async function WorkspaceLayout({
   children,
@@ -31,9 +30,7 @@ export default async function WorkspaceLayout({
   return (
     <>
       <BetaBanner />
-      <TutorialProvider>
-        {children}
-      </TutorialProvider>
+      {children}
     </>
   );
 }
