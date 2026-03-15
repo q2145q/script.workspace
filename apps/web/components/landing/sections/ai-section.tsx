@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useInView } from "../hooks";
+import { AIRewriteMockup } from "../mockups";
 
 export function AISection() {
   const t = useTranslations("Landing.ai");
@@ -70,6 +71,10 @@ export function AISection() {
               </p>
             </div>
           ))}
+        </div>
+
+        <div className={`reveal ${visible ? "visible" : ""}`}>
+          <AIRewriteMockup />
         </div>
       </div>
     </section>

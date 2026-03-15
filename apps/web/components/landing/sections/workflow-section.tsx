@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useInView } from "../hooks";
 import { PenTool, BookOpen, Wand2, Megaphone } from "lucide-react";
+import { WorkflowMockup } from "../mockups";
 
 const STEPS = [
   { key: "step1", icon: PenTool },
@@ -89,22 +90,7 @@ export function WorkflowSection() {
               })}
             </div>
 
-            {/* Screenshot placeholder */}
-            <div
-              style={{
-                background: "var(--l-bg-white)",
-                border: "1px solid var(--l-border)",
-                borderRadius: "16px",
-                minHeight: "320px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--l-text-muted)",
-                fontSize: "0.9rem",
-              }}
-            >
-              Screenshot — Step {active + 1}
-            </div>
+            <WorkflowMockup step={active} />
           </div>
         </div>
       </div>
