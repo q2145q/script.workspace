@@ -17,11 +17,18 @@ export function buildRewritePrompt(input: {
   blocks?: Array<{ type: string; text: string }>;
   previousResult?: string;
   language?: string;
+  projectContext?: string;
 }): string {
-  const parts = [
-    `=== CONTEXT BEFORE ===`,
-    input.contextBefore.slice(-500),
-  ];
+  const parts: string[] = [];
+
+  if (input.projectContext) {
+    parts.push(`=== PROJECT CONTEXT ===`);
+    parts.push(input.projectContext);
+    parts.push("");
+  }
+
+  parts.push(`=== CONTEXT BEFORE ===`);
+  parts.push(input.contextBefore.slice(-500));
 
   // Typed blocks format (preferred)
   if (input.blocks && input.blocks.length > 0) {
@@ -61,16 +68,23 @@ export function buildFormatPrompt(input: {
   contextBefore: string;
   contextAfter: string;
   language?: string;
+  projectContext?: string;
 }): string {
-  const parts = [
-    `=== CONTEXT BEFORE ===`,
-    input.contextBefore.slice(-500),
-    `=== TEXT TO FORMAT ===`,
-    input.selectedText,
-    `=== CONTEXT AFTER ===`,
-    input.contextAfter.slice(0, 500),
-    `\nAnalyze the text above and split it into properly formatted screenplay blocks.`,
-  ];
+  const parts: string[] = [];
+
+  if (input.projectContext) {
+    parts.push(`=== PROJECT CONTEXT ===`);
+    parts.push(input.projectContext);
+    parts.push("");
+  }
+
+  parts.push(`=== CONTEXT BEFORE ===`);
+  parts.push(input.contextBefore.slice(-500));
+  parts.push(`=== TEXT TO FORMAT ===`);
+  parts.push(input.selectedText);
+  parts.push(`=== CONTEXT AFTER ===`);
+  parts.push(input.contextAfter.slice(0, 500));
+  parts.push(`\nAnalyze the text above and split it into properly formatted screenplay blocks.`);
 
   if (input.language && input.language !== "en") {
     parts.push(`\nThe screenplay is written in ${input.language}. Preserve the language.`);

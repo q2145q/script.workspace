@@ -15,6 +15,7 @@ import {
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { logApiUsage } from "../../usage-logger";
 import { logger } from "../../logger";
+import { loadSmartContext } from "../../smart-context-loader";
 import {
   resolveProjectAIForTask,
   callAIWithMapReduce,
@@ -171,8 +172,15 @@ export const generationRouter = createTRPCRouter({
       const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "describe-character");
       const providerId = resolved.provider as ProviderId;
 
+      // Load smart context with RAG for character description
+      const smartContext = await loadSmartContext({
+        projectId: project.id,
+        query: input.characterName,
+      });
+
       const systemPrompt = composePrompt(providerId, "describe-character", {
         USER_LANGUAGE: project.language,
+        PROJECT_CONTEXT: smartContext.contextBlocks,
       });
 
       const userPrompt = input.characterContext
@@ -215,8 +223,15 @@ export const generationRouter = createTRPCRouter({
       const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "describe-location");
       const providerId = resolved.provider as ProviderId;
 
+      // Load smart context with RAG for location description
+      const smartContext = await loadSmartContext({
+        projectId: project.id,
+        query: input.locationName,
+      });
+
       const systemPrompt = composePrompt(providerId, "describe-location", {
         USER_LANGUAGE: project.language,
+        PROJECT_CONTEXT: smartContext.contextBlocks,
       });
 
       const userPrompt = input.locationContext

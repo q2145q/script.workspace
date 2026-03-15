@@ -12,6 +12,7 @@ import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { resolveApiKey } from "../../global-key-resolver";
 import { logApiUsage } from "../../usage-logger";
 import { logger } from "../../logger";
+import { loadSmartContext } from "../../smart-context-loader";
 import {
   getSecret,
   callAIWithSchema,
@@ -74,6 +75,15 @@ export const rewriteRouter = createTRPCRouter({
 
       const provider = getProvider(resolved.provider as ProviderId);
 
+      // Load smart context with RAG
+      const smartContext = await loadSmartContext({
+        projectId: document.project.id,
+        query: input.instruction + " " + input.selectedText,
+        editorContext: {
+          currentSceneText: input.contextBefore?.slice(-1000) + input.selectedText + input.contextAfter?.slice(0, 1000),
+        },
+      });
+
       let result;
       try {
         result = await provider.rewrite(
@@ -86,6 +96,7 @@ export const rewriteRouter = createTRPCRouter({
             blocks: input.blocks,
             previousResult: input.previousResult,
             language: document.project.language,
+            projectContext: smartContext.contextBlocks,
           },
           {
             apiKey: resolved.apiKey,
@@ -174,6 +185,12 @@ export const rewriteRouter = createTRPCRouter({
 
       const provider = getProvider(resolved.provider as ProviderId);
 
+      // Load smart context (skip RAG for formatting — it's a structural task)
+      const smartContext = await loadSmartContext({
+        projectId: document.project.id,
+        skipRAG: true,
+      });
+
       try {
         const result = await provider.format(
           {
@@ -181,6 +198,7 @@ export const rewriteRouter = createTRPCRouter({
             contextBefore: input.contextBefore,
             contextAfter: input.contextAfter,
             language: document.project.language,
+            projectContext: smartContext.contextBlocks,
           },
           { apiKey: resolved.apiKey, model: resolved.model }
         );
@@ -240,6 +258,13 @@ export const rewriteRouter = createTRPCRouter({
       }
 
       const providerId = resolved.provider as ProviderId;
+
+      // Load smart context with RAG for dialogue improvement
+      const smartContext = await loadSmartContext({
+        projectId: document.project.id,
+        query: input.blocks.map(b => b.text).join(" "),
+      });
+
       const blocksText = input.blocks.map(b => `[${b.type}] ${b.text}`).join("\n");
       const userPrompt = [
         `Selected dialogue blocks:\n${blocksText}`,
@@ -255,7 +280,7 @@ export const rewriteRouter = createTRPCRouter({
           userPrompt,
           { apiKey: resolved.apiKey, model: resolved.model },
           aiRewriteResponseSchema,
-          { USER_LANGUAGE: document.project.language },
+          { USER_LANGUAGE: document.project.language, PROJECT_CONTEXT: smartContext.contextBlocks },
         );
 
         await logApiUsage({
@@ -331,6 +356,12 @@ export const rewriteRouter = createTRPCRouter({
         throw new TRPCError({ code: "PRECONDITION_FAILED", message: "No AI provider configured." });
       }
 
+      // Load smart context (skip RAG for grammar — uses project terms/jargon from bible)
+      const smartContext = await loadSmartContext({
+        projectId: document.project.id,
+        skipRAG: true,
+      });
+
       const userPrompt = [
         `Selected text:\n${input.selectedText}`,
         input.contextBefore ? `\nContext before:\n${input.contextBefore}` : "",
@@ -344,7 +375,7 @@ export const rewriteRouter = createTRPCRouter({
           userPrompt,
           { apiKey: resolved.apiKey, model: resolved.model },
           grammarResultSchema,
-          { USER_LANGUAGE: document.project.language },
+          { USER_LANGUAGE: document.project.language, PROJECT_CONTEXT: smartContext.contextBlocks },
         );
 
         await logApiUsage({

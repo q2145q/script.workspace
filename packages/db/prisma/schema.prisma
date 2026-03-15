@@ -378,15 +378,15 @@ model RAGChunk {
   sourceType String
   sourceId   String
   content    String   @db.Text
-  embedding  Bytes?
+  embedding  Unsupported("vector(1536)")?
   metadata   Json?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  @@unique([projectId, sourceType, sourceId])
   @@index([projectId])
-  @@index([projectId, sourceId])
   @@map("rag_chunk")
 }
 
@@ -545,6 +545,7 @@ model SceneMetadata {
   characters String[]
   colorTag   String?
   act        Int?
+  tags       Json?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

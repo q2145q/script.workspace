@@ -13,7 +13,8 @@
     "./global-key-resolver": "./src/global-key-resolver.ts",
     "./rate-limit": "./src/rate-limit.ts",
     "./redis": "./src/redis.ts",
-    "./telegram": "./src/telegram.ts"
+    "./telegram": "./src/telegram.ts",
+    "./smart-context-loader": "./src/smart-context-loader.ts"
   },
   "dependencies": {
     "@better-auth/prisma-adapter": "^1.5.3",

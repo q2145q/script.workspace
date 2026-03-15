@@ -41,6 +41,8 @@ export interface RewriteInput {
   blocks?: Array<{ type: string; text: string }>;
   previousResult?: string;
   language?: string;
+  /** RAG-assembled project context (bible, characters, relevant scenes) */
+  projectContext?: string;
 }
 
 /** Configuration for a provider */
@@ -70,6 +72,8 @@ export interface FormatInput {
   contextBefore: string;
   contextAfter: string;
   language?: string;
+  /** RAG-assembled project context (bible, characters, relevant scenes) */
+  projectContext?: string;
 }
 
 /** Task types for AI operations */

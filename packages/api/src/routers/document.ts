@@ -4,6 +4,7 @@ import { createTRPCRouter, protectedProcedure } from "../trpc";
 import { prisma, type Prisma } from "@script/db";
 import { tipTapContentSchema } from "@script/types";
 import { extractPlainText } from "../content-text";
+import { triggerSceneIndexing } from "../rag-indexer";
 
 /** Common where clause for project access check */
 function docProjectAccess(userId: string) {
@@ -212,7 +213,7 @@ export const documentRouter = createTRPCRouter({
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
-      return prisma.document.update({
+      const updated = await prisma.document.update({
         where: { id: input.id },
         data: {
           content: input.content as unknown as Prisma.InputJsonValue,
@@ -220,6 +221,11 @@ export const documentRouter = createTRPCRouter({
           ...(input.title && { title: input.title }),
         },
       });
+
+      // Trigger RAG indexing in background (non-blocking)
+      triggerSceneIndexing(doc.id, doc.projectId, input.content);
+
+      return updated;
     }),
 
   /** Save document metadata (e.g. scene synopses) */

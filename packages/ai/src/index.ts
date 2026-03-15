@@ -62,6 +62,31 @@ export {
 } from "./circuit-breaker";
 export type { FallbackKeyResolver } from "./circuit-breaker";
 
+// Embeddings
+export { getEmbeddings, getEmbedding, toPgVector } from "./embeddings";
+export type { EmbeddingResult } from "./embeddings";
+
+// Scene indexer (RAG)
+export {
+  parseScenesFromContent,
+  tagScene,
+  indexScene,
+  indexChangedScenes,
+} from "./scene-indexer";
+export type { SceneTags, ParsedScene, IndexedScene } from "./scene-indexer";
+
+// Intent parser
+export { parseIntent, resolveCharacterReferences } from "./intent-parser";
+export type { ParsedIntent, ChatHistoryMessage } from "./intent-parser";
+
+// RAG search
+export { searchRelevantScenes, searchEpisodeSummaries } from "./rag-search";
+export type { RAGSearchResult } from "./rag-search";
+
+// Smart context (RAG-aware context builder)
+export { buildSmartContext, MAX_SMART_CONTEXT_CHARS } from "./smart-context";
+export type { SmartContextInput, SmartContext } from "./smart-context";
+
 // Prompt system (Phase 1)
 export { fillTemplate, composePrompt } from "./prompts/compose";
 export type { TemplateVars } from "./prompts/compose";

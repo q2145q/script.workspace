@@ -15,6 +15,7 @@ import {
 import { createTRPCRouter, protectedProcedure } from "../../trpc";
 import { logApiUsage } from "../../usage-logger";
 import { logger } from "../../logger";
+import { loadSmartContext } from "../../smart-context-loader";
 import {
   resolveProjectAIForTask,
   callAIWithSchema,
@@ -31,6 +32,12 @@ export const analysisRouter = createTRPCRouter({
       const { project, resolved } = await resolveProjectAIForTask(input.projectId, ctx.user.id, "analysis");
       const providerId = resolved.provider as ProviderId;
 
+      // Load smart context with RAG for scene analysis
+      const smartContext = await loadSmartContext({
+        projectId: project.id,
+        query: input.sceneText.slice(0, 500),
+      });
+
       try {
         const { result, tokensIn, tokensOut, durationMs } = await callAIWithSchema(
           providerId,
@@ -38,7 +45,7 @@ export const analysisRouter = createTRPCRouter({
           input.sceneText,
           { apiKey: resolved.apiKey, model: resolved.model },
           sceneAnalysisSchema,
-          { SCENE_TEXT: input.sceneText, USER_LANGUAGE: project.language },
+          { SCENE_TEXT: input.sceneText, USER_LANGUAGE: project.language, PROJECT_CONTEXT: smartContext.contextBlocks },
         );
 
         await logApiUsage({

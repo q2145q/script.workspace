@@ -210,6 +210,30 @@ export const TASK_MODEL_CONFIG: Record<string, Record<ModelTier, TaskModelEntry[
     cheap: [],
   },
 
+  "intent-parser": {
+    best: [
+      { provider: "openai", model: "gpt-4.1-nano" },
+    ],
+    middle: [
+      { provider: "openai", model: "gpt-4.1-nano" },
+    ],
+    cheap: [
+      { provider: "openai", model: "gpt-4.1-nano" },
+    ],
+  },
+
+  "scene-tagger": {
+    best: [
+      { provider: "openai", model: "gpt-4.1-nano" },
+    ],
+    middle: [
+      { provider: "openai", model: "gpt-4.1-nano" },
+    ],
+    cheap: [
+      { provider: "openai", model: "gpt-4.1-nano" },
+    ],
+  },
+
   "act-assignment": {
     best: [
       { provider: "openai", model: "gpt-4.1" },

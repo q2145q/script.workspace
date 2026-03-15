@@ -2,9 +2,7 @@ import { NextRequest } from "next/server";
 import { auth } from "@script/api/auth";
 import { prisma } from "@script/db";
 import {
-  buildChatContext,
   streamChat,
-  extractTextFromTipTapJson,
   extractScreenplayStructure,
   composePrompt,
   isCircuitOpen,
@@ -16,6 +14,7 @@ import {
 import type { ProviderId, StreamUsageResult } from "@script/ai";
 import { resolveApiKey } from "@script/api/global-key-resolver";
 import { logApiUsage, logAiResponse } from "@script/api/usage-logger";
+import { loadSmartContext } from "@script/api/smart-context-loader";
 import { isRateLimited } from "@script/api/rate-limit";
 
 export async function POST(req: NextRequest) {
@@ -69,9 +68,11 @@ export async function POST(req: NextRequest) {
         { members: { some: { userId: session.user.id } } },
       ],
     },
-    include: {
-      bible: true,
-      contextPins: { orderBy: { sortOrder: "asc" } },
+    select: {
+      id: true,
+      language: true,
+      preferredProvider: true,
+      preferredModel: true,
     },
   });
 
@@ -122,20 +123,17 @@ export async function POST(req: NextRequest) {
   });
   const screenplayStructure = extractScreenplayStructure(projectDocuments);
 
-  // 9. Build context
-  const bibleText = project.bible
-    ? extractTextFromTipTapJson(project.bible.content)
-    : undefined;
+  // 9. Build smart context with RAG
+  const recentHistory = history.slice(-10).map((m) => ({
+    role: m.role.toLowerCase() as "user" | "assistant",
+    content: m.content,
+  }));
 
-  const chatContext = buildChatContext({
-    bibleText: bibleText || undefined,
-    pins: project.contextPins.map((p) => ({
-      content: p.content,
-      label: p.label,
-    })),
-    currentSceneText: editorContext?.currentSceneText,
-    adjacentScenesText: editorContext?.adjacentScenesText,
-    documentSummary: editorContext?.documentSummary,
+  const smartContext = await loadSmartContext({
+    projectId,
+    query: content,
+    chatHistory: recentHistory,
+    editorContext,
   });
 
   // 9. Stream response using SSE
@@ -240,7 +238,7 @@ export async function POST(req: NextRequest) {
 
       try {
         const systemPrompt = composePrompt(activeProviderId, "chat", {
-          PROJECT_CONTEXT: chatContext.contextBlocks,
+          PROJECT_CONTEXT: smartContext.contextBlocks,
           USER_LANGUAGE: project.language || "en",
           SCREENPLAY_STRUCTURE: screenplayStructure,
         });
@@ -264,7 +262,7 @@ export async function POST(req: NextRequest) {
               const fallbackKey = await resolveApiKey(secret, fallbackId);
               const fbConfig = { apiKey: fallbackKey.apiKey, model: fallbackKey.model };
               const fbSystemPrompt = composePrompt(fallbackId as ProviderId, "chat", {
-                PROJECT_CONTEXT: chatContext.contextBlocks,
+                PROJECT_CONTEXT: smartContext.contextBlocks,
                 USER_LANGUAGE: project.language || "en",
                 SCREENPLAY_STRUCTURE: screenplayStructure,
               });
