@@ -92,7 +92,7 @@
 
   --glass-bg: rgba(14, 14, 20, 0.8);
   --glass-border: rgba(255, 255, 255, 0.06);
-  --glass-blur: 20px;
+  --glass-blur: 16px;
 }
 
 body {
@@ -101,6 +101,16 @@ body {
   background: var(--color-background);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+/* ============================================================
+   Z-INDEX SYSTEM
+   z-10: inline dropdowns (inside panels)
+   z-20: floating toolbars (SelectionToolbar, StatsFooter)
+   z-30: floating popovers (CommentPopover, SuggestionPopover, Chat dropdowns)
+   z-40: overlay backdrops (mobile overlays)
+   z-50: modal dialogs (Export, Import, Shortcuts, etc.)
+   z-60: mobile drawers (top layer)
+   ============================================================ */
 
 /* ============================================================
    GLASSMORPHISM UTILITIES
@@ -344,8 +354,8 @@ body {
     0 10px 25px -5px rgba(0, 0, 0, 0.15),
     0 0 0 1px rgba(255, 255, 255, 0.05);
   min-width: 180px;
-  max-width: 320px;
-  max-height: 200px;
+  max-width: min(320px, 90vw);
+  max-height: min(200px, 50vh);
   overflow: hidden;
   display: flex;
   flex-direction: column;

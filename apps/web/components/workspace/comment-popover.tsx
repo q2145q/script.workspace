@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, Trash2, RotateCcw } from "lucide-react";
 import type { Editor } from "@script/editor";
@@ -207,8 +207,8 @@ export function CommentPopover({ editor, documentId }: CommentPopoverProps) {
     };
   }, [activeThreadId, close]);
 
-  // Adjust position to stay within viewport
-  useEffect(() => {
+  // Adjust position to stay within viewport (useLayoutEffect to avoid visible jump)
+  useLayoutEffect(() => {
     if (!popoverRef.current || !position) return;
     const rect = popoverRef.current.getBoundingClientRect();
     const vw = window.innerWidth;
@@ -224,7 +224,6 @@ export function CommentPopover({ editor, documentId }: CommentPopoverProps) {
 
     // If would go below viewport, show above the text
     if (top + rect.height > vh - 16) {
-      // Re-find the span to get its top edge
       const span = document.querySelector(
         `span[data-comment-thread-id="${activeThreadId}"]`
       );
@@ -268,7 +267,7 @@ export function CommentPopover({ editor, documentId }: CommentPopoverProps) {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -4, scale: 0.97 }}
         transition={{ duration: 0.15 }}
-        className="fixed z-50 w-72 rounded-lg border border-border bg-background/95 shadow-xl backdrop-blur-sm"
+        className="fixed z-30 w-72 max-w-[calc(100vw-2rem)] rounded-lg border border-border bg-background/95 shadow-xl backdrop-blur-sm"
         style={{ top: position.top, left: position.left }}
       >
         {/* Header */}
@@ -286,6 +285,7 @@ export function CommentPopover({ editor, documentId }: CommentPopoverProps) {
             <button
               onClick={() => resolveMutation.mutate({ id: thread.id })}
               className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              aria-label={thread.resolved ? t("reopen") : t("resolve")}
               title={thread.resolved ? t("reopen") : t("resolve")}
             >
               {thread.resolved ? (
@@ -300,6 +300,7 @@ export function CommentPopover({ editor, documentId }: CommentPopoverProps) {
                 deleteMutation.mutate({ id: thread.id });
               }}
               className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
+              aria-label={tc("delete")}
               title={tc("delete")}
             >
               <Trash2 className="h-3 w-3" />
@@ -307,6 +308,7 @@ export function CommentPopover({ editor, documentId }: CommentPopoverProps) {
             <button
               onClick={close}
               className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              aria-label={tc("close")}
             >
               <X className="h-3 w-3" />
             </button>
@@ -385,7 +387,7 @@ export function CommentPopover({ editor, documentId }: CommentPopoverProps) {
                 }}
                 placeholder={t("replyPlaceholder")}
                 className="flex-1 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-[11px] text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
-                autoFocus={false}
+                autoFocus
               />
               {replyText.trim() && (
                 <button

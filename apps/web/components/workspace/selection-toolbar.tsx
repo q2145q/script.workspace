@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Type, Pin, Loader2, X, MessageSquare, Drama, SpellCheck, Check, XCircle } from "lucide-react";
 import type { Editor, SuggestionData } from "@script/editor";
@@ -356,37 +356,44 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
   }, [documentId, fixGrammarMutation, isPending]);
 
   const handleAcceptCorrection = useCallback((index: number) => {
-    if (!editor) return;
+    if (!editor || !grammarSelRange) return;
     const correction = grammarCorrections[index];
     if (!correction) return;
 
-    // Search-and-replace in editor content
-    const docText = editor.state.doc.textBetween(0, editor.state.doc.content.size, "\n");
-    const pos = docText.indexOf(correction.original);
-    if (pos !== -1) {
-      // +1 because textBetween starts at pos 0 but doc positions start at 1 for top-level content
-      editor.chain().focus().insertContentAt(
-        { from: pos + 1, to: pos + 1 + correction.original.length },
-        correction.corrected
-      ).run();
+    // Search within the original selection range to avoid false matches elsewhere
+    const searchFrom = grammarSelRange.from;
+    const searchTo = Math.min(grammarSelRange.to, editor.state.doc.content.size);
+    const rangeText = editor.state.doc.textBetween(searchFrom, searchTo, "\n");
+    const localPos = rangeText.indexOf(correction.original);
+    if (localPos !== -1) {
+      const from = searchFrom + localPos;
+      const to = from + correction.original.length;
+      editor.chain().focus().insertContentAt({ from, to }, correction.corrected).run();
+
+      // Adjust range end for length difference
+      const delta = correction.corrected.length - correction.original.length;
+      setGrammarSelRange((prev) => prev ? { ...prev, to: prev.to + delta } : null);
     }
 
     setGrammarCorrections((prev) => prev.filter((_, i) => i !== index));
-  }, [editor, grammarCorrections]);
+  }, [editor, grammarCorrections, grammarSelRange]);
 
   const handleAcceptAllCorrections = useCallback(() => {
-    if (!editor || grammarCorrections.length === 0) return;
+    if (!editor || grammarCorrections.length === 0 || !grammarSelRange) return;
 
-    // Apply all corrections in reverse order by position to avoid offset issues
-    const docText = editor.state.doc.textBetween(0, editor.state.doc.content.size, "\n");
+    const searchFrom = grammarSelRange.from;
+    const searchTo = Math.min(grammarSelRange.to, editor.state.doc.content.size);
+    const rangeText = editor.state.doc.textBetween(searchFrom, searchTo, "\n");
+
+    // Find positions within range, apply in reverse order to avoid offset issues
     const positioned = grammarCorrections
-      .map((c) => ({ ...c, pos: docText.indexOf(c.original) }))
-      .filter((c) => c.pos !== -1)
-      .sort((a, b) => b.pos - a.pos); // reverse order
+      .map((c) => ({ ...c, localPos: rangeText.indexOf(c.original) }))
+      .filter((c) => c.localPos !== -1)
+      .sort((a, b) => b.localPos - a.localPos);
 
     const { tr } = editor.state;
     for (const c of positioned) {
-      const from = c.pos + 1;
+      const from = searchFrom + c.localPos;
       const to = from + c.original.length;
       tr.replaceWith(from, to, editor.state.schema.text(c.corrected));
     }
@@ -394,7 +401,7 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
 
     setGrammarCorrections([]);
     toast.success(t("grammarFixed"));
-  }, [editor, grammarCorrections, t]);
+  }, [editor, grammarCorrections, grammarSelRange, t]);
 
   const handleRejectCorrection = useCallback((index: number) => {
     setGrammarCorrections((prev) => prev.filter((_, i) => i !== index));
@@ -520,6 +527,29 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
     };
   }, [visible, hideToolbar, isPending]);
 
+  // --- viewport clamp: prevent toolbar from going off-screen horizontally ---
+  useLayoutEffect(() => {
+    if (!visible || !toolbarRef.current) return;
+    const rect = toolbarRef.current.getBoundingClientRect();
+    const vw = window.innerWidth;
+
+    let newLeft = position.left;
+    // translateX(-50%) means visual bounds are:
+    const visualLeft = newLeft - rect.width / 2;
+    const visualRight = newLeft + rect.width / 2;
+
+    if (visualRight > vw - 16) {
+      newLeft = vw - 16 - rect.width / 2;
+    }
+    if (visualLeft < 16) {
+      newLeft = 16 + rect.width / 2;
+    }
+
+    if (newLeft !== position.left) {
+      setPosition((prev) => ({ ...prev, left: newLeft }));
+    }
+  }, [visible, position.left]);
+
   if (!visible && !isPending) return null;
 
   return (
@@ -531,7 +561,7 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: flipBelow ? -4 : 4 }}
           transition={{ duration: 0.15 }}
-          className="fixed z-50"
+          className="fixed z-20"
           style={{
             left: `${position.left}px`,
             top: flipBelow ? `${position.top + 28}px` : `${position.top - 8}px`,
@@ -579,7 +609,7 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
                   }}
                   placeholder={t("rewritePlaceholder")}
                   disabled={isPending}
-                  className="w-48 rounded-md bg-transparent px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  className="w-32 rounded-md bg-transparent px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none sm:w-48"
                 />
                 {rewriteMutation.isPending ? (
                   <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin text-ai-accent" />
@@ -675,7 +705,7 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
                   }}
                   placeholder={t("commentPlaceholder")}
                   disabled={isPending}
-                  className="w-48 rounded-md bg-transparent px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  className="w-32 rounded-md bg-transparent px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none sm:w-48"
                 />
                 {commentMutation.isPending ? (
                   <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin text-ai-accent" />
@@ -723,7 +753,7 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
 
           {/* Grammar corrections panel */}
           {grammarCorrections.length > 0 && (
-            <div className="mt-1 max-h-64 w-80 overflow-y-auto rounded-lg border border-border bg-popover/95 p-2 shadow-lg backdrop-blur">
+            <div className="mt-1 max-h-64 w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-lg border border-border bg-popover/95 p-2 shadow-lg backdrop-blur sm:w-80">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                   {t("grammarCorrections", { count: grammarCorrections.length })}
@@ -751,6 +781,7 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
                       <button
                         onClick={() => handleAcceptCorrection(i)}
                         className="rounded p-0.5 text-green-500 hover:bg-green-500/10"
+                        aria-label={t("accept")}
                         title={t("accept")}
                       >
                         <Check className="h-3.5 w-3.5" />
@@ -758,6 +789,7 @@ export function SelectionToolbar({ editor, documentId, projectId, onSuggestionCr
                       <button
                         onClick={() => handleRejectCorrection(i)}
                         className="rounded p-0.5 text-red-400 hover:bg-red-400/10"
+                        aria-label={t("reject")}
                         title={t("reject")}
                       >
                         <XCircle className="h-3.5 w-3.5" />

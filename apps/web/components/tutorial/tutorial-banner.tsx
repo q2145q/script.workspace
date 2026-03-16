@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Sparkles, X } from "lucide-react";
 import { useTutorial } from "./use-tutorial";
 
@@ -10,6 +11,7 @@ import { useTutorial } from "./use-tutorial";
  */
 export function TutorialBanner() {
   const router = useRouter();
+  const t = useTranslations("TutorialBanner");
   const {
     step,
     isCompleted,
@@ -45,7 +47,7 @@ export function TutorialBanner() {
       <button
         onClick={() => skip()}
         className="absolute right-3 top-3 rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
-        aria-label="Dismiss"
+        aria-label={t("dismiss")}
       >
         <X className="h-4 w-4" />
       </button>
@@ -57,11 +59,10 @@ export function TutorialBanner() {
 
         <div className="flex-1">
           <h3 className="text-sm font-semibold text-foreground">
-            Добро пожаловать в Script!
+            {t("title")}
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            Пройдите интерактивный туториал — мы покажем все возможности редактора на примере
-            сценария фильма «Начало» Кристофера Нолана.
+            {t("description")}
           </p>
 
           <div className="mt-3 flex items-center gap-2">
@@ -73,12 +74,12 @@ export function TutorialBanner() {
               {isCreatingDemo ? (
                 <>
                   <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  Создаём проект...
+                  {t("creating")}
                 </>
               ) : (
                 <>
                   <Sparkles className="h-3.5 w-3.5" />
-                  Начать туториал
+                  {t("start")}
                 </>
               )}
             </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Square, Trash2, Sparkles, FileDown, Loader2, Check, ChevronDown, StickyNote, AtSign, Film, MapPin } from "lucide-react";
 import { Fragment, type Editor } from "@script/editor";
@@ -121,14 +122,30 @@ function InsertButton({
   }
 
   const scenes = getScenePositions(editor);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+
+  // Compute fixed position when picker opens
+  useEffect(() => {
+    if (!showPicker || !btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    const maxH = 192; // max-h-48 = 12rem = 192px
+    const top = Math.max(8, rect.top - maxH - 4);
+    let left = rect.right - 256; // w-64 = 16rem = 256px
+    if (left < 8) left = 8;
+    const w = Math.min(256, window.innerWidth - 16);
+    setDropdownStyle({ position: "fixed", top, left, width: w, maxHeight: maxH, zIndex: 30 });
+  }, [showPicker]);
 
   return (
-    <div className="relative" ref={pickerRef}>
+    <div ref={pickerRef}>
       <button
+        ref={btnRef}
         onClick={() => setShowPicker(!showPicker)}
         disabled={formatMutation.isPending}
         className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] text-muted-foreground transition-colors hover:bg-ai-accent/10 hover:text-ai-accent disabled:opacity-50"
         title={t("insertTitle")}
+        aria-label={t("insertTitle")}
       >
         {formatMutation.isPending ? (
           <Loader2 className="h-3 w-3 animate-spin" />
@@ -138,13 +155,14 @@ function InsertButton({
         {t("insert")}
       </button>
 
-      <AnimatePresence>
-        {showPicker && (
+      {showPicker && createPortal(
+        <AnimatePresence>
           <motion.div
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
-            className="absolute bottom-full right-0 z-50 mb-1 max-h-48 w-64 overflow-y-auto rounded-lg border border-border bg-background shadow-xl"
+            style={dropdownStyle}
+            className="overflow-y-auto rounded-lg border border-border bg-background shadow-xl"
           >
             <div className="p-1">
               <p className="px-2 py-1 text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -179,8 +197,9 @@ function InsertButton({
               </button>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
@@ -304,6 +323,8 @@ function ChatBubble({
 
 function ModelSelector({ projectId, onModelSelect }: { projectId: string; onModelSelect: (provider: string, model: string) => void }) {
   const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const trpc = useTRPC();
   const t = useTranslations("Chat");
 
@@ -329,11 +350,38 @@ function ModelSelector({ projectId, onModelSelect }: { projectId: string; onMode
     }
   }
 
+  // Close on click outside
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+        btnRef.current && !btnRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  // Compute fixed position
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  useEffect(() => {
+    if (!open || !btnRef.current) return;
+    const rect = btnRef.current.getBoundingClientRect();
+    const w = Math.min(224, window.innerWidth - 16);
+    let left = rect.right - w;
+    if (left < 8) left = 8;
+    setDropdownStyle({ position: "fixed", top: rect.bottom + 4, left, width: w, maxHeight: 256, zIndex: 30 });
+  }, [open]);
+
   if (!availableModels || availableModels.length === 0) return null;
 
   return (
-    <div className="relative">
+    <div>
       <button
+        ref={btnRef}
         onClick={() => setOpen(!open)}
         className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
       >
@@ -341,13 +389,15 @@ function ModelSelector({ projectId, onModelSelect }: { projectId: string; onMode
         <ChevronDown className="h-3 w-3" />
       </button>
 
-      <AnimatePresence>
-        {open && (
+      {open && createPortal(
+        <AnimatePresence>
           <motion.div
+            ref={dropdownRef}
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            className="absolute right-0 top-full z-50 mt-1 max-h-64 w-56 overflow-y-auto rounded-lg border border-border bg-background p-1 shadow-xl"
+            style={dropdownStyle}
+            className="overflow-y-auto rounded-lg border border-border bg-background p-1 shadow-xl"
           >
             {availableModels.map((p) => (
               <div key={p.provider}>
@@ -371,9 +421,66 @@ function ModelSelector({ projectId, onModelSelect }: { projectId: string; onMode
               </div>
             ))}
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
+  );
+}
+
+function ScenePickerDropdown({
+  textareaRef,
+  filteredScenes,
+  insertSceneRef,
+  t,
+}: {
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  filteredScenes: string[];
+  insertSceneRef: (heading: string) => void;
+  t: (key: string) => string;
+}) {
+  const [style, setStyle] = useState<React.CSSProperties>({});
+
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const maxH = 160; // max-h-40
+    const top = Math.max(8, rect.top - maxH - 4);
+    setStyle({
+      position: "fixed",
+      top,
+      left: rect.left,
+      width: rect.width,
+      maxHeight: maxH,
+      zIndex: 20,
+    });
+  }, [textareaRef]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 4 }}
+      style={style}
+      className="overflow-y-auto rounded-lg border border-border bg-background shadow-xl"
+    >
+      <div className="p-1">
+        <p className="px-2 py-1 text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
+          {t("sceneReference")}
+        </p>
+        {filteredScenes.map((heading) => (
+          <button
+            key={heading}
+            onClick={() => insertSceneRef(heading)}
+            className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-foreground transition-colors hover:bg-accent"
+          >
+            <Film className="h-3 w-3 text-ai-accent" />
+            <span className="truncate">{heading}</span>
+          </button>
+        ))}
+      </div>
+    </motion.div>
   );
 }
 
@@ -588,35 +695,19 @@ export function ChatPanel({ editor, documentId, projectId }: ChatPanelProps) {
         )}
       </AnimatePresence>
 
+      {/* Scene mention picker — rendered via portal to avoid overflow clip */}
+      {showScenePicker && filteredScenes.length > 0 && createPortal(
+        <ScenePickerDropdown
+          textareaRef={textareaRef}
+          filteredScenes={filteredScenes}
+          insertSceneRef={insertSceneRef}
+          t={t}
+        />,
+        document.body
+      )}
+
       {/* Input area */}
       <div className="relative border-t border-border p-2">
-        {/* Scene mention picker */}
-        <AnimatePresence>
-          {showScenePicker && filteredScenes.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 4 }}
-              className="absolute bottom-full left-2 right-2 z-10 mb-1 max-h-40 overflow-y-auto rounded-lg border border-border bg-background shadow-xl"
-            >
-              <div className="p-1">
-                <p className="px-2 py-1 text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
-                  {t("sceneReference")}
-                </p>
-                {filteredScenes.map((heading) => (
-                  <button
-                    key={heading}
-                    onClick={() => insertSceneRef(heading)}
-                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs text-foreground transition-colors hover:bg-accent"
-                  >
-                    <Film className="h-3 w-3 text-ai-accent" />
-                    <span className="truncate">{heading}</span>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         <div className="flex items-end gap-2">
           <div className="relative flex-1">

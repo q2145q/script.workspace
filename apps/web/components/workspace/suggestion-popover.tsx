@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, RefreshCw, Loader2, Undo2, Sparkles } from "lucide-react";
 import type { Editor } from "@script/editor";
@@ -228,8 +228,8 @@ export function SuggestionPopover({
     };
   }, [activeSuggestionId, close]);
 
-  // Adjust position to stay in viewport
-  useEffect(() => {
+  // Adjust position to stay in viewport (useLayoutEffect to avoid visible jump)
+  useLayoutEffect(() => {
     if (!popoverRef.current || !position) return;
     const rect = popoverRef.current.getBoundingClientRect();
     const vw = window.innerWidth;
@@ -419,7 +419,7 @@ export function SuggestionPopover({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -4, scale: 0.97 }}
         transition={{ duration: 0.15 }}
-        className="fixed z-50 w-80 rounded-lg border border-border bg-background/95 shadow-xl backdrop-blur-sm"
+        className="fixed z-[31] w-80 max-w-[calc(100vw-2rem)] rounded-lg border border-border bg-background/95 shadow-xl backdrop-blur-sm"
         style={{ top: position.top, left: position.left }}
       >
         {/* Recently applied state */}
@@ -442,6 +442,7 @@ export function SuggestionPopover({
               </button>
               <button
                 onClick={close}
+                aria-label={t("dismiss")}
                 className="rounded p-0.5 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-3 w-3" />
@@ -459,6 +460,7 @@ export function SuggestionPopover({
             </span>
             <button
               onClick={close}
+              aria-label={t("dismiss")}
               className="ml-auto rounded p-0.5 text-muted-foreground hover:text-foreground"
             >
               <X className="h-3 w-3" />
@@ -479,6 +481,7 @@ export function SuggestionPopover({
               </div>
               <button
                 onClick={close}
+                aria-label={t("dismiss")}
                 className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               >
                 <X className="h-3 w-3" />
@@ -525,7 +528,7 @@ export function SuggestionPopover({
               <button
                 onClick={handleApply}
                 disabled={applyMutation.isPending}
-                className="flex items-center gap-1 rounded-md bg-emerald-600 px-2.5 py-1 text-[10px] font-medium text-white transition-all hover:bg-emerald-500 disabled:opacity-50"
+                className="flex items-center gap-1 rounded-md bg-emerald-600 px-2.5 py-1 text-[10px] font-medium text-white transition-all hover:bg-emerald-500 disabled:opacity-50 dark:bg-emerald-700 dark:hover:bg-emerald-600"
               >
                 <Check className="h-3 w-3" />
                 {t("apply")}
@@ -545,7 +548,7 @@ export function SuggestionPopover({
               <button
                 onClick={handleDismiss}
                 disabled={rejectMutation.isPending}
-                className="flex items-center gap-1 rounded-md bg-red-600/80 px-2.5 py-1 text-[10px] font-medium text-white transition-all hover:bg-red-500 disabled:opacity-50"
+                className="flex items-center gap-1 rounded-md bg-red-600/80 px-2.5 py-1 text-[10px] font-medium text-white transition-all hover:bg-red-500 disabled:opacity-50 dark:bg-red-700/80 dark:hover:bg-red-600"
               >
                 <X className="h-3 w-3" />
                 {t("dismiss")}

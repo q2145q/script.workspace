@@ -1,17 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 
+const DISMISS_KEY = "beta-banner-dismissed";
+
 export function BetaBanner() {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const t = useTranslations("Landing.betaBanner");
+
+  useEffect(() => {
+    if (!localStorage.getItem(DISMISS_KEY)) {
+      setVisible(true);
+    }
+  }, []);
 
   if (!visible) return null;
 
+  const handleDismiss = () => {
+    localStorage.setItem(DISMISS_KEY, "1");
+    setVisible(false);
+  };
+
   return (
-    <div className="relative z-50 bg-amber-500/90 px-4 py-2 text-center text-sm text-black backdrop-blur-sm">
+    <div
+      role="status"
+      className="relative z-10 bg-amber-500/90 px-4 py-2 text-center text-sm text-black backdrop-blur-sm"
+    >
       <p className="pr-8">
         {t("text")}{" "}
         <a
@@ -25,7 +41,7 @@ export function BetaBanner() {
         {t("textEnd")}
       </p>
       <button
-        onClick={() => setVisible(false)}
+        onClick={handleDismiss}
         className="absolute right-3 top-1/2 -translate-y-1/2 rounded-sm p-0.5 text-black/70 transition-colors hover:text-black"
         aria-label={t("closeLabel")}
       >

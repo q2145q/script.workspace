@@ -111,7 +111,7 @@ export function TutorialProvider({ children }: TutorialProviderProps) {
               backgroundColor: "#18181b",
               overlayColor: "rgba(0, 0, 0, 0.5)",
               primaryColor: "#f97316",
-              zIndex: 10000,
+              zIndex: 60,
             },
           }}
         />

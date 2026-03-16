@@ -253,7 +253,9 @@
     "acceptAll": "Accept all",
     "accept": "Accept",
     "reject": "Reject",
-    "grammarFixed": "Grammar fixed"
+    "grammarFixed": "Grammar fixed",
+    "text": "Text",
+    "world": "World"
   },
   "RightPanel": {
     "comments": "Comments",
@@ -947,5 +949,12 @@
   "LocaleSwitcher": {
     "ru": "Russian",
     "en": "English"
+  },
+  "TutorialBanner": {
+    "title": "Welcome to Script!",
+    "description": "Take an interactive tutorial — we'll show you all the editor features using Christopher Nolan's Inception screenplay.",
+    "start": "Start tutorial",
+    "creating": "Creating project...",
+    "dismiss": "Dismiss"
   }
 }
